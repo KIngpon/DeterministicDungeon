@@ -19,7 +19,9 @@ public class EnemyVo
 	//提供的经验
 	public var exp:int;
 	//类型（1普通，2boss）
-	public var type:int
+	public var type:int;
+	//图片或动画名称
+	public var pic:String;
 	public function EnemyVo() 
 	{
 		
