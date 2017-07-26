@@ -392,6 +392,38 @@ var Laya=window.Laya=(function(window,document){
 
 
 	/**
+	*...消息常量
+	*@author ...Kanon
+	*/
+	//class config.MsgConstant
+	var MsgConstant=(function(){
+		function MsgConstant(){};
+		__class(MsgConstant,'config.MsgConstant');
+		MsgConstant.START_FIGHT="START_FIGHT";
+		return MsgConstant;
+	})()
+
+
+	/**
+	*...用于初始化 view和proxy
+	*@author Kanon
+	*/
+	//class mvc.Command
+	var Command=(function(){
+		function Command(){
+			this.facade=null;
+			this.facade=Facade.getInstance();
+		}
+
+		__class(Command,'mvc.Command');
+		var __proto=Command.prototype;
+		//执行
+		__proto.execute=function(notification){}
+		return Command;
+	})()
+
+
+	/**
 	*...主文件
 	*@author ...Kanon
 	*/
@@ -402,57 +434,413 @@ var Laya=window.Laya=(function(window,document){
 			Laya.stage.scaleMode="showall";
 			Laya.stage.screenMode="horizontal";
 			Layer.init(Laya.stage);
+			this.startMvc();
 		}
 
 		__class(Main,'Main');
+		var __proto=Main.prototype;
+		/**
+		*启动mvc
+		*/
+		__proto.startMvc=function(){
+			var m=new ModelCommand();
+			var v=new ViewCommand();
+			var initDataCommand=new InitDataCommand();
+			m.execute(null);
+			v.execute(null);
+			initDataCommand.execute(null);
+		}
+
 		return Main;
 	})()
 
 
 	/**
-	*...游戏层级
-	*@author ...Kanon
+	*...数据代理
+	*@author Kanon
 	*/
-	//class view.ui.Layer
-	var Layer=(function(){
-		function Layer(){};
-		__class(Layer,'view.ui.Layer');
-		Layer.init=function(root){
-			Layer.STAGE=new Sprite();
-			root.addChild(Layer.STAGE);
-			Layer.GAME_STAGE=new Sprite();
-			Layer.GAME_UI=new Sprite();
-			Layer.GAME_ALERT=new Sprite();
-			Layer.STAGE.addChild(Layer.GAME_STAGE);
-			Layer.STAGE.addChild(Layer.GAME_UI);
-			Layer.STAGE.addChild(Layer.GAME_ALERT);
+	//class mvc.Proxy
+	var Proxy=(function(){
+		function Proxy(){
+			this.proxyName=null;
+			this.facade=null;
+			this.facade=Facade.getInstance();
 		}
 
-		Layer.STAGE=null
-		Layer.GAME_STAGE=null
-		Layer.GAME_UI=null
-		Layer.GAME_ALERT=null
-		return Layer;
+		__class(Proxy,'mvc.Proxy');
+		var __proto=Proxy.prototype;
+		__proto.retrieveMediator=function(name){
+			return Facade.getInstance().retrieveMediator(name);
+		}
+
+		__proto.retrieveProxy=function(name){
+			return Facade.getInstance().retrieveProxy(name);
+		}
+
+		__proto.sendNotification=function(notificationName,body){
+			this.facade.sendNotification(notificationName,body);
+		}
+
+		/**
+		*初始化数据 子类实现
+		*/
+		__proto.initData=function(){}
+		return Proxy;
 	})()
 
 
 	/**
-	*Config 用于配置一些全局参数。
+	*...敌人数据
+	*@author ...Kanon
 	*/
-	//class Config
-	var Config=(function(){
-		function Config(){};
-		__class(Config,'Config');
-		Config.WebGLTextCacheCount=500;
-		Config.atlasEnable=false;
-		Config.showCanvasMark=false;
-		Config.CPUMemoryLimit=120 *1024 *1024;
-		Config.GPUMemoryLimit=160 *1024 *1024;
-		Config.animationInterval=50;
-		Config.isAntialias=false;
-		Config.isAlpha=false;
-		Config.premultipliedAlpha=false;
-		return Config;
+	//class model.vo.EnemyPo
+	var EnemyPo=(function(){
+		function EnemyPo(){
+			this.id=0;
+			this.name=null;
+			this.atk=0;
+			this.hp=0;
+			this.level=0;
+			this.exp=0;
+			this.type=0;
+			this.pic=null;
+		}
+
+		__class(EnemyPo,'model.vo.EnemyPo');
+		return EnemyPo;
+	})()
+
+
+	/**
+	*...装备数据
+	*@author Kanon
+	*/
+	//class model.vo.EquipPo
+	var EquipPo=(function(){
+		function EquipPo(){
+			this.id=0;
+			this.name=null;
+			this.atk=null;
+			this.def=0;
+			this.type=0;
+			this.pic=null;
+		}
+
+		__class(EquipPo,'model.vo.EquipPo');
+		EquipPo.WEAPON=1;
+		EquipPo.SHIELD=2;
+		EquipPo.HELMET=3;
+		return EquipPo;
+	})()
+
+
+	/**
+	*...角色数据
+	*@author ...Kanon
+	*/
+	//class model.vo.PlayerPo
+	var PlayerPo=(function(){
+		function PlayerPo(){
+			this.hp=0;
+			this.atk=NaN;
+			this.def=NaN;
+			this.magic=NaN;
+			this.exp=0;
+			this.level=0;
+		}
+
+		__class(PlayerPo,'model.vo.PlayerPo');
+		return PlayerPo;
+	})()
+
+
+	/**
+	*...角色动态数据
+	*@author ...
+	*/
+	//class model.vo.PlayerVo
+	var PlayerVo=(function(){
+		function PlayerVo(){
+			this.curHp=0;
+			this.maxHp=0;
+			this.curExp=0;
+			this.maxExp=0;
+			this.level=0;
+		}
+
+		__class(PlayerVo,'model.vo.PlayerVo');
+		return PlayerVo;
+	})()
+
+
+	/**
+	*...
+	*@author Kanon
+	*/
+	//class mvc.Facade
+	var Facade=(function(){
+		var Singletoner;
+		function Facade(singletoner){
+			this.mediatorDict=null;
+			this.proxyDict=null;
+			if (!singletoner)
+				throw new Error("只能用getInstance()来获取实例");
+			this.mediatorDict=new Dictionary();
+			this.proxyDict=new Dictionary();
+		}
+
+		__class(Facade,'mvc.Facade');
+		var __proto=Facade.prototype;
+		__proto.sendNotification=function(notificationName,body){
+			var notification=new Notification();
+			notification.notificationName=notificationName;
+			notification.body=body;
+			NotificationCenter.getInstance().postNotification("_mvc_message",notification);
+		}
+
+		/**
+		*注册mediator
+		*@param mediator
+		*/
+		__proto.registerMediator=function(mediator){
+			this.mediatorDict.set(mediator.mediatorName,mediator);
+		}
+
+		/**
+		*注册proxy
+		*@param proxy
+		*/
+		__proto.registerProxy=function(proxy){
+			this.proxyDict.set(proxy.proxyName,proxy);
+		}
+
+		/**
+		*获取proxy
+		*@param name
+		*@return
+		*/
+		__proto.retrieveProxy=function(name){
+			return this.proxyDict.get(name);
+		}
+
+		/**
+		*获取proxy
+		*@param name
+		*@return
+		*/
+		__proto.retrieveMediator=function(name){
+			return this.mediatorDict.get(name);
+		}
+
+		/**
+		*删除mediator
+		*@param name
+		*/
+		__proto.removeMediator=function(name){
+			this.mediatorDict.remove(name);
+		}
+
+		/**
+		*删除proxy
+		*@param name
+		*/
+		__proto.removeProxy=function(name){
+			this.proxyDict.remove(name);
+		}
+
+		/**
+		*初始化数据
+		*/
+		__proto.initData=function(){
+			var ary=this.proxyDict.values;
+			var count=ary.length;
+			for (var i=0;i < count;i++){
+				ary[i].initData();
+			}
+		}
+
+		Facade.getInstance=function(){
+			if (!Facade.instance)Facade.instance=new Facade(new Singletoner());
+			return Facade.instance;
+		}
+
+		Facade.MVC_MSG="_mvc_message";
+		Facade.instance=null
+		Facade.__init$=function(){
+			//class Singletoner
+			Singletoner=(function(){
+				function Singletoner(){};
+				__class(Singletoner,'');
+				return Singletoner;
+			})()
+		}
+
+		return Facade;
+	})()
+
+
+	/**
+	*...中介
+	*@author Kanon
+	*/
+	//class mvc.Mediator
+	var Mediator=(function(){
+		function Mediator(){
+			this.notificationList=null;
+			this.facade=null;
+			this.mediatorName=null;
+			this.notificationList=this.listNotificationInterests();
+			this.facade=Facade.getInstance();
+			NotificationCenter.getInstance().addObserver("_mvc_message",this.getNotificationHandler,this);
+		}
+
+		__class(Mediator,'mvc.Mediator');
+		var __proto=Mediator.prototype;
+		__proto.sendNotification=function(notificationName,body){
+			this.facade.sendNotification(notificationName,body);
+		}
+
+		__proto.retrieveMediator=function(name){
+			return this.facade.retrieveMediator(name);
+		}
+
+		__proto.retrieveProxy=function(name){
+			return this.facade.retrieveProxy(name);
+		}
+
+		/**
+		*列出感兴趣的事件列表 子类继承
+		*@return 事件列表
+		*/
+		__proto.listNotificationInterests=function(){
+			var notificationList=[];
+			return notificationList;
+		}
+
+		/**
+		*mvc消息回调
+		*@param notification 消息体
+		*/
+		__proto.handleNotification=function(notification){}
+		//子类继承
+		__proto.getNotificationHandler=function(notification){
+			var count=this.notificationList.length;
+			var notificationName=notification.notificationName;
+			for (var i=0;i < count;i++){
+				var name=this.notificationList[i];
+				if (name==notificationName){
+					this.handleNotification(notification);
+					break ;
+				}
+			}
+		}
+
+		return Mediator;
+	})()
+
+
+	/**
+	*...消息体
+	*@author Kanon
+	*/
+	//class mvc.Notification
+	var Notification=(function(){
+		function Notification(){
+			this.notificationName=null;
+			this.body=null;
+		}
+
+		__class(Notification,'mvc.Notification');
+		return Notification;
+	})()
+
+
+	/**
+	*...消息中心
+	*@author Kanon
+	*/
+	//class mvc.support.NotificationCenter
+	var NotificationCenter=(function(){
+		var Singletoner;
+		function NotificationCenter(singletoner){
+			this.callBackDict=new Dictionary();
+			this.thisObjDict=new Dictionary();
+			if (!singletoner)
+				throw new Error("只能用getInstance()来获取实例");
+		}
+
+		__class(NotificationCenter,'mvc.support.NotificationCenter');
+		var __proto=NotificationCenter.prototype;
+		/**
+		*添加观察者
+		*@param name 消息名称
+		*@param callBack 回调
+		*/
+		__proto.addObserver=function(name,callBack,thisObj){
+			var callBackVect;
+			var thisObjVect;
+			if (!this.callBackDict.get(name)){
+				callBackVect=[];
+				thisObjVect=[];
+				this.callBackDict.set(name,callBackVect);
+				this.thisObjDict.set(name,thisObjVect);
+			}
+			else{
+				callBackVect=this.callBackDict.get(name);
+				thisObjVect=this.thisObjDict.get(name);
+			}
+			thisObjVect.push(thisObj);
+			callBackVect.push(callBack);
+		}
+
+		/**
+		*发送消息
+		*@param name 消息名称
+		*@param params 消息参数
+		*/
+		__proto.postNotification=function(name,__rest){
+			var rest=[];for(var i=1,sz=arguments.length;i<sz;i++)rest.push(arguments[i]);
+			var callBackVect=this.callBackDict.get(name);
+			var thisObjVect=this.thisObjDict.get(name);
+			if (callBackVect){
+				var count=callBackVect.length;
+				for (var i=0;i < count;i++){
+					callBackVect[i].apply(thisObjVect[i],rest);
+				}
+			}
+		}
+
+		/**
+		*删除消息侦查者
+		*@param name 消息名称
+		*/
+		__proto.removeObserver=function(name){
+			this.callBackDict.remove(name);
+		}
+
+		/**
+		*删除所有消息侦查者
+		*/
+		__proto.removeObservers=function(){
+			this.callBackDict.clear();
+		}
+
+		NotificationCenter.getInstance=function(){
+			if (!NotificationCenter.instance)NotificationCenter.instance=new NotificationCenter(new Singletoner())
+				return NotificationCenter.instance;
+		}
+
+		NotificationCenter.instance=null
+		NotificationCenter.__init$=function(){
+			//class Singletoner
+			Singletoner=(function(){
+				function Singletoner(){};
+				__class(Singletoner,'');
+				return Singletoner;
+			})()
+		}
+
+		return NotificationCenter;
 	})()
 
 
@@ -746,6 +1134,53 @@ var Laya=window.Laya=(function(window,document){
 		Handler._pool=[];
 		Handler._gid=1;
 		return Handler;
+	})()
+
+
+	/**
+	*...游戏层级
+	*@author ...Kanon
+	*/
+	//class view.ui.Layer
+	var Layer=(function(){
+		function Layer(){};
+		__class(Layer,'view.ui.Layer');
+		Layer.init=function(root){
+			Layer.STAGE=new Sprite();
+			root.addChild(Layer.STAGE);
+			Layer.GAME_STAGE=new Sprite();
+			Layer.GAME_UI=new Sprite();
+			Layer.GAME_ALERT=new Sprite();
+			Layer.STAGE.addChild(Layer.GAME_STAGE);
+			Layer.STAGE.addChild(Layer.GAME_UI);
+			Layer.STAGE.addChild(Layer.GAME_ALERT);
+		}
+
+		Layer.STAGE=null
+		Layer.GAME_STAGE=null
+		Layer.GAME_UI=null
+		Layer.GAME_ALERT=null
+		return Layer;
+	})()
+
+
+	/**
+	*Config 用于配置一些全局参数。
+	*/
+	//class Config
+	var Config=(function(){
+		function Config(){};
+		__class(Config,'Config');
+		Config.WebGLTextCacheCount=500;
+		Config.atlasEnable=false;
+		Config.showCanvasMark=false;
+		Config.CPUMemoryLimit=120 *1024 *1024;
+		Config.GPUMemoryLimit=160 *1024 *1024;
+		Config.animationInterval=50;
+		Config.isAntialias=false;
+		Config.isAlpha=false;
+		Config.premultipliedAlpha=false;
+		return Config;
 	})()
 
 
@@ -6054,6 +6489,96 @@ var Laya=window.Laya=(function(window,document){
 
 
 	/**
+	*<code>Dictionary</code> 是一个字典型的数据存取类。
+	*/
+	//class laya.utils.Dictionary
+	var Dictionary=(function(){
+		function Dictionary(){
+			this._values=[];
+			this._keys=[];
+		}
+
+		__class(Dictionary,'laya.utils.Dictionary');
+		var __proto=Dictionary.prototype;
+		/**
+		*给指定的键名设置值。
+		*@param key 键名。
+		*@param value 值。
+		*/
+		__proto.set=function(key,value){
+			var index=this.indexOf(key);
+			if (index >=0){
+				this._values[index]=value;
+				return;
+			}
+			this._keys.push(key);
+			this._values.push(value);
+		}
+
+		/**
+		*获取指定对象的键名索引。
+		*@param key 键名对象。
+		*@return 键名索引。
+		*/
+		__proto.indexOf=function(key){
+			var index=this._keys.indexOf(key);
+			if (index >=0)return index;
+			key=((typeof key=='string'))? Number(key):(((typeof key=='number'))? key.toString():key);
+			return this._keys.indexOf(key);
+		}
+
+		/**
+		*返回指定键名的值。
+		*@param key 键名对象。
+		*@return 指定键名的值。
+		*/
+		__proto.get=function(key){
+			var index=this.indexOf(key);
+			return index < 0 ? null :this._values[index];
+		}
+
+		/**
+		*移除指定键名的值。
+		*@param key 键名对象。
+		*@return 是否成功移除。
+		*/
+		__proto.remove=function(key){
+			var index=this.indexOf(key);
+			if (index >=0){
+				this._keys.splice(index,1);
+				this._values.splice(index,1);
+				return true;
+			}
+			return false;
+		}
+
+		/**
+		*清除此对象的键名列表和键值列表。
+		*/
+		__proto.clear=function(){
+			this._values.length=0;
+			this._keys.length=0;
+		}
+
+		/**
+		*获取所有的子元素列表。
+		*/
+		__getset(0,__proto,'values',function(){
+			return this._values;
+		});
+
+		/**
+		*获取所有的子元素键名列表。
+		*/
+		__getset(0,__proto,'keys',function(){
+			return this._keys;
+		});
+
+		return Dictionary;
+	})()
+
+
+	/**
 	*<code>Dragging</code> 类是触摸滑动控件。
 	*/
 	//class laya.utils.Dragging
@@ -7832,237 +8357,303 @@ var Laya=window.Laya=(function(window,document){
 
 
 	/**
-	*<code>Resource</code> 资源存取类。
+	*...
+	*@author Kanon
 	*/
-	//class laya.resource.Resource extends laya.events.EventDispatcher
-	var Resource=(function(_super){
-		function Resource(){
-			this._id=0;
-			this._lastUseFrameCount=0;
-			this._memorySize=0;
-			this._name=null;
-			this._loaded=false;
-			this._released=false;
-			this._resourceManager=null;
-			this.lock=false;
-			Resource.__super.call(this);
-			this._$1__id=++Resource._uniqueIDCounter;
-			Resource._loadedResources.push(this);
-			Resource._isLoadedResourcesSorted=false;
-			this._released=true;
-			this.lock=false;
-			this._memorySize=0;
-			this._lastUseFrameCount=-1;
-			(ResourceManager.currentResourceManager)&& (ResourceManager.currentResourceManager.addResource(this));
+	//class controller.InitDataCommand extends mvc.Command
+	var InitDataCommand=(function(_super){
+		function InitDataCommand(){InitDataCommand.__super.call(this);;
+		};
+
+		__class(InitDataCommand,'controller.InitDataCommand',_super);
+		var __proto=InitDataCommand.prototype;
+		__proto.execute=function(notification){
+			this.facade.initData();
 		}
 
-		__class(Resource,'laya.resource.Resource',_super);
-		var __proto=Resource.prototype;
-		Laya.imps(__proto,{"laya.resource.ICreateResource":true,"laya.resource.IDispose":true})
-		/**重新创建资源。override it，同时修改memorySize属性、处理startCreate()和compoleteCreate()方法。*/
-		__proto.recreateResource=function(){
-			this.startCreate();
-			this.completeCreate();
+		return InitDataCommand;
+	})(Command)
+
+
+	/**
+	*...初始化数据代理
+	*@author Kanon
+	*/
+	//class controller.ModelCommand extends mvc.Command
+	var ModelCommand=(function(_super){
+		function ModelCommand(){ModelCommand.__super.call(this);;
+		};
+
+		__class(ModelCommand,'controller.ModelCommand',_super);
+		var __proto=ModelCommand.prototype;
+		__proto.execute=function(notification){
+			this.facade.registerProxy(new EquipProxy());
+			this.facade.registerProxy(new EnemyProxy());
+			this.facade.registerProxy(new PlayerProxy());
 		}
 
-		/**销毁资源，override it,同时修改memorySize属性。*/
-		__proto.detoryResource=function(){}
+		return ModelCommand;
+	})(Command)
+
+
+	/**
+	*...视图command
+	*@author Kanon
+	*/
+	//class controller.ViewCommand extends mvc.Command
+	var ViewCommand=(function(_super){
+		function ViewCommand(){ViewCommand.__super.call(this);;
+		};
+
+		__class(ViewCommand,'controller.ViewCommand',_super);
+		var __proto=ViewCommand.prototype;
+		__proto.execute=function(notification){
+			this.facade.registerMediator(new GameStageMediator());
+		}
+
+		return ViewCommand;
+	})(Command)
+
+
+	/**
+	*...敌人静态数据
+	*@author ...Kanon
+	*/
+	//class model.proxy.EnemyProxy extends mvc.Proxy
+	var EnemyProxy=(function(_super){
+		function EnemyProxy(){
+			this.enemyDict=null;
+			this.enemyAry=null;
+			this.isLoaded=false;
+			EnemyProxy.__super.call(this);
+			this.proxyName="EnemyProxy";
+		}
+
+		__class(EnemyProxy,'model.proxy.EnemyProxy',_super);
+		var __proto=EnemyProxy.prototype;
 		/**
-		*激活资源，使用资源前应先调用此函数激活。
-		*@param force 是否强制创建。
+		*初始化数据
 		*/
-		__proto.activeResource=function(force){
-			(force===void 0)&& (force=false);
-			this._lastUseFrameCount=Stat.loopCount;
-			if (this._released || force){
-				this.recreateResource();
-			}
-		}
-
-		/**
-		*释放资源。
-		*@param force 是否强制释放。
-		*@return 是否成功释放。
-		*/
-		__proto.releaseResource=function(force){
-			(force===void 0)&& (force=false);
-			if (!force && this.lock)
-				return false;
-			if (!this._released || force){
-				this.detoryResource();
-				this._released=true;
-				this._lastUseFrameCount=-1;
-				this.event("released",this);
-				return true;
-				}else {
-				return false;
-			}
-		}
-
-		/**
-		*设置唯一名字,如果名字重复则自动加上“-copy”。
-		*@param newName 名字。
-		*/
-		__proto.setUniqueName=function(newName){
-			var isUnique=true;
-			for (var i=0;i < Resource._loadedResources.length;i++){
-				if (Resource._loadedResources[i]._name!==newName || Resource._loadedResources[i]===this)
-					continue ;
-				isUnique=false;
-				return;
-			}
-			if (isUnique){
-				if (this.name !=newName){
-					this.name=newName;
-					Resource._isLoadedResourcesSorted=false;
+		__proto.initData=function(){
+			this.isLoaded=false;
+			this.enemyAry=[];
+			this.enemyDict=new Dictionary();
+			Laya.loader.load("data/enemy.xml",Handler.create(this,function(data){
+				var xml=Laya.loader.getRes("data/enemy.xml");
+				var elementList=xml.getElementsByTagName("enemy");
+				var count=elementList.length;
+				for (var i=0;i < count;++i){
+					var childNode=elementList[i];
+					var enemyPo=new EnemyPo();
+					enemyPo.id=childNode.getAttribute("id");
+					enemyPo.name=String(childNode.getAttribute("name"));
+					enemyPo.hp=childNode.getAttribute("hp");
+					enemyPo.atk=Number(childNode.getAttribute("atk"));
+					enemyPo.exp=childNode.getAttribute("exp");
+					enemyPo.type=childNode.getAttribute("type");
+					enemyPo.level=childNode.getAttribute("level");
+					enemyPo.pic=String(childNode.getAttribute("pic"));
+					if (!this.enemyDict.get(enemyPo.level))
+						this.enemyDict.set(enemyPo.level,[]);
+					var arr=this.enemyDict.get(enemyPo.level);
+					arr.push(enemyPo);
+					this.enemyAry.push(enemyPo);
 				}
-				}else{
-				this.setUniqueName(newName.concat("-copy"));
+				this.isLoaded=true;
+			}));
+		}
+
+		/**
+		*根据层数获取敌人列表
+		*@param level 层数
+		*@return 敌人列表
+		*/
+		__proto.getEnemyListByLevel=function(level){
+			return this.enemyDict.get(level);
+		}
+
+		/**
+		*根据id获取敌人数据
+		*@param id 敌人id
+		*@return 敌人数据
+		*/
+		__proto.getEnemyPoById=function(id){
+			if (!this.enemyAry)return null;
+			var count=this.enemyAry.length;
+			for (var i=0;i < count;i++){
+				var ePo=this.enemyAry[i];
+				if (ePo.id==id)
+					return ePo;
 			}
+			return null;
+		}
+
+		EnemyProxy.NAME="EnemyProxy";
+		return EnemyProxy;
+	})(Proxy)
+
+
+	/**
+	*...装备数据代理
+	*@author ...Kanon
+	*/
+	//class model.proxy.EquipProxy extends mvc.Proxy
+	var EquipProxy=(function(_super){
+		function EquipProxy(){
+			this.isLoaded=false;
+			this.equipAry=null;
+			EquipProxy.__super.call(this);
+		}
+
+		__class(EquipProxy,'model.proxy.EquipProxy',_super);
+		var __proto=EquipProxy.prototype;
+		__proto.initData=function(){
+			this.equipAry=[];
+			Laya.loader.load("data/equip.xml",Handler.create(this,function(data){
+				var xml=Laya.loader.getRes("data/equip.xml");
+				var elementList=xml.getElementsByTagName("equip");
+				var count=elementList.length;
+				for (var i=0;i < count;++i){
+					var childNode=elementList[i];
+					var ePo=new EquipPo();
+					ePo.id=childNode.getAttribute("id");
+					ePo.type=childNode.getAttribute("type");
+					if (ePo.type==1)ePo.atk=String(childNode.getAttribute("atk")).split(",");
+					if (ePo.type !=1)ePo.def=childNode.getAttribute("def");
+					ePo.name=childNode.getAttribute("name");
+					ePo.pic=childNode.getAttribute("pic");
+					this.equipAry.push(ePo);
+				}
+				this.isLoaded=true;
+			}));
 		}
 
 		/**
-		*@private
+		*根据id获取装备数据
+		*@param id 装备id
+		*@return 装备数据
 		*/
-		__proto.onAsynLoaded=function(url,data){
-			throw new Error("Resource: must override this function!");
-		}
-
-		/**
-		*<p>彻底清理资源。</p>
-		*<p><b>注意：</b>会强制解锁清理。</p>
-		*/
-		__proto.dispose=function(){
-			if (this._resourceManager!==null)
-				throw new Error("附属于resourceManager的资源不能独立释放！");
-			this.lock=false;
-			this.releaseResource();
-			var index=Resource._loadedResources.indexOf(this);
-			if (index!==-1){
-				Resource._loadedResources.splice(index,1);
-				Resource._isLoadedResourcesSorted=false;
+		__proto.getEquipPoById=function(id){
+			if (!this.equipAry)return null;
+			var count=this.equipAry.length;
+			for (var i=0;i < count;i++){
+				var ePo=this.equipAry[i];
+				if (ePo.id==id)
+					return ePo;
 			}
+			return null;
 		}
 
-		/**开始资源激活。*/
-		__proto.startCreate=function(){
-			this.event("recovering",this);
+		EquipProxy.NAME="EquipProxy";
+		return EquipProxy;
+	})(Proxy)
+
+
+	/**
+	*...玩家静态数据
+	*@author ...Kanon
+	*/
+	//class model.proxy.PlayerProxy extends mvc.Proxy
+	var PlayerProxy=(function(_super){
+		function PlayerProxy(){
+			this.isLoaded=false;
+			this.levelAry=null;
+			this.pVo=null;
+			PlayerProxy.__super.call(this);
+			this.proxyName="PlayerProxy";
 		}
 
-		/**完成资源激活。*/
-		__proto.completeCreate=function(){
-			this._released=false;
-			this.event("recovered",this);
+		__class(PlayerProxy,'model.proxy.PlayerProxy',_super);
+		var __proto=PlayerProxy.prototype;
+		/**
+		*初始化数据
+		*/
+		__proto.initData=function(){
+			this.levelAry=[];
+			this.isLoaded=false;
+			Laya.loader.load("data/player.xml",Handler.create(this,function(data){
+				var xml=Laya.loader.getRes("data/player.xml");
+				var elementList=xml.getElementsByTagName("player");
+				var count=elementList.length;
+				for (var i=0;i < count;++i){
+					var childNode=elementList[i];
+					var playerPo=new PlayerPo();
+					playerPo.atk=childNode.getAttribute("atk");
+					playerPo.hp=childNode.getAttribute("hp");
+					playerPo.def=childNode.getAttribute("def");
+					playerPo.exp=childNode.getAttribute("exp");
+					playerPo.magic=childNode.getAttribute("magic");
+					playerPo.level=childNode.getAttribute("level");
+					this.levelAry.push(playerPo);
+				}
+				this.isLoaded=true;
+				this.pVo=new PlayerVo();
+				this.pVo.level=0;
+				var pPo=this.getPlayerPoByLevel(this.pVo.level);
+				this.pVo.maxExp=pPo.exp;
+				this.pVo.maxHp=pPo.hp;
+				this.pVo.curHp=this.pVo.maxHp;
+				this.pVo.curExp=0;
+				console.log(this.pVo.curHp,this.pVo.level,this.pVo.maxExp);
+				this.sendNotification("START_FIGHT");
+			}));
 		}
 
-		__getset(0,__proto,'loaded',function(){
-			return this._loaded;
-		});
-
 		/**
-		*获取唯一标识ID(通常用于优化或识别)。
+		*根据等级获取角色数据
+		*@param level 等级
+		*@return 角色数据
 		*/
-		__getset(0,__proto,'id',function(){
-			return this._$1__id;
-		});
-
-		/**
-		*是否已释放。
-		*/
-		__getset(0,__proto,'released',function(){
-			return this._released;
-		});
-
-		/**
-		*设置名字
-		*/
-		/**
-		*获取名字。
-		*/
-		__getset(0,__proto,'name',function(){
-			return this._name;
-			},function(value){
-			if ((value || value!=="")&& this.name!==value){
-				this._name=value;
-				Resource._isLoadedResourcesSorted=false;
+		__proto.getPlayerPoByLevel=function(level){
+			if (!this.levelAry)return null;
+			var count=this.levelAry.length;
+			for (var i=0;i < count;++i){
+				var playerPo=this.levelAry[i];
+				if (playerPo.level==level)
+					return playerPo;
 			}
-		});
-
-		/**
-		*距离上次使用帧率。
-		*/
-		__getset(0,__proto,'lastUseFrameCount',function(){
-			return this._lastUseFrameCount;
-		});
-
-		/**
-		*资源管理员。
-		*/
-		__getset(0,__proto,'resourceManager',function(){
-			return this._resourceManager;
-		});
-
-		/**
-		*占用内存尺寸。
-		*/
-		__getset(0,__proto,'memorySize',function(){
-			return this._memorySize;
-			},function(value){
-			var offsetValue=value-this._memorySize;
-			this._memorySize=value;
-			this.resourceManager && this.resourceManager.addSize(offsetValue);
-		});
-
-		/**
-		*本类型排序后的已载入资源。
-		*/
-		__getset(1,Resource,'sortedLoadedResourcesByName',function(){
-			if (!Resource._isLoadedResourcesSorted){
-				Resource._isLoadedResourcesSorted=true;
-				Resource._loadedResources.sort(Resource.compareResourcesByName);
-			}
-			return Resource._loadedResources;
-		},laya.events.EventDispatcher._$SET_sortedLoadedResourcesByName);
-
-		Resource.getLoadedResourceByIndex=function(index){
-			return Resource._loadedResources[index];
+			return null;
 		}
 
-		Resource.getLoadedResourcesCount=function(){
-			return Resource._loadedResources.length;
+		PlayerProxy.NAME="PlayerProxy";
+		return PlayerProxy;
+	})(Proxy)
+
+
+	/**
+	*...战斗系统中介
+	*@author ...Kanon
+	*/
+	//class view.mediator.GameStageMediator extends mvc.Mediator
+	var GameStageMediator=(function(_super){
+		function GameStageMediator(){
+			this.gameStage=null;
+			GameStageMediator.__super.call(this);
 		}
 
-		Resource.compareResourcesByName=function(left,right){
-			if (left===right)
-				return 0;
-			var x=left.name;
-			var y=right.name;
-			if (x===null){
-				if (y===null)
-					return 0;
-				else
-				return-1;
-				}else {
-				if (y==null)
-					return 1;
-				else {
-					var retval=x.localeCompare(y);
-					if (retval !=0)
-						return retval;
-					else {
-						right.setUniqueName(y);
-						y=right.name;
-						return x.localeCompare(y);
+		__class(GameStageMediator,'view.mediator.GameStageMediator',_super);
+		var __proto=GameStageMediator.prototype;
+		__proto.listNotificationInterests=function(){
+			var vect=[];
+			vect.push("START_FIGHT");
+			return vect;
+		}
+
+		__proto.handleNotification=function(notification){
+			switch (notification.notificationName){
+				case "START_FIGHT":
+					if (!this.gameStage){
+						console.log("ininin")
+						this.gameStage=new GameStageLayer();
+						Layer.GAME_STAGE.addChild(this.gameStage);
 					}
+					break ;
+				default :
 				}
-			}
 		}
 
-		Resource._uniqueIDCounter=0;
-		Resource._loadedResources=[];
-		Resource._isLoadedResourcesSorted=false;
-		return Resource;
-	})(EventDispatcher)
+		return GameStageMediator;
+	})(Mediator)
 
 
 	/**
@@ -8490,6 +9081,240 @@ var Laya=window.Laya=(function(window,document){
 		Node.ARRAY_EMPTY=[];
 		Node.PROP_EMPTY={};
 		return Node;
+	})(EventDispatcher)
+
+
+	/**
+	*<code>Resource</code> 资源存取类。
+	*/
+	//class laya.resource.Resource extends laya.events.EventDispatcher
+	var Resource=(function(_super){
+		function Resource(){
+			this._id=0;
+			this._lastUseFrameCount=0;
+			this._memorySize=0;
+			this._name=null;
+			this._loaded=false;
+			this._released=false;
+			this._resourceManager=null;
+			this.lock=false;
+			Resource.__super.call(this);
+			this._$1__id=++Resource._uniqueIDCounter;
+			Resource._loadedResources.push(this);
+			Resource._isLoadedResourcesSorted=false;
+			this._released=true;
+			this.lock=false;
+			this._memorySize=0;
+			this._lastUseFrameCount=-1;
+			(ResourceManager.currentResourceManager)&& (ResourceManager.currentResourceManager.addResource(this));
+		}
+
+		__class(Resource,'laya.resource.Resource',_super);
+		var __proto=Resource.prototype;
+		Laya.imps(__proto,{"laya.resource.ICreateResource":true,"laya.resource.IDispose":true})
+		/**重新创建资源。override it，同时修改memorySize属性、处理startCreate()和compoleteCreate()方法。*/
+		__proto.recreateResource=function(){
+			this.startCreate();
+			this.completeCreate();
+		}
+
+		/**销毁资源，override it,同时修改memorySize属性。*/
+		__proto.detoryResource=function(){}
+		/**
+		*激活资源，使用资源前应先调用此函数激活。
+		*@param force 是否强制创建。
+		*/
+		__proto.activeResource=function(force){
+			(force===void 0)&& (force=false);
+			this._lastUseFrameCount=Stat.loopCount;
+			if (this._released || force){
+				this.recreateResource();
+			}
+		}
+
+		/**
+		*释放资源。
+		*@param force 是否强制释放。
+		*@return 是否成功释放。
+		*/
+		__proto.releaseResource=function(force){
+			(force===void 0)&& (force=false);
+			if (!force && this.lock)
+				return false;
+			if (!this._released || force){
+				this.detoryResource();
+				this._released=true;
+				this._lastUseFrameCount=-1;
+				this.event("released",this);
+				return true;
+				}else {
+				return false;
+			}
+		}
+
+		/**
+		*设置唯一名字,如果名字重复则自动加上“-copy”。
+		*@param newName 名字。
+		*/
+		__proto.setUniqueName=function(newName){
+			var isUnique=true;
+			for (var i=0;i < Resource._loadedResources.length;i++){
+				if (Resource._loadedResources[i]._name!==newName || Resource._loadedResources[i]===this)
+					continue ;
+				isUnique=false;
+				return;
+			}
+			if (isUnique){
+				if (this.name !=newName){
+					this.name=newName;
+					Resource._isLoadedResourcesSorted=false;
+				}
+				}else{
+				this.setUniqueName(newName.concat("-copy"));
+			}
+		}
+
+		/**
+		*@private
+		*/
+		__proto.onAsynLoaded=function(url,data){
+			throw new Error("Resource: must override this function!");
+		}
+
+		/**
+		*<p>彻底清理资源。</p>
+		*<p><b>注意：</b>会强制解锁清理。</p>
+		*/
+		__proto.dispose=function(){
+			if (this._resourceManager!==null)
+				throw new Error("附属于resourceManager的资源不能独立释放！");
+			this.lock=false;
+			this.releaseResource();
+			var index=Resource._loadedResources.indexOf(this);
+			if (index!==-1){
+				Resource._loadedResources.splice(index,1);
+				Resource._isLoadedResourcesSorted=false;
+			}
+		}
+
+		/**开始资源激活。*/
+		__proto.startCreate=function(){
+			this.event("recovering",this);
+		}
+
+		/**完成资源激活。*/
+		__proto.completeCreate=function(){
+			this._released=false;
+			this.event("recovered",this);
+		}
+
+		__getset(0,__proto,'loaded',function(){
+			return this._loaded;
+		});
+
+		/**
+		*获取唯一标识ID(通常用于优化或识别)。
+		*/
+		__getset(0,__proto,'id',function(){
+			return this._$1__id;
+		});
+
+		/**
+		*是否已释放。
+		*/
+		__getset(0,__proto,'released',function(){
+			return this._released;
+		});
+
+		/**
+		*设置名字
+		*/
+		/**
+		*获取名字。
+		*/
+		__getset(0,__proto,'name',function(){
+			return this._name;
+			},function(value){
+			if ((value || value!=="")&& this.name!==value){
+				this._name=value;
+				Resource._isLoadedResourcesSorted=false;
+			}
+		});
+
+		/**
+		*距离上次使用帧率。
+		*/
+		__getset(0,__proto,'lastUseFrameCount',function(){
+			return this._lastUseFrameCount;
+		});
+
+		/**
+		*资源管理员。
+		*/
+		__getset(0,__proto,'resourceManager',function(){
+			return this._resourceManager;
+		});
+
+		/**
+		*占用内存尺寸。
+		*/
+		__getset(0,__proto,'memorySize',function(){
+			return this._memorySize;
+			},function(value){
+			var offsetValue=value-this._memorySize;
+			this._memorySize=value;
+			this.resourceManager && this.resourceManager.addSize(offsetValue);
+		});
+
+		/**
+		*本类型排序后的已载入资源。
+		*/
+		__getset(1,Resource,'sortedLoadedResourcesByName',function(){
+			if (!Resource._isLoadedResourcesSorted){
+				Resource._isLoadedResourcesSorted=true;
+				Resource._loadedResources.sort(Resource.compareResourcesByName);
+			}
+			return Resource._loadedResources;
+		},laya.events.EventDispatcher._$SET_sortedLoadedResourcesByName);
+
+		Resource.getLoadedResourceByIndex=function(index){
+			return Resource._loadedResources[index];
+		}
+
+		Resource.getLoadedResourcesCount=function(){
+			return Resource._loadedResources.length;
+		}
+
+		Resource.compareResourcesByName=function(left,right){
+			if (left===right)
+				return 0;
+			var x=left.name;
+			var y=right.name;
+			if (x===null){
+				if (y===null)
+					return 0;
+				else
+				return-1;
+				}else {
+				if (y==null)
+					return 1;
+				else {
+					var retval=x.localeCompare(y);
+					if (retval !=0)
+						return retval;
+					else {
+						right.setUniqueName(y);
+						y=right.name;
+						return x.localeCompare(y);
+					}
+				}
+			}
+		}
+
+		Resource._uniqueIDCounter=0;
+		Resource._loadedResources=[];
+		Resource._isLoadedResourcesSorted=false;
+		return Resource;
 	})(EventDispatcher)
 
 
@@ -12365,6 +13190,37 @@ var Laya=window.Laya=(function(window,document){
 
 
 	/**
+	*...战斗场景
+	*@author ...
+	*/
+	//class view.ui.GameStageLayer extends laya.display.Sprite
+	var GameStageLayer=(function(_super){
+		function GameStageLayer(){
+			this.player=null;
+			this.enemyAry=null;
+			this.rolePosY=350;
+			GameStageLayer.__super.call(this);
+			this.initUI();
+		}
+
+		__class(GameStageLayer,'view.ui.GameStageLayer',_super);
+		var __proto=GameStageLayer.prototype;
+		/**
+		*初始化UI
+		*/
+		__proto.initUI=function(){
+			this.player=new Sprite();
+			this.player.graphics.drawRect(0,-200,150,200,"#ff0000");
+			this.addChild(this.player);
+			this.player.x=0;
+			this.player.y=this.rolePosY;
+		}
+
+		return GameStageLayer;
+	})(Sprite)
+
+
+	/**
 	*<p> <code>Text</code> 类用于创建显示对象以显示文本。</p>
 	*@example 以下示例代码，创建了一个 <code>Text</code> 实例。
 	*<listing version="3.0">
@@ -14471,7 +15327,7 @@ var Laya=window.Laya=(function(window,document){
 	})(FileBitmap)
 
 
-	Laya.__init([EventDispatcher,LoaderManager,Render,Browser,LocalStorage,Timer]);
+	Laya.__init([LoaderManager,EventDispatcher,Render,NotificationCenter,Facade,Browser,LocalStorage,Timer]);
 	new Main();
 
 })(window,document,Laya);

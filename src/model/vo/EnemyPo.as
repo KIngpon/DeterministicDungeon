@@ -4,7 +4,7 @@ package model.vo
  * ...敌人数据
  * @author ...Kanon
  */
-public class EnemyVo 
+public class EnemyPo 
 {
 	//id
 	public var id:int;
@@ -22,7 +22,7 @@ public class EnemyVo
 	public var type:int;
 	//图片或动画名称
 	public var pic:String;
-	public function EnemyVo() 
+	public function EnemyPo() 
 	{
 		
 	}

@@ -7,9 +7,10 @@ package mvc
 public class Proxy 
 {
 	public var proxyName:String;
+	protected var facade:Facade;
 	public function Proxy() 
 	{
-		
+		this.facade = Facade.getInstance();
 	}
 	
 	protected function retrieveMediator(name:String):Mediator
@@ -20,6 +21,11 @@ public class Proxy
 	protected function retrieveProxy(name:String):Proxy
 	{
 		return Facade.getInstance().retrieveProxy(name);
+	}
+	
+	protected function sendNotification(notificationName:String, body:Object):void
+	{
+		this.facade.sendNotification(notificationName, body);
 	}
 	
 	/**
