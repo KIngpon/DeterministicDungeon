@@ -1,5 +1,6 @@
 package view.ui 
 {
+import config.GameConstant;
 import laya.display.Sprite;
 /**
  * ...战斗场景
@@ -11,8 +12,7 @@ public class GameStageLayer extends Sprite
 	public var player:Sprite;
 	//敌人列表
 	public var enemyAry:Array;
-	//人物坐标
-	private var rolePosY:Number = 380;
+
 	public function GameStageLayer() 
 	{
 		this.initUI();
@@ -24,10 +24,21 @@ public class GameStageLayer extends Sprite
 	public function initUI():void
 	{
 		this.player = new Sprite();
-		this.player.graphics.drawRect(0, -200, 150, 200, "#ff0000");
+		this.player.graphics.drawRect(0, -120, 70, 120, "#ff0000");
 		this.addChild(this.player);
-		this.player.x = 0;
-		this.player.y = this.rolePosY;
+		this.player.x = 160;
+		this.player.y = GameConstant.ROLE_POS_Y;
+		
+		var gap:Number = 30;
+		for (var i:int = 0; i < GameConstant.ENEMY_NUM; i++) 
+		{
+			var enemy:Sprite = new Sprite();
+			enemy.graphics.drawRect(0, -120, 70, 120, "#ff00ff");
+			enemy.x = 600 + i * (70 + gap);
+			enemy.y = GameConstant.ROLE_POS_Y;
+			this.addChild(enemy);
+			trace(enemy.x);
+		}
 	}
 	
 }

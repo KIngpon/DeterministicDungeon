@@ -6,7 +6,10 @@ package config
  */
 public class GameConstant 
 {
-	static public const GAME_WIDTH:int = 960;
-	static public const GAME_HEIGHT:int = 640;
+	public static const GAME_WIDTH:int = 960;
+	public static const GAME_HEIGHT:int = 640;
+	public static const ENEMY_NUM:int = 3;
+	//人物坐标
+	public static const ROLE_POS_Y:int = 380;
 }
 }

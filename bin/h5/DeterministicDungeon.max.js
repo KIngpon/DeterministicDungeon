@@ -387,6 +387,8 @@ var Laya=window.Laya=(function(window,document){
 		__class(GameConstant,'config.GameConstant');
 		GameConstant.GAME_WIDTH=960;
 		GameConstant.GAME_HEIGHT=640;
+		GameConstant.ENEMY_NUM=3;
+		GameConstant.ROLE_POS_Y=380;
 		return GameConstant;
 	})()
 
@@ -470,11 +472,11 @@ var Laya=window.Laya=(function(window,document){
 		__class(Proxy,'mvc.Proxy');
 		var __proto=Proxy.prototype;
 		__proto.retrieveMediator=function(name){
-			return Facade.getInstance().retrieveMediator(name);
+			return this.facade.retrieveMediator(name);
 		}
 
 		__proto.retrieveProxy=function(name){
-			return Facade.getInstance().retrieveProxy(name);
+			return this.facade.retrieveProxy(name);
 		}
 
 		__proto.sendNotification=function(notificationName,body){
@@ -8643,7 +8645,6 @@ var Laya=window.Laya=(function(window,document){
 			switch (notification.notificationName){
 				case "START_FIGHT":
 					if (!this.gameStage){
-						console.log("ininin")
 						this.gameStage=new GameStageLayer();
 						Layer.GAME_STAGE.addChild(this.gameStage);
 					}
@@ -13198,7 +13199,6 @@ var Laya=window.Laya=(function(window,document){
 		function GameStageLayer(){
 			this.player=null;
 			this.enemyAry=null;
-			this.rolePosY=350;
 			GameStageLayer.__super.call(this);
 			this.initUI();
 		}
@@ -13210,10 +13210,19 @@ var Laya=window.Laya=(function(window,document){
 		*/
 		__proto.initUI=function(){
 			this.player=new Sprite();
-			this.player.graphics.drawRect(0,-200,150,200,"#ff0000");
+			this.player.graphics.drawRect(0,-120,70,120,"#ff0000");
 			this.addChild(this.player);
-			this.player.x=0;
-			this.player.y=this.rolePosY;
+			this.player.x=160;
+			this.player.y=380;
+			var gap=30;
+			for (var i=0;i < 3;i++){
+				var enemy=new Sprite();
+				enemy.graphics.drawRect(0,-120,70,120,"#ff00ff");
+				enemy.x=600+i *(70+gap);
+				enemy.y=380;
+				this.addChild(enemy);
+				console.log(enemy.x);
+			}
 		}
 
 		return GameStageLayer;

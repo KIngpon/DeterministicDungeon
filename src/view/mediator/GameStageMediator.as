@@ -32,7 +32,6 @@ public class GameStageMediator extends Mediator
 			case MsgConstant.START_FIGHT:
 				if (!this.gameStage)
 				{
-					trace("ininin")
 					this.gameStage = new GameStageLayer();
 					Layer.GAME_STAGE.addChild(this.gameStage);
 				}
