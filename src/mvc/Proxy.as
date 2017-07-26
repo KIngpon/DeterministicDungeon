@@ -15,12 +15,12 @@ public class Proxy
 	
 	protected function retrieveMediator(name:String):Mediator
 	{
-		return Facade.getInstance().retrieveMediator(name);
+		return this.facade.retrieveMediator(name);
 	}
 	
 	protected function retrieveProxy(name:String):Proxy
 	{
-		return Facade.getInstance().retrieveProxy(name);
+		return this.facade.retrieveProxy(name);
 	}
 	
 	protected function sendNotification(notificationName:String, body:Object):void
