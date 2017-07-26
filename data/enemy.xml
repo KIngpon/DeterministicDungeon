@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<enemys>
+	<enemy id="1" name="史莱姆" hp="1" akt="1" level="1" exp="1" type="1" pic="0"/>
+	<enemy id="2" name="哥布林" hp="2" akt="1.1" level="1" exp="2" type="1" pic="1"/>
+	<enemy id="3" name="巨魔" hp="3" akt="1.2" level="1" exp="3" type="1" pic="2"/>
+	<enemy id="4" name="利维坦" hp="10" akt="1.5" level="1" exp="10" type="2" pic="3"/>
+	<enemy id="5" name="狼" hp="5" akt="1.5" level="2" exp="5" type="1" pic="4"/>
+	<enemy id="6" name="木头傀儡" hp="5" akt="2" level="2" exp="5" type="1" pic="5"/>
+	<enemy id="7" name="石头傀儡" hp="6" akt="2.5" level="2" exp="6" type="1" pic="6"/>
+	<enemy id="8" name="斯卡塔" hp="15" akt="3" level="2" exp="20" type="2" pic="7"/>
+	<enemy id="9" name="蜘蛛" hp="8" akt="3" level="3" exp="6" type="1" pic="8"/>
+	<enemy id="10" name="骷髅兵" hp="9" akt="3.5" level="3" exp="5" type="1" pic="9"/>
+	<enemy id="11" name="獠牙兽" hp="10" akt="4" level="3" exp="7" type="1" pic="10"/>
+	<enemy id="12" name="哈特尼根" hp="20" akt="5.5" level="3" exp="20" type="2" pic="11"/>
+</enemys>
