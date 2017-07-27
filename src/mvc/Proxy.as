@@ -7,7 +7,7 @@ package mvc
 public class Proxy 
 {
 	public var proxyName:String;
-	protected var facade:Facade;
+	protected var facade:Facade
 	public function Proxy() 
 	{
 		this.facade = Facade.getInstance();

@@ -2,7 +2,7 @@ package model.vo
 {
 /**
  * ...角色动态数据
- * @author ...
+ * @author ...Kanon
  */
 public class PlayerVo 
 {
@@ -14,6 +14,12 @@ public class PlayerVo
 	public var maxExp:int;
 	//等级
 	public var level:int;
+	//当前层数
+	public var curLevelNum:int;
+	//当前关卡输
+	public var curStageNum:int;
+	//是否是当前层里的第一步
+	public var isFirstStep:Boolean;
 	public function PlayerVo() 
 	{
 		

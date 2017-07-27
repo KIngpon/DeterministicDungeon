@@ -388,7 +388,8 @@ var Laya=window.Laya=(function(window,document){
 		GameConstant.GAME_WIDTH=960;
 		GameConstant.GAME_HEIGHT=640;
 		GameConstant.ENEMY_NUM=3;
-		GameConstant.ROLE_POS_Y=380;
+		GameConstant.ROLE_POS_Y=450;
+		GameConstant.DEBUG=true;
 		return GameConstant;
 	})()
 
@@ -401,6 +402,7 @@ var Laya=window.Laya=(function(window,document){
 	var MsgConstant=(function(){
 		function MsgConstant(){};
 		__class(MsgConstant,'config.MsgConstant');
+		MsgConstant.INIT_FIGHT_STAGE="INIT_FIGHT_STAGE";
 		MsgConstant.START_FIGHT="START_FIGHT";
 		return MsgConstant;
 	})()
@@ -413,7 +415,7 @@ var Laya=window.Laya=(function(window,document){
 	//class mvc.Command
 	var Command=(function(){
 		function Command(){
-			this.facade=null;
+			this.facade
 			this.facade=Facade.getInstance();
 		}
 
@@ -465,7 +467,7 @@ var Laya=window.Laya=(function(window,document){
 	var Proxy=(function(){
 		function Proxy(){
 			this.proxyName=null;
-			this.facade=null;
+			this.facade
 			this.facade=Facade.getInstance();
 		}
 
@@ -558,7 +560,7 @@ var Laya=window.Laya=(function(window,document){
 
 	/**
 	*...角色动态数据
-	*@author ...
+	*@author ...Kanon
 	*/
 	//class model.vo.PlayerVo
 	var PlayerVo=(function(){
@@ -568,6 +570,9 @@ var Laya=window.Laya=(function(window,document){
 			this.curExp=0;
 			this.maxExp=0;
 			this.level=0;
+			this.curLevelNum=0;
+			this.curStageNum=0;
+			this.isFirstStep=false;
 		}
 
 		__class(PlayerVo,'model.vo.PlayerVo');
@@ -691,8 +696,8 @@ var Laya=window.Laya=(function(window,document){
 			this.notificationList=null;
 			this.facade=null;
 			this.mediatorName=null;
-			this.notificationList=this.listNotificationInterests();
 			this.facade=Facade.getInstance();
+			this.notificationList=this.listNotificationInterests();
 			NotificationCenter.getInstance().addObserver("_mvc_message",this.getNotificationHandler,this);
 		}
 
@@ -843,6 +848,85 @@ var Laya=window.Laya=(function(window,document){
 		}
 
 		return NotificationCenter;
+	})()
+
+
+	//class utils.Random
+	var Random=(function(){
+		function Random(){};
+		__class(Random,'utils.Random');
+		Random.randrange=function(start,stop,step){
+			(step===void 0)&& (step=1);
+			if (step==0)
+				throw new Error('step 不能为 0');
+			var width=stop-start;
+			if (width==0)
+				throw new Error('没有可用的范围('+start+','+stop+')');
+			if (width < 0)
+				width=start-stop;
+			var n=parseInt((width+step-1)/ step);
+			return parseInt(Random.random()*n)*step+Math.min(start,stop);
+		}
+
+		Random.randint=function(a,b){
+			if (a > b)
+				a++;
+			else
+			b++;
+			return Random.randrange(a,b);
+		}
+
+		Random.randnum=function(a,b){
+			return Random.random()*(b-a)+a;
+		}
+
+		Random.shuffle=function(array){
+			array.sort(Random._randomCompare);
+			return array;
+		}
+
+		Random._randomCompare=function(a,b){
+			return (Random.random()>.5)? 1 :-1;
+		}
+
+		Random.choice=function(sequence){
+			if (!sequence.hasOwnProperty('length'))
+				throw new Error('无法对此对象执行此操作');
+			var index=parseInt(Random.random()*sequence.length);
+			if ((typeof sequence=='string'))
+				return String(sequence).charAt(index);
+			else
+			return sequence[index];
+		}
+
+		Random.sample=function(sequence,num){
+			if (!sequence.hasOwnProperty('length'))
+				throw new Error('无法对此对象执行此操作');
+			var len=sequence.length;
+			if (num <=0 || len < num)
+				throw new Error('采样数量不够');
+			var selected=[];
+			var indices=[];
+			for (var i=0;i < num;i++){
+				var index=parseInt(Random.random()*len);
+				while (indices.indexOf(index)>=0)
+				index=parseInt(Random.random()*len);
+				selected.push(sequence[index]);
+				indices.push(index);
+			}
+			return selected;
+		}
+
+		Random.random=function(){
+			return Math.random();
+		}
+
+		Random.boolean=function(chance){
+			(chance===void 0)&& (chance=.5);
+			return (utils.Random.random()< chance)? true:false;
+		}
+
+		return Random;
 	})()
 
 
@@ -2802,6 +2886,116 @@ var Laya=window.Laya=(function(window,document){
 		Event.WORLDMATRIX_NEEDCHANGE="worldmatrixneedchanged";
 		Event.ANIMATION_CHANGED="animationchanged";
 		return Event;
+	})()
+
+
+	/**
+	*<code>Keyboard</code> 类的属性是一些常数，这些常数表示控制游戏时最常用的键。
+	*/
+	//class laya.events.Keyboard
+	var Keyboard=(function(){
+		function Keyboard(){};
+		__class(Keyboard,'laya.events.Keyboard');
+		Keyboard.NUMBER_0=48;
+		Keyboard.NUMBER_1=49;
+		Keyboard.NUMBER_2=50;
+		Keyboard.NUMBER_3=51;
+		Keyboard.NUMBER_4=52;
+		Keyboard.NUMBER_5=53;
+		Keyboard.NUMBER_6=54;
+		Keyboard.NUMBER_7=55;
+		Keyboard.NUMBER_8=56;
+		Keyboard.NUMBER_9=57;
+		Keyboard.A=65;
+		Keyboard.B=66;
+		Keyboard.C=67;
+		Keyboard.D=68;
+		Keyboard.E=69;
+		Keyboard.F=70;
+		Keyboard.G=71;
+		Keyboard.H=72;
+		Keyboard.I=73;
+		Keyboard.J=74;
+		Keyboard.K=75;
+		Keyboard.L=76;
+		Keyboard.M=77;
+		Keyboard.N=78;
+		Keyboard.O=79;
+		Keyboard.P=80;
+		Keyboard.Q=81;
+		Keyboard.R=82;
+		Keyboard.S=83;
+		Keyboard.T=84;
+		Keyboard.U=85;
+		Keyboard.V=86;
+		Keyboard.W=87;
+		Keyboard.X=88;
+		Keyboard.Y=89;
+		Keyboard.Z=90;
+		Keyboard.F1=112;
+		Keyboard.F2=113;
+		Keyboard.F3=114;
+		Keyboard.F4=115;
+		Keyboard.F5=116;
+		Keyboard.F6=117;
+		Keyboard.F7=118;
+		Keyboard.F8=119;
+		Keyboard.F9=120;
+		Keyboard.F10=121;
+		Keyboard.F11=122;
+		Keyboard.F12=123;
+		Keyboard.F13=124;
+		Keyboard.F14=125;
+		Keyboard.F15=126;
+		Keyboard.NUMPAD=21;
+		Keyboard.NUMPAD_0=96;
+		Keyboard.NUMPAD_1=97;
+		Keyboard.NUMPAD_2=98;
+		Keyboard.NUMPAD_3=99;
+		Keyboard.NUMPAD_4=100;
+		Keyboard.NUMPAD_5=101;
+		Keyboard.NUMPAD_6=102;
+		Keyboard.NUMPAD_7=103;
+		Keyboard.NUMPAD_8=104;
+		Keyboard.NUMPAD_9=105;
+		Keyboard.NUMPAD_ADD=107;
+		Keyboard.NUMPAD_DECIMAL=110;
+		Keyboard.NUMPAD_DIVIDE=111;
+		Keyboard.NUMPAD_ENTER=108;
+		Keyboard.NUMPAD_MULTIPLY=106;
+		Keyboard.NUMPAD_SUBTRACT=109;
+		Keyboard.SEMICOLON=186;
+		Keyboard.EQUAL=187;
+		Keyboard.COMMA=188;
+		Keyboard.MINUS=189;
+		Keyboard.PERIOD=190;
+		Keyboard.SLASH=191;
+		Keyboard.BACKQUOTE=192;
+		Keyboard.LEFTBRACKET=219;
+		Keyboard.BACKSLASH=220;
+		Keyboard.RIGHTBRACKET=221;
+		Keyboard.QUOTE=222;
+		Keyboard.ALTERNATE=18;
+		Keyboard.BACKSPACE=8;
+		Keyboard.CAPS_LOCK=20;
+		Keyboard.COMMAND=15;
+		Keyboard.CONTROL=17;
+		Keyboard.DELETE=46;
+		Keyboard.ENTER=13;
+		Keyboard.ESCAPE=27;
+		Keyboard.PAGE_UP=33;
+		Keyboard.PAGE_DOWN=34;
+		Keyboard.END=35;
+		Keyboard.HOME=36;
+		Keyboard.LEFT=37;
+		Keyboard.UP=38;
+		Keyboard.RIGHT=39;
+		Keyboard.DOWN=40;
+		Keyboard.SHIFT=16;
+		Keyboard.SPACE=32;
+		Keyboard.TAB=9;
+		Keyboard.INSERT=45;
+		return Keyboard;
 	})()
 
 
@@ -8596,8 +8790,11 @@ var Laya=window.Laya=(function(window,document){
 				this.pVo.maxHp=pPo.hp;
 				this.pVo.curHp=this.pVo.maxHp;
 				this.pVo.curExp=0;
+				this.pVo.curLevelNum=1;
+				this.pVo.curStageNum=1;
+				this.pVo.isFirstStep=true;
 				console.log(this.pVo.curHp,this.pVo.level,this.pVo.maxExp);
-				this.sendNotification("START_FIGHT");
+				this.sendNotification("INIT_FIGHT_STAGE");
 			}));
 		}
 
@@ -8624,35 +8821,109 @@ var Laya=window.Laya=(function(window,document){
 
 	/**
 	*...战斗系统中介
+	*战斗流程
+	*1.1.选择地形
+	*1.2.选择宝箱位置
+	*1.3.选择boss位置
+	*1.4.选择移动位置
+	*1.5。角色进入
+	*2.选择敌人数量
+	*3.选择敌人类型
+	*4.敌人进入
+	*5.选择攻击强度
+	*5.1攻击
+	*5.2buff攻击
+	*5.3判断升级
+	*6.选择掉落个数
+	*7.选择掉落类型
+	*8.角色出去
+	*8.1提示是否下一层
 	*@author ...Kanon
 	*/
 	//class view.mediator.GameStageMediator extends mvc.Mediator
 	var GameStageMediator=(function(_super){
 		function GameStageMediator(){
 			this.gameStage=null;
+			this.playerProxy=null;
+			this.playerVo=null;
 			GameStageMediator.__super.call(this);
+			this.mediatorName="GameStageMediator";
+			this.playerProxy=this.retrieveProxy("PlayerProxy");
 		}
 
 		__class(GameStageMediator,'view.mediator.GameStageMediator',_super);
 		var __proto=GameStageMediator.prototype;
 		__proto.listNotificationInterests=function(){
 			var vect=[];
+			vect.push("INIT_FIGHT_STAGE");
 			vect.push("START_FIGHT");
 			return vect;
 		}
 
 		__proto.handleNotification=function(notification){
 			switch (notification.notificationName){
+				case "INIT_FIGHT_STAGE":
+					this.initStage();
+					this.initEvent();
+					this.playerVo=this.playerProxy.pVo;
+					this.sendNotification("START_FIGHT");
+					break ;
 				case "START_FIGHT":
-					if (!this.gameStage){
-						this.gameStage=new GameStageLayer();
-						Layer.GAME_STAGE.addChild(this.gameStage);
+					if (this.playerVo.isFirstStep){
+						if (this.playerVo.curLevelNum==3){
+						}
 					}
+					else{
+					}
+					this.gameStage.playerMove(200,Handler.create(this,this.playerMoveComplete));
 					break ;
 				default :
+					break ;
 				}
 		}
 
+		/**
+		*初始化事件
+		*/
+		__proto.initEvent=function(){
+			if (GameConstant.DEBUG){
+				Laya.stage.on("keydown",this,this.onKeyDownHandler);
+			}
+		}
+
+		__proto.onKeyDownHandler=function(event){
+			if (!this.gameStage)return;
+			if (event.keyCode==65)this.gameStage.playerAtk();
+			if (event.keyCode==68)this.gameStage.playerHurt();
+			if (event.keyCode==90)this.gameStage.enemyAtk(Random.randint(0,2));
+			if (event.keyCode==88)this.gameStage.enemyHurt(Random.randint(0,2));
+		}
+
+		/**
+		*初始化舞台
+		*/
+		__proto.initStage=function(){
+			if (this.gameStage)return;
+			this.gameStage=new GameStageLayer();
+			Layer.GAME_STAGE.addChild(this.gameStage);
+		}
+
+		/**
+		*角色移动结束
+		*/
+		__proto.playerMoveComplete=function(){
+			this.gameStage.enemyMove(Handler.create(this,this.enemyMoveComplete));
+		}
+
+		/**
+		*敌人移动结束
+		*/
+		__proto.enemyMoveComplete=function(){
+			console.log("选择伤害界面");
+			this.gameStage.playerAtk();
+		}
+
+		GameStageMediator.NAME="GameStageMediator";
 		return GameStageMediator;
 	})(Mediator)
 
@@ -13210,19 +13481,97 @@ var Laya=window.Laya=(function(window,document){
 		*/
 		__proto.initUI=function(){
 			this.player=new Sprite();
-			this.player.graphics.drawRect(0,-120,70,120,"#ff0000");
+			this.player.width=70;
+			this.player.height=120;
+			this.player.graphics.drawRect(-this.player.width / 2,-this.player.height,
+			this.player.width,this.player.height,"#ff0000");
 			this.addChild(this.player);
-			this.player.x=160;
-			this.player.y=380;
+			this.player.x=-this.player.width / 2;
+			this.player.y=450;
+			this.enemyAry=[];
 			var gap=30;
+			var startX=Laya.stage.width;
 			for (var i=0;i < 3;i++){
 				var enemy=new Sprite();
-				enemy.graphics.drawRect(0,-120,70,120,"#ff00ff");
-				enemy.x=600+i *(70+gap);
-				enemy.y=380;
+				enemy.width=70;
+				enemy.height=120;
+				enemy.graphics.drawRect(-enemy.width / 2,-enemy.height,
+				enemy.width,enemy.height,"#ff00ff");
+				enemy.x=startX+i *(enemy.width+gap)+enemy.width / 2;
+				enemy.y=450;
 				this.addChild(enemy);
-				console.log(enemy.x);
+				this.enemyAry.push(enemy);
 			}
+		}
+
+		/**
+		*角色移动
+		*@param targetX 目标位置
+		*@param complete 移动结束
+		*/
+		__proto.playerMove=function(targetX,complete){
+			if (!this.player)return;
+			Tween.to(this.player,{x:targetX},800,Ease.linearNone,complete);
+		}
+
+		/**
+		*敌人移动
+		*@param complete 移动结束
+		*/
+		__proto.enemyMove=function(complete){
+			var count=this.enemyAry.length;
+			for (var i=0;i < count;++i){
+				var enemy=this.enemyAry[i];
+				Tween.to(enemy,{x:enemy.x-300},800,Ease.linearNone,complete);
+			}
+		}
+
+		/**
+		*角色攻击
+		*@param complete 攻击结束
+		*/
+		__proto.playerAtk=function(complete){
+			if (!this.player)return;
+			Tween.to(this.player,{x:this.player.x+50},100,Ease.strongOut);
+			Tween.to(this.player,{x:this.player.x},200,Ease.strongOut,complete,100);
+		}
+
+		/**
+		*角色受伤
+		*@param complete 受伤动作结束
+		*/
+		__proto.playerHurt=function(complete){
+			if (!this.player)return;
+			Tween.to(this.player,{x:this.player.x-50},100,Ease.strongOut);
+			Tween.to(this.player,{x:this.player.x},200,Ease.strongOut,complete,100);
+		}
+
+		/**
+		*单个敌人受伤
+		*@param index 位置索引
+		*@param complete 动作结束
+		*/
+		__proto.enemyAtk=function(index,complete){
+			if (!this.enemyAry)return;
+			if (index < 0 || index > this.enemyAry.length-1)return;
+			var enemy=this.enemyAry[index];
+			if (!enemy)return;
+			Tween.to(enemy,{x:enemy.x+50},100,Ease.strongOut);
+			Tween.to(enemy,{x:enemy.x},200,Ease.strongOut,complete,100);
+		}
+
+		/**
+		*单个敌人受伤
+		*@param index 位置索引
+		*@param complete 动作结束
+		*/
+		__proto.enemyHurt=function(index,complete){
+			if (!this.enemyAry)return;
+			if (index < 0 || index > this.enemyAry.length-1)return;
+			var enemy=this.enemyAry[index];
+			if (!enemy)return;
+			Tween.to(enemy,{x:enemy.x-50},100,Ease.strongOut);
+			Tween.to(enemy,{x:enemy.x},200,Ease.strongOut,complete,100);
 		}
 
 		return GameStageLayer;
@@ -15336,7 +15685,7 @@ var Laya=window.Laya=(function(window,document){
 	})(FileBitmap)
 
 
-	Laya.__init([LoaderManager,EventDispatcher,Render,NotificationCenter,Facade,Browser,LocalStorage,Timer]);
+	Laya.__init([LoaderManager,EventDispatcher,Render,NotificationCenter,Facade,Browser,Timer,LocalStorage]);
 	new Main();
 
 })(window,document,Laya);

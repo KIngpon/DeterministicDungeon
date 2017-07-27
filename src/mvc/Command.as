@@ -6,10 +6,10 @@ package mvc
  */
 public class Command 
 {
-	protected var facade:Facade;
+	protected var facade:Facade
 	public function Command() 
 	{
-		facade = Facade.getInstance();
+		this.facade = Facade.getInstance();
 	}
 	
 	//执行

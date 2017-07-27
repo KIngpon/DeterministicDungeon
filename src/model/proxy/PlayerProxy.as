@@ -57,9 +57,11 @@ public class PlayerProxy extends Proxy
 			this.pVo.maxHp = pPo.hp;
 			this.pVo.curHp = this.pVo.maxHp;
 			this.pVo.curExp = 0;
+			this.pVo.curLevelNum = 1;
+			this.pVo.curStageNum = 1;
+			this.pVo.isFirstStep = true;
 			trace(this.pVo.curHp, this.pVo.level, this.pVo.maxExp);
-			
-			this.sendNotification(MsgConstant.START_FIGHT);
+			this.sendNotification(MsgConstant.INIT_FIGHT_STAGE);
 		}));
 	}
 	

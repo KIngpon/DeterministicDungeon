@@ -9,12 +9,12 @@ import mvc.support.NotificationCenter;
 public class Mediator 
 {
 	protected var notificationList:Vector.<String>;
-	protected var facade:Facade;
+	protected var facade:Facade
 	public var mediatorName:String;
 	public function Mediator() 
 	{
-		this.notificationList = this.listNotificationInterests();
 		this.facade = Facade.getInstance();
+		this.notificationList = this.listNotificationInterests();
 		NotificationCenter.getInstance().addObserver(Facade.MVC_MSG, getNotificationHandler, this);
 	}
 	
