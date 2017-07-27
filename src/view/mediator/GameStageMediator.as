@@ -40,6 +40,7 @@ public class GameStageMediator extends Mediator
 	private var gameStage:GameStageLayer;
 	private var playerProxy:PlayerProxy;
 	private var playerVo:PlayerVo;
+	private var roundIndex:int;
 	public function GameStageMediator() 
 	{
 		this.mediatorName = NAME;
@@ -79,6 +80,7 @@ public class GameStageMediator extends Mediator
 					//选择移动位置
 					//角色移动
 				}
+				this.roundIndex = 0;
 				this.gameStage.playerMove(200, Handler.create(this, playerMoveComplete));
 				break;
 			default:
@@ -100,7 +102,7 @@ public class GameStageMediator extends Mediator
 	private function onKeyDownHandler(event:Event):void 
 	{
 		if (!this.gameStage) return;
-		if (event.keyCode == Keyboard.A) this.gameStage.playerAtk();
+		if (event.keyCode == Keyboard.A) this.gameStage.playerAtk(Handler.create(this, playerAtkComplete));
 		if (event.keyCode == Keyboard.D) this.gameStage.playerHurt();
 		
 		if (event.keyCode == Keyboard.Z) this.gameStage.enemyAtk(Random.randint(0, 2));
@@ -132,7 +134,44 @@ public class GameStageMediator extends Mediator
 	{
 		//出现选择伤害界面
 		trace("选择伤害界面");
-		this.gameStage.playerAtk();
+		this.gameStage.playerAtk(Handler.create(this, playerAtkComplete));
+	}
+	
+	/**
+	 * 角色攻击动作结束
+	 */
+	private function playerAtkComplete():void
+	{
+		this.gameStage.enemyHurt(this.roundIndex, Handler.create(this, enemyHurtComplete));
+	}
+	
+	/**
+	 * 敌人受伤还动作结束
+	 */
+	private function enemyHurtComplete():void
+	{
+		this.gameStage.enemyAtk(this.roundIndex, Handler.create(this, enemyAtkComplete));
+	}
+	
+	/**
+	 * 敌人进攻结束
+	 */
+	private function enemyAtkComplete():void
+	{
+		trace("角色受击")
+		this.gameStage.playerHurt(Handler.create(this, playerHurtComplete));
+	}
+	
+	/**
+	 * 角色受伤动作结束
+	 */
+	private function playerHurtComplete():void
+	{
+		//弹出选择攻击界面
+		this.roundIndex++;
+		if (this.roundIndex > GameConstant.ENEMY_NUM - 1) this.roundIndex = 0;
+		//trace("角色进攻")
+		//this.gameStage.playerAtk(Handler.create(this, playerAtkComplete));
 	}
 }
 }

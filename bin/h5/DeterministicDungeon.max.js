@@ -8846,6 +8846,7 @@ var Laya=window.Laya=(function(window,document){
 			this.gameStage=null;
 			this.playerProxy=null;
 			this.playerVo=null;
+			this.roundIndex=0;
 			GameStageMediator.__super.call(this);
 			this.mediatorName="GameStageMediator";
 			this.playerProxy=this.retrieveProxy("PlayerProxy");
@@ -8875,6 +8876,7 @@ var Laya=window.Laya=(function(window,document){
 					}
 					else{
 					}
+					this.roundIndex=0;
 					this.gameStage.playerMove(200,Handler.create(this,this.playerMoveComplete));
 					break ;
 				default :
@@ -8893,7 +8895,7 @@ var Laya=window.Laya=(function(window,document){
 
 		__proto.onKeyDownHandler=function(event){
 			if (!this.gameStage)return;
-			if (event.keyCode==65)this.gameStage.playerAtk();
+			if (event.keyCode==65)this.gameStage.playerAtk(Handler.create(this,this.playerAtkComplete));
 			if (event.keyCode==68)this.gameStage.playerHurt();
 			if (event.keyCode==90)this.gameStage.enemyAtk(Random.randint(0,2));
 			if (event.keyCode==88)this.gameStage.enemyHurt(Random.randint(0,2));
@@ -8920,7 +8922,37 @@ var Laya=window.Laya=(function(window,document){
 		*/
 		__proto.enemyMoveComplete=function(){
 			console.log("选择伤害界面");
-			this.gameStage.playerAtk();
+			this.gameStage.playerAtk(Handler.create(this,this.playerAtkComplete));
+		}
+
+		/**
+		*角色攻击动作结束
+		*/
+		__proto.playerAtkComplete=function(){
+			this.gameStage.enemyHurt(this.roundIndex,Handler.create(this,this.enemyHurtComplete));
+		}
+
+		/**
+		*敌人受伤还动作结束
+		*/
+		__proto.enemyHurtComplete=function(){
+			this.gameStage.enemyAtk(this.roundIndex,Handler.create(this,this.enemyAtkComplete));
+		}
+
+		/**
+		*敌人进攻结束
+		*/
+		__proto.enemyAtkComplete=function(){
+			console.log("角色受击")
+			this.gameStage.playerHurt(Handler.create(this,this.playerHurtComplete));
+		}
+
+		/**
+		*角色受伤动作结束
+		*/
+		__proto.playerHurtComplete=function(){
+			this.roundIndex++;
+			if (this.roundIndex > 3-1)this.roundIndex=0;
 		}
 
 		GameStageMediator.NAME="GameStageMediator";
@@ -13542,7 +13574,7 @@ var Laya=window.Laya=(function(window,document){
 		*/
 		__proto.playerHurt=function(complete){
 			if (!this.player)return;
-			Tween.to(this.player,{x:this.player.x-50},100,Ease.strongOut);
+			Tween.to(this.player,{x:this.player.x-20},100,Ease.strongOut);
 			Tween.to(this.player,{x:this.player.x},200,Ease.strongOut,complete,100);
 		}
 
@@ -13570,7 +13602,7 @@ var Laya=window.Laya=(function(window,document){
 			if (index < 0 || index > this.enemyAry.length-1)return;
 			var enemy=this.enemyAry[index];
 			if (!enemy)return;
-			Tween.to(enemy,{x:enemy.x-50},100,Ease.strongOut);
+			Tween.to(enemy,{x:enemy.x-20},100,Ease.strongOut);
 			Tween.to(enemy,{x:enemy.x},200,Ease.strongOut,complete,100);
 		}
 
