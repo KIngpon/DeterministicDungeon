@@ -10,6 +10,7 @@ import model.vo.PlayerVo;
 import mvc.Mediator;
 import mvc.Notification;
 import utils.Random;
+import view.components.SlotsPanel;
 import view.ui.GameStageLayer;
 import view.ui.Layer;
 
@@ -38,9 +39,14 @@ public class GameStageMediator extends Mediator
 {
 	public static const NAME:String = "GameStageMediator";
 	private var gameStage:GameStageLayer;
+	//角色数据代理
 	private var playerProxy:PlayerProxy;
+	//角色数据
 	private var playerVo:PlayerVo;
+	//回合数
 	private var roundIndex:int;
+	//滚动
+	private var slots:SlotsPanel;
 	public function GameStageMediator() 
 	{
 		this.mediatorName = NAME;
@@ -61,9 +67,10 @@ public class GameStageMediator extends Mediator
 		{
 			case MsgConstant.INIT_FIGHT_STAGE:
 				this.initStage();
+				this.initUI();
 				this.initEvent();
 				this.playerVo = this.playerProxy.pVo;
-				this.sendNotification(MsgConstant.START_FIGHT);
+				this.sendNotification(MsgConstant.START_FIGHT, null);
 				break;
 			case MsgConstant.START_FIGHT:
 				if (this.playerVo.isFirstStep)
@@ -120,6 +127,16 @@ public class GameStageMediator extends Mediator
 	}
 	
 	/**
+	 * 初始化UI
+	 */
+	private function initUI():void
+	{
+		if (this.slots) return;
+		this.slots = new SlotsPanel();
+		Layer.GAME_ALERT.addChild(this.slots);
+	}
+	
+	/**
 	 * 角色移动结束
 	 */
 	private function playerMoveComplete():void
@@ -134,6 +151,7 @@ public class GameStageMediator extends Mediator
 	{
 		//出现选择伤害界面
 		trace("选择伤害界面");
+		this.slots.initData(0, 3);
 		this.gameStage.playerAtk(Handler.create(this, playerAtkComplete));
 	}
 	

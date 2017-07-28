@@ -30,7 +30,7 @@ public class EnemyProxy extends Proxy
 		this.isLoaded = false;
 		this.enemyAry = [];
 		this.enemyDict = new Dictionary();
-		Laya.loader.load("data/enemy.xml", Handler.create(this, function(data:*)
+		Laya.loader.load("data/enemy.xml", Handler.create(this, function(data:*):void
 		{
             var xml:XmlDom = Laya.loader.getRes("data/enemy.xml");
 			var elementList:Array = xml.getElementsByTagName("enemy");

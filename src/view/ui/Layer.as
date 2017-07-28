@@ -25,6 +25,8 @@ public class Layer
 		STAGE = new Sprite();
 		root.addChild(STAGE);
 		
+		STAGE.graphics.drawRect(0, 0, 1300, Laya.stage.height, "#001542");
+		
 		GAME_STAGE = new Sprite();
 		GAME_UI = new Sprite();
 		GAME_ALERT = new Sprite();

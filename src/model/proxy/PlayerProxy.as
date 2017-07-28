@@ -31,7 +31,7 @@ public class PlayerProxy extends Proxy
 	{
 		this.levelAry = [];
 		this.isLoaded = false;
-		Laya.loader.load("data/player.xml", Handler.create(this, function(data:*)
+		Laya.loader.load("data/player.xml", Handler.create(this, function(data:*):void
 		{
             var xml:XmlDom = Laya.loader.getRes("data/player.xml");
 			var elementList:Array = xml.getElementsByTagName("player");

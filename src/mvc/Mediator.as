@@ -1,6 +1,5 @@
 package mvc 
 {
-import adobe.utils.CustomActions;
 import mvc.support.NotificationCenter;
 /**
  * ...中介
@@ -9,7 +8,7 @@ import mvc.support.NotificationCenter;
 public class Mediator 
 {
 	protected var notificationList:Vector.<String>;
-	protected var facade:Facade
+	protected var facade:Facade;
 	public var mediatorName:String;
 	public function Mediator() 
 	{
@@ -18,7 +17,7 @@ public class Mediator
 		NotificationCenter.getInstance().addObserver(Facade.MVC_MSG, getNotificationHandler, this);
 	}
 	
-	protected function sendNotification(notificationName:String, body:Object):void
+	protected function sendNotification(notificationName:String, body:Object = null):void
 	{
 		this.facade.sendNotification(notificationName, body);
 	}

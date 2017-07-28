@@ -1,0 +1,1419 @@
+{
+    "frames": {
+        "confirmBtn.png": {
+            "frame": {
+                "x": 0,
+                "y": 0,
+                "w": 177,
+                "h": 69,
+                "idx": 0
+            },
+            "spriteSourceSize": {
+                "x": 0,
+                "y": 0,
+                "w": 177,
+                "h": 69
+            },
+            "sourceSize": {
+                "w": 177,
+                "h": 69
+            },
+            "rotated": false,
+            "trimed": false
+        },
+        "defIcon.png": {
+            "frame": {
+                "x": 179,
+                "y": 0,
+                "w": 46,
+                "h": 47,
+                "idx": 0
+            },
+            "spriteSourceSize": {
+                "x": 0,
+                "y": 0,
+                "w": 46,
+                "h": 47
+            },
+            "sourceSize": {
+                "w": 46,
+                "h": 47
+            },
+            "rotated": false,
+            "trimed": false
+        },
+        "deleteBtn.png": {
+            "frame": {
+                "x": 227,
+                "y": 0,
+                "w": 29,
+                "h": 29,
+                "idx": 0
+            },
+            "spriteSourceSize": {
+                "x": 0,
+                "y": 0,
+                "w": 29,
+                "h": 29
+            },
+            "sourceSize": {
+                "w": 29,
+                "h": 29
+            },
+            "rotated": false,
+            "trimed": false
+        },
+        "dropSlotsBg.png": {
+            "frame": {
+                "x": 258,
+                "y": 0,
+                "w": 80,
+                "h": 59,
+                "idx": 0
+            },
+            "spriteSourceSize": {
+                "x": 0,
+                "y": 0,
+                "w": 80,
+                "h": 59
+            },
+            "sourceSize": {
+                "w": 80,
+                "h": 59
+            },
+            "rotated": false,
+            "trimed": false
+        },
+        "enemySlotsBg.png": {
+            "frame": {
+                "x": 340,
+                "y": 0,
+                "w": 80,
+                "h": 59,
+                "idx": 0
+            },
+            "spriteSourceSize": {
+                "x": 0,
+                "y": 0,
+                "w": 80,
+                "h": 59
+            },
+            "sourceSize": {
+                "w": 80,
+                "h": 59
+            },
+            "rotated": false,
+            "trimed": false
+        },
+        "equipIcon.png": {
+            "frame": {
+                "x": 179,
+                "y": 49,
+                "w": 44,
+                "h": 46,
+                "idx": 0
+            },
+            "spriteSourceSize": {
+                "x": 0,
+                "y": 0,
+                "w": 44,
+                "h": 46
+            },
+            "sourceSize": {
+                "w": 44,
+                "h": 46
+            },
+            "rotated": false,
+            "trimed": false
+        },
+        "freezeTips.png": {
+            "frame": {
+                "x": 0,
+                "y": 71,
+                "w": 78,
+                "h": 67,
+                "idx": 0
+            },
+            "spriteSourceSize": {
+                "x": 0,
+                "y": 0,
+                "w": 78,
+                "h": 67
+            },
+            "sourceSize": {
+                "w": 78,
+                "h": 67
+            },
+            "rotated": false,
+            "trimed": false
+        },
+        "helmetBtn.png": {
+            "frame": {
+                "x": 422,
+                "y": 0,
+                "w": 193,
+                "h": 87,
+                "idx": 0
+            },
+            "spriteSourceSize": {
+                "x": 0,
+                "y": 0,
+                "w": 193,
+                "h": 87
+            },
+            "sourceSize": {
+                "w": 193,
+                "h": 87
+            },
+            "rotated": false,
+            "trimed": false
+        },
+        "helmetSlotsBg.png": {
+            "frame": {
+                "x": 80,
+                "y": 71,
+                "w": 80,
+                "h": 59,
+                "idx": 0
+            },
+            "spriteSourceSize": {
+                "x": 0,
+                "y": 0,
+                "w": 80,
+                "h": 59
+            },
+            "sourceSize": {
+                "w": 80,
+                "h": 59
+            },
+            "rotated": false,
+            "trimed": false
+        },
+        "helmetSlotsIcon.png": {
+            "frame": {
+                "x": 617,
+                "y": 0,
+                "w": 74,
+                "h": 57,
+                "idx": 0
+            },
+            "spriteSourceSize": {
+                "x": 0,
+                "y": 0,
+                "w": 74,
+                "h": 57
+            },
+            "sourceSize": {
+                "w": 74,
+                "h": 57
+            },
+            "rotated": false,
+            "trimed": false
+        },
+        "image257.png": {
+            "frame": {
+                "x": 693,
+                "y": 0,
+                "w": 38,
+                "h": 37,
+                "idx": 0
+            },
+            "spriteSourceSize": {
+                "x": 0,
+                "y": 0,
+                "w": 38,
+                "h": 37
+            },
+            "sourceSize": {
+                "w": 38,
+                "h": 37
+            },
+            "rotated": false,
+            "trimed": false
+        },
+        "image3315.png": {
+            "frame": {
+                "x": 693,
+                "y": 39,
+                "w": 80,
+                "h": 59,
+                "idx": 0
+            },
+            "spriteSourceSize": {
+                "x": 0,
+                "y": 0,
+                "w": 80,
+                "h": 59
+            },
+            "sourceSize": {
+                "w": 80,
+                "h": 59
+            },
+            "rotated": false,
+            "trimed": false
+        },
+        "image3318.png": {
+            "frame": {
+                "x": 225,
+                "y": 61,
+                "w": 80,
+                "h": 59,
+                "idx": 0
+            },
+            "spriteSourceSize": {
+                "x": 0,
+                "y": 0,
+                "w": 80,
+                "h": 59
+            },
+            "sourceSize": {
+                "w": 80,
+                "h": 59
+            },
+            "rotated": false,
+            "trimed": false
+        },
+        "magicIcon.png": {
+            "frame": {
+                "x": 162,
+                "y": 97,
+                "w": 41,
+                "h": 41,
+                "idx": 0
+            },
+            "spriteSourceSize": {
+                "x": 0,
+                "y": 0,
+                "w": 41,
+                "h": 41
+            },
+            "sourceSize": {
+                "w": 41,
+                "h": 41
+            },
+            "rotated": false,
+            "trimed": false
+        },
+        "magicSlotsBg.png": {
+            "frame": {
+                "x": 80,
+                "y": 132,
+                "w": 80,
+                "h": 59,
+                "idx": 0
+            },
+            "spriteSourceSize": {
+                "x": 0,
+                "y": 0,
+                "w": 80,
+                "h": 59
+            },
+            "sourceSize": {
+                "w": 80,
+                "h": 59
+            },
+            "rotated": false,
+            "trimed": false
+        },
+        "magicSlotsIcon.png": {
+            "frame": {
+                "x": 0,
+                "y": 140,
+                "w": 52,
+                "h": 52,
+                "idx": 0
+            },
+            "spriteSourceSize": {
+                "x": 0,
+                "y": 0,
+                "w": 52,
+                "h": 52
+            },
+            "sourceSize": {
+                "w": 52,
+                "h": 52
+            },
+            "rotated": false,
+            "trimed": false
+        },
+        "menuBtn.png": {
+            "frame": {
+                "x": 617,
+                "y": 59,
+                "w": 60,
+                "h": 60,
+                "idx": 0
+            },
+            "spriteSourceSize": {
+                "x": 0,
+                "y": 0,
+                "w": 60,
+                "h": 60
+            },
+            "sourceSize": {
+                "w": 60,
+                "h": 60
+            },
+            "rotated": false,
+            "trimed": false
+        },
+        "menuSelectBtn.png": {
+            "frame": {
+                "x": 307,
+                "y": 89,
+                "w": 125,
+                "h": 36,
+                "idx": 0
+            },
+            "spriteSourceSize": {
+                "x": 0,
+                "y": 0,
+                "w": 125,
+                "h": 36
+            },
+            "sourceSize": {
+                "w": 125,
+                "h": 36
+            },
+            "rotated": false,
+            "trimed": false
+        },
+        "num0.png": {
+            "frame": {
+                "x": 205,
+                "y": 122,
+                "w": 79,
+                "h": 54,
+                "idx": 0
+            },
+            "spriteSourceSize": {
+                "x": 0,
+                "y": 0,
+                "w": 79,
+                "h": 54
+            },
+            "sourceSize": {
+                "w": 79,
+                "h": 54
+            },
+            "rotated": false,
+            "trimed": false
+        },
+        "num1.png": {
+            "frame": {
+                "x": 679,
+                "y": 100,
+                "w": 79,
+                "h": 54,
+                "idx": 0
+            },
+            "spriteSourceSize": {
+                "x": 0,
+                "y": 0,
+                "w": 79,
+                "h": 54
+            },
+            "sourceSize": {
+                "w": 79,
+                "h": 54
+            },
+            "rotated": false,
+            "trimed": false
+        },
+        "num10.png": {
+            "frame": {
+                "x": 434,
+                "y": 89,
+                "w": 79,
+                "h": 54,
+                "idx": 0
+            },
+            "spriteSourceSize": {
+                "x": 0,
+                "y": 0,
+                "w": 79,
+                "h": 54
+            },
+            "sourceSize": {
+                "w": 79,
+                "h": 54
+            },
+            "rotated": false,
+            "trimed": false
+        },
+        "num11.png": {
+            "frame": {
+                "x": 515,
+                "y": 89,
+                "w": 79,
+                "h": 54,
+                "idx": 0
+            },
+            "spriteSourceSize": {
+                "x": 0,
+                "y": 0,
+                "w": 79,
+                "h": 54
+            },
+            "sourceSize": {
+                "w": 79,
+                "h": 54
+            },
+            "rotated": false,
+            "trimed": false
+        },
+        "num12.png": {
+            "frame": {
+                "x": 596,
+                "y": 121,
+                "w": 79,
+                "h": 54,
+                "idx": 0
+            },
+            "spriteSourceSize": {
+                "x": 0,
+                "y": 0,
+                "w": 79,
+                "h": 54
+            },
+            "sourceSize": {
+                "w": 79,
+                "h": 54
+            },
+            "rotated": false,
+            "trimed": false
+        },
+        "num13.png": {
+            "frame": {
+                "x": 677,
+                "y": 156,
+                "w": 79,
+                "h": 54,
+                "idx": 0
+            },
+            "spriteSourceSize": {
+                "x": 0,
+                "y": 0,
+                "w": 79,
+                "h": 54
+            },
+            "sourceSize": {
+                "w": 79,
+                "h": 54
+            },
+            "rotated": false,
+            "trimed": false
+        },
+        "num14.png": {
+            "frame": {
+                "x": 286,
+                "y": 127,
+                "w": 79,
+                "h": 54,
+                "idx": 0
+            },
+            "spriteSourceSize": {
+                "x": 0,
+                "y": 0,
+                "w": 79,
+                "h": 54
+            },
+            "sourceSize": {
+                "w": 79,
+                "h": 54
+            },
+            "rotated": false,
+            "trimed": false
+        },
+        "num15.png": {
+            "frame": {
+                "x": 162,
+                "y": 178,
+                "w": 79,
+                "h": 54,
+                "idx": 0
+            },
+            "spriteSourceSize": {
+                "x": 0,
+                "y": 0,
+                "w": 79,
+                "h": 54
+            },
+            "sourceSize": {
+                "w": 79,
+                "h": 54
+            },
+            "rotated": false,
+            "trimed": false
+        },
+        "num16.png": {
+            "frame": {
+                "x": 54,
+                "y": 193,
+                "w": 79,
+                "h": 54,
+                "idx": 0
+            },
+            "spriteSourceSize": {
+                "x": 0,
+                "y": 0,
+                "w": 79,
+                "h": 54
+            },
+            "sourceSize": {
+                "w": 79,
+                "h": 54
+            },
+            "rotated": false,
+            "trimed": false
+        },
+        "num17.png": {
+            "frame": {
+                "x": 367,
+                "y": 145,
+                "w": 79,
+                "h": 54,
+                "idx": 0
+            },
+            "spriteSourceSize": {
+                "x": 0,
+                "y": 0,
+                "w": 79,
+                "h": 54
+            },
+            "sourceSize": {
+                "w": 79,
+                "h": 54
+            },
+            "rotated": false,
+            "trimed": false
+        },
+        "num18.png": {
+            "frame": {
+                "x": 243,
+                "y": 183,
+                "w": 79,
+                "h": 54,
+                "idx": 0
+            },
+            "spriteSourceSize": {
+                "x": 0,
+                "y": 0,
+                "w": 79,
+                "h": 54
+            },
+            "sourceSize": {
+                "w": 79,
+                "h": 54
+            },
+            "rotated": false,
+            "trimed": false
+        },
+        "num19.png": {
+            "frame": {
+                "x": 135,
+                "y": 234,
+                "w": 79,
+                "h": 54,
+                "idx": 0
+            },
+            "spriteSourceSize": {
+                "x": 0,
+                "y": 0,
+                "w": 79,
+                "h": 54
+            },
+            "sourceSize": {
+                "w": 79,
+                "h": 54
+            },
+            "rotated": false,
+            "trimed": false
+        },
+        "num2.png": {
+            "frame": {
+                "x": 0,
+                "y": 249,
+                "w": 79,
+                "h": 54,
+                "idx": 0
+            },
+            "spriteSourceSize": {
+                "x": 0,
+                "y": 0,
+                "w": 79,
+                "h": 54
+            },
+            "sourceSize": {
+                "w": 79,
+                "h": 54
+            },
+            "rotated": false,
+            "trimed": false
+        },
+        "num20.png": {
+            "frame": {
+                "x": 448,
+                "y": 145,
+                "w": 79,
+                "h": 54,
+                "idx": 0
+            },
+            "spriteSourceSize": {
+                "x": 0,
+                "y": 0,
+                "w": 79,
+                "h": 54
+            },
+            "sourceSize": {
+                "w": 79,
+                "h": 54
+            },
+            "rotated": false,
+            "trimed": false
+        },
+        "num21.png": {
+            "frame": {
+                "x": 529,
+                "y": 177,
+                "w": 79,
+                "h": 54,
+                "idx": 0
+            },
+            "spriteSourceSize": {
+                "x": 0,
+                "y": 0,
+                "w": 79,
+                "h": 54
+            },
+            "sourceSize": {
+                "w": 79,
+                "h": 54
+            },
+            "rotated": false,
+            "trimed": false
+        },
+        "num3.png": {
+            "frame": {
+                "x": 610,
+                "y": 212,
+                "w": 79,
+                "h": 54,
+                "idx": 0
+            },
+            "spriteSourceSize": {
+                "x": 0,
+                "y": 0,
+                "w": 79,
+                "h": 54
+            },
+            "sourceSize": {
+                "w": 79,
+                "h": 54
+            },
+            "rotated": false,
+            "trimed": false
+        },
+        "num4.png": {
+            "frame": {
+                "x": 691,
+                "y": 212,
+                "w": 79,
+                "h": 54,
+                "idx": 0
+            },
+            "spriteSourceSize": {
+                "x": 0,
+                "y": 0,
+                "w": 79,
+                "h": 54
+            },
+            "sourceSize": {
+                "w": 79,
+                "h": 54
+            },
+            "rotated": false,
+            "trimed": false
+        },
+        "num5.png": {
+            "frame": {
+                "x": 324,
+                "y": 201,
+                "w": 79,
+                "h": 54,
+                "idx": 0
+            },
+            "spriteSourceSize": {
+                "x": 0,
+                "y": 0,
+                "w": 79,
+                "h": 54
+            },
+            "sourceSize": {
+                "w": 79,
+                "h": 54
+            },
+            "rotated": false,
+            "trimed": false
+        },
+        "num6.png": {
+            "frame": {
+                "x": 216,
+                "y": 239,
+                "w": 79,
+                "h": 54,
+                "idx": 0
+            },
+            "spriteSourceSize": {
+                "x": 0,
+                "y": 0,
+                "w": 79,
+                "h": 54
+            },
+            "sourceSize": {
+                "w": 79,
+                "h": 54
+            },
+            "rotated": false,
+            "trimed": false
+        },
+        "num7.png": {
+            "frame": {
+                "x": 81,
+                "y": 290,
+                "w": 79,
+                "h": 54,
+                "idx": 0
+            },
+            "spriteSourceSize": {
+                "x": 0,
+                "y": 0,
+                "w": 79,
+                "h": 54
+            },
+            "sourceSize": {
+                "w": 79,
+                "h": 54
+            },
+            "rotated": false,
+            "trimed": false
+        },
+        "num8.png": {
+            "frame": {
+                "x": 0,
+                "y": 305,
+                "w": 79,
+                "h": 54,
+                "idx": 0
+            },
+            "spriteSourceSize": {
+                "x": 0,
+                "y": 0,
+                "w": 79,
+                "h": 54
+            },
+            "sourceSize": {
+                "w": 79,
+                "h": 54
+            },
+            "rotated": false,
+            "trimed": false
+        },
+        "num9.png": {
+            "frame": {
+                "x": 405,
+                "y": 201,
+                "w": 79,
+                "h": 54,
+                "idx": 0
+            },
+            "spriteSourceSize": {
+                "x": 0,
+                "y": 0,
+                "w": 79,
+                "h": 54
+            },
+            "sourceSize": {
+                "w": 79,
+                "h": 54
+            },
+            "rotated": false,
+            "trimed": false
+        },
+        "pokedexItemBg.png": {
+            "frame": {
+                "x": 486,
+                "y": 233,
+                "w": 86,
+                "h": 70,
+                "idx": 0
+            },
+            "spriteSourceSize": {
+                "x": 0,
+                "y": 0,
+                "w": 86,
+                "h": 70
+            },
+            "sourceSize": {
+                "w": 86,
+                "h": 70
+            },
+            "rotated": false,
+            "trimed": false
+        },
+        "pokedexItemBg2.png": {
+            "frame": {
+                "x": 297,
+                "y": 257,
+                "w": 94,
+                "h": 79,
+                "idx": 0
+            },
+            "spriteSourceSize": {
+                "x": 0,
+                "y": 0,
+                "w": 94,
+                "h": 79
+            },
+            "sourceSize": {
+                "w": 94,
+                "h": 79
+            },
+            "rotated": false,
+            "trimed": false
+        },
+        "roundArrow.png": {
+            "frame": {
+                "x": 393,
+                "y": 257,
+                "w": 54,
+                "h": 44,
+                "idx": 0
+            },
+            "spriteSourceSize": {
+                "x": 0,
+                "y": 0,
+                "w": 54,
+                "h": 44
+            },
+            "sourceSize": {
+                "w": 54,
+                "h": 44
+            },
+            "rotated": false,
+            "trimed": false
+        },
+        "selectBtn.png": {
+            "frame": {
+                "x": 162,
+                "y": 295,
+                "w": 126,
+                "h": 126,
+                "idx": 0
+            },
+            "spriteSourceSize": {
+                "x": 0,
+                "y": 0,
+                "w": 126,
+                "h": 126
+            },
+            "sourceSize": {
+                "w": 126,
+                "h": 126
+            },
+            "rotated": false,
+            "trimed": false
+        },
+        "selectClickedBtn.png": {
+            "frame": {
+                "x": 0,
+                "y": 361,
+                "w": 126,
+                "h": 101,
+                "idx": 0
+            },
+            "spriteSourceSize": {
+                "x": 0,
+                "y": 0,
+                "w": 126,
+                "h": 101
+            },
+            "sourceSize": {
+                "w": 126,
+                "h": 101
+            },
+            "rotated": false,
+            "trimed": false
+        },
+        "shieldBtn.png": {
+            "frame": {
+                "x": 574,
+                "y": 268,
+                "w": 193,
+                "h": 87,
+                "idx": 0
+            },
+            "spriteSourceSize": {
+                "x": 0,
+                "y": 0,
+                "w": 193,
+                "h": 87
+            },
+            "sourceSize": {
+                "w": 193,
+                "h": 87
+            },
+            "rotated": false,
+            "trimed": false
+        },
+        "shieldSlotsBg.png": {
+            "frame": {
+                "x": 393,
+                "y": 303,
+                "w": 80,
+                "h": 59,
+                "idx": 0
+            },
+            "spriteSourceSize": {
+                "x": 0,
+                "y": 0,
+                "w": 80,
+                "h": 59
+            },
+            "sourceSize": {
+                "w": 80,
+                "h": 59
+            },
+            "rotated": false,
+            "trimed": false
+        },
+        "shieldSlotsIcon.png": {
+            "frame": {
+                "x": 0,
+                "y": 194,
+                "w": 52,
+                "h": 53,
+                "idx": 0
+            },
+            "spriteSourceSize": {
+                "x": 0,
+                "y": 0,
+                "w": 52,
+                "h": 53
+            },
+            "sourceSize": {
+                "w": 52,
+                "h": 53
+            },
+            "rotated": false,
+            "trimed": false
+        },
+        "slotsNumBg.png": {
+            "frame": {
+                "x": 290,
+                "y": 338,
+                "w": 80,
+                "h": 59,
+                "idx": 0
+            },
+            "spriteSourceSize": {
+                "x": 0,
+                "y": 0,
+                "w": 80,
+                "h": 59
+            },
+            "sourceSize": {
+                "w": 80,
+                "h": 59
+            },
+            "rotated": false,
+            "trimed": false
+        },
+        "slotsPanelBg.png": {
+            "frame": {
+                "x": 475,
+                "y": 357,
+                "w": 300,
+                "h": 280,
+                "idx": 0
+            },
+            "spriteSourceSize": {
+                "x": 0,
+                "y": 0,
+                "w": 300,
+                "h": 280
+            },
+            "sourceSize": {
+                "w": 300,
+                "h": 280
+            },
+            "rotated": false,
+            "trimed": false
+        },
+        "slotsPanelTitleBg.png": {
+            "frame": {
+                "x": 0,
+                "y": 639,
+                "w": 316,
+                "h": 77,
+                "idx": 0
+            },
+            "spriteSourceSize": {
+                "x": 0,
+                "y": 0,
+                "w": 316,
+                "h": 77
+            },
+            "sourceSize": {
+                "w": 316,
+                "h": 77
+            },
+            "rotated": false,
+            "trimed": false
+        },
+        "slotsSelectedBg.png": {
+            "frame": {
+                "x": 372,
+                "y": 364,
+                "w": 84,
+                "h": 63,
+                "idx": 0
+            },
+            "spriteSourceSize": {
+                "x": 0,
+                "y": 0,
+                "w": 84,
+                "h": 63
+            },
+            "sourceSize": {
+                "w": 84,
+                "h": 63
+            },
+            "rotated": false,
+            "trimed": false
+        },
+        "slotsTitle.png": {
+            "frame": {
+                "x": 128,
+                "y": 423,
+                "w": 188,
+                "h": 53,
+                "idx": 0
+            },
+            "spriteSourceSize": {
+                "x": 0,
+                "y": 0,
+                "w": 188,
+                "h": 53
+            },
+            "sourceSize": {
+                "w": 188,
+                "h": 53
+            },
+            "rotated": false,
+            "trimed": false
+        },
+        "slotsUnselectedBg.png": {
+            "frame": {
+                "x": 0,
+                "y": 464,
+                "w": 84,
+                "h": 63,
+                "idx": 0
+            },
+            "spriteSourceSize": {
+                "x": 0,
+                "y": 0,
+                "w": 84,
+                "h": 63
+            },
+            "sourceSize": {
+                "w": 84,
+                "h": 63
+            },
+            "rotated": false,
+            "trimed": false
+        },
+        "specialSlotsBg.png": {
+            "frame": {
+                "x": 0,
+                "y": 529,
+                "w": 80,
+                "h": 59,
+                "idx": 0
+            },
+            "spriteSourceSize": {
+                "x": 0,
+                "y": 0,
+                "w": 80,
+                "h": 59
+            },
+            "sourceSize": {
+                "w": 80,
+                "h": 59
+            },
+            "rotated": false,
+            "trimed": false
+        },
+        "stageSlotsBg.png": {
+            "frame": {
+                "x": 82,
+                "y": 529,
+                "w": 105,
+                "h": 74,
+                "idx": 0
+            },
+            "spriteSourceSize": {
+                "x": 0,
+                "y": 0,
+                "w": 105,
+                "h": 74
+            },
+            "sourceSize": {
+                "w": 105,
+                "h": 74
+            },
+            "rotated": false,
+            "trimed": false
+        },
+        "stageSlotsSelectedBg.png": {
+            "frame": {
+                "x": 189,
+                "y": 478,
+                "w": 110,
+                "h": 78,
+                "idx": 0
+            },
+            "spriteSourceSize": {
+                "x": 0,
+                "y": 0,
+                "w": 110,
+                "h": 78
+            },
+            "sourceSize": {
+                "w": 110,
+                "h": 78
+            },
+            "rotated": false,
+            "trimed": false
+        },
+        "textBg.png": {
+            "frame": {
+                "x": 0,
+                "y": 718,
+                "w": 506,
+                "h": 41,
+                "idx": 0
+            },
+            "spriteSourceSize": {
+                "x": 0,
+                "y": 0,
+                "w": 506,
+                "h": 41
+            },
+            "sourceSize": {
+                "w": 506,
+                "h": 41
+            },
+            "rotated": false,
+            "trimed": false
+        },
+        "totem1.png": {
+            "frame": {
+                "x": 189,
+                "y": 558,
+                "w": 67,
+                "h": 73,
+                "idx": 0
+            },
+            "spriteSourceSize": {
+                "x": 0,
+                "y": 0,
+                "w": 67,
+                "h": 73
+            },
+            "sourceSize": {
+                "w": 67,
+                "h": 73
+            },
+            "rotated": false,
+            "trimed": false
+        },
+        "totem2.png": {
+            "frame": {
+                "x": 258,
+                "y": 558,
+                "w": 94,
+                "h": 61,
+                "idx": 0
+            },
+            "spriteSourceSize": {
+                "x": 0,
+                "y": 0,
+                "w": 94,
+                "h": 61
+            },
+            "sourceSize": {
+                "w": 94,
+                "h": 61
+            },
+            "rotated": false,
+            "trimed": false
+        },
+        "totem3.png": {
+            "frame": {
+                "x": 301,
+                "y": 478,
+                "w": 95,
+                "h": 64,
+                "idx": 0
+            },
+            "spriteSourceSize": {
+                "x": 0,
+                "y": 0,
+                "w": 95,
+                "h": 64
+            },
+            "sourceSize": {
+                "w": 95,
+                "h": 64
+            },
+            "rotated": false,
+            "trimed": false
+        },
+        "totem4.png": {
+            "frame": {
+                "x": 318,
+                "y": 621,
+                "w": 79,
+                "h": 73,
+                "idx": 0
+            },
+            "spriteSourceSize": {
+                "x": 0,
+                "y": 0,
+                "w": 79,
+                "h": 73
+            },
+            "sourceSize": {
+                "w": 79,
+                "h": 73
+            },
+            "rotated": false,
+            "trimed": false
+        },
+        "totem5.png": {
+            "frame": {
+                "x": 354,
+                "y": 544,
+                "w": 93,
+                "h": 75,
+                "idx": 0
+            },
+            "spriteSourceSize": {
+                "x": 0,
+                "y": 0,
+                "w": 93,
+                "h": 75
+            },
+            "sourceSize": {
+                "w": 93,
+                "h": 75
+            },
+            "rotated": false,
+            "trimed": false
+        },
+        "weaponBtn.png": {
+            "frame": {
+                "x": 508,
+                "y": 639,
+                "w": 193,
+                "h": 87,
+                "idx": 0
+            },
+            "spriteSourceSize": {
+                "x": 0,
+                "y": 0,
+                "w": 193,
+                "h": 87
+            },
+            "sourceSize": {
+                "w": 193,
+                "h": 87
+            },
+            "rotated": false,
+            "trimed": false
+        },
+        "weaponIcon.png": {
+            "frame": {
+                "x": 86,
+                "y": 464,
+                "w": 37,
+                "h": 50,
+                "idx": 0
+            },
+            "spriteSourceSize": {
+                "x": 0,
+                "y": 0,
+                "w": 37,
+                "h": 50
+            },
+            "sourceSize": {
+                "w": 37,
+                "h": 50
+            },
+            "rotated": false,
+            "trimed": false
+        },
+        "weaponItemBg.png": {
+            "frame": {
+                "x": 399,
+                "y": 639,
+                "w": 80,
+                "h": 59,
+                "idx": 0
+            },
+            "spriteSourceSize": {
+                "x": 0,
+                "y": 0,
+                "w": 80,
+                "h": 59
+            },
+            "sourceSize": {
+                "w": 80,
+                "h": 59
+            },
+            "rotated": false,
+            "trimed": false
+        },
+        "weaponSlotsIcon.png": {
+            "frame": {
+                "x": 318,
+                "y": 399,
+                "w": 43,
+                "h": 58,
+                "idx": 0
+            },
+            "spriteSourceSize": {
+                "x": 0,
+                "y": 0,
+                "w": 43,
+                "h": 58
+            },
+            "sourceSize": {
+                "w": 43,
+                "h": 58
+            },
+            "rotated": false,
+            "trimed": false
+        }
+    },
+    "meta": {
+        "app": "http:\/\/www.layabox.com",
+        "version": "0.1.0 alpha",
+        "format": "json",
+        "scale": 1,
+        "image": "comp.png",
+        "prefix": "comp\/"
+    }
+}

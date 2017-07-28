@@ -23,7 +23,7 @@ public class Proxy
 		return this.facade.retrieveProxy(name);
 	}
 	
-	protected function sendNotification(notificationName:String, body:Object):void
+	protected function sendNotification(notificationName:String, body:Object = null):void
 	{
 		this.facade.sendNotification(notificationName, body);
 	}

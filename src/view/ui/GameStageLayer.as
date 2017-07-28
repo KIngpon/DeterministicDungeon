@@ -94,8 +94,9 @@ public class GameStageLayer extends Sprite
 	public function playerHurt(complete:Handler = null):void
 	{
 		if (!this.player) return;
-		Tween.to(this.player, {x:this.player.x - 20}, 100, Ease.strongOut);
-		Tween.to(this.player, {x:this.player.x}, 200, Ease.strongOut, complete, 100);
+		Tween.to(this.player, {x:this.player.x - 50}, 100, Ease.strongOut);
+		Tween.to(this.player, {x:this.player.x}, 200, Ease.strongOut, null, 100);
+		Tween.to(this.player, {x:this.player.x}, 300, Ease.strongOut, complete, 200);
 	}
 	
 	/**
@@ -109,7 +110,7 @@ public class GameStageLayer extends Sprite
 		if (index < 0 || index > this.enemyAry.length - 1) return;
 		var enemy:Sprite = this.enemyAry[index];
 		if (!enemy) return;
-		Tween.to(enemy, {x:enemy.x + 50}, 100, Ease.strongOut);
+		Tween.to(enemy, {x:enemy.x - 50}, 100, Ease.strongOut);
 		Tween.to(enemy, {x:enemy.x}, 200, Ease.strongOut, complete, 100);
 	}
 	
@@ -124,8 +125,10 @@ public class GameStageLayer extends Sprite
 		if (index < 0 || index > this.enemyAry.length - 1) return;
 		var enemy:Sprite = this.enemyAry[index];
 		if (!enemy) return;
-		Tween.to(enemy, {x:enemy.x - 20}, 100, Ease.strongOut);
-		Tween.to(enemy, {x:enemy.x}, 200, Ease.strongOut, complete, 100);
+		Tween.to(enemy, {x:enemy.x + 50}, 100, Ease.strongOut);
+		Tween.to(enemy, {x:enemy.x}, 200, Ease.strongOut, null, 100);
+		Tween.to(enemy, {x:enemy.x}, 300, Ease.strongOut, complete, 200);
+
 	}
 }
 }

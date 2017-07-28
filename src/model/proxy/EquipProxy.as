@@ -23,7 +23,7 @@ public class EquipProxy extends Proxy
 	override public function initData():void 
 	{
 		this.equipAry = [];
-		Laya.loader.load("data/equip.xml", Handler.create(this, function(data:*)
+		Laya.loader.load("data/equip.xml", Handler.create(this, function(data:*):void
 		{
             var xml:XmlDom = Laya.loader.getRes("data/equip.xml");
 			var elementList:Array = xml.getElementsByTagName("equip");

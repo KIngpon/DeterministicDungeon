@@ -28,7 +28,7 @@ public class Facade
 		return instance;
 	}
 	
-	public function sendNotification(notificationName:String, body:Object):void
+	public function sendNotification(notificationName:String, body:Object = null):void
 	{
 		var notification:Notification = new Notification();
 		notification.notificationName = notificationName;
@@ -104,6 +104,7 @@ public class Facade
 			ary[i].initData();
 		}
 	}
+}
 }
 internal class Singletoner {  
 } 
