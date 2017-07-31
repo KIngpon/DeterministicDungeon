@@ -1,1 +1,2 @@
-/release/Android/*.apk
+/release/*
+libs/*
