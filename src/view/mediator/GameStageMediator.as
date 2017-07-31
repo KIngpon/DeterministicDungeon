@@ -140,10 +140,14 @@ public class GameStageMediator extends Mediator
 	
 	private function selectedBtnMouseDown():void 
 	{
-		trace("selectedBtnMouseDown");
 		this.slots.stop();
-		//TODO 选中效果
-		//this.gameStage.playerAtk(Handler.create(this, playerAtkComplete));
+		this.slots.flashing(Handler.create(this, flashingCompleteHandler));
+	}
+	
+	private function flashingCompleteHandler():void 
+	{
+		this.slots.visible = false;
+		this.gameStage.playerAtk(Handler.create(this, playerAtkComplete));
 	}
 	
 	/**
@@ -151,20 +155,20 @@ public class GameStageMediator extends Mediator
 	 */
 	private function playerMoveComplete():void
 	{
-		this.gameStage.enemyMove(Handler.create(this, enemyMoveComplete));
+		this.gameStage.enemyMove(Handler.create(this, slotsInit));
 	}
 	
 	/**
 	 * 敌人移动结束
 	 */
-	private function enemyMoveComplete():void
+	private function slotsInit():void
 	{
 		//出现选择伤害界面
 		trace("选择伤害界面");
 		this.slots.visible = true;
 		this.slots.initData(0, 3);
-		this.slots.initIcon(["comp/num0.png", "comp/num1.png", "comp/num2.png"]);
 		this.slots.initIconBg("frame/slotsNumBg.png");
+		this.slots.initIcon(["comp/num0.png", "comp/num1.png", "comp/num2.png"]);
 		this.slots.start(100);
 	}
 	
@@ -201,7 +205,8 @@ public class GameStageMediator extends Mediator
 		this.roundIndex++;
 		if (this.roundIndex > GameConstant.ENEMY_NUM - 1) this.roundIndex = 0;
 		//trace("角色进攻")
-		this.gameStage.playerAtk(Handler.create(this, playerAtkComplete));
+		//this.gameStage.playerAtk(Handler.create(this, playerAtkComplete));
+		this.slotsInit();
 	}
 }
 }

@@ -5,6 +5,7 @@ import laya.display.Sprite;
 import laya.ui.Button;
 import laya.ui.Image;
 import laya.ui.Label;
+import laya.utils.Handler;
 import laya.utils.Timer;
 import ui.GameStage.SlotsPanelUI;
 /**
@@ -14,21 +15,23 @@ import ui.GameStage.SlotsPanelUI;
 public class SlotsPanel extends Sprite
 {
 	private var timer:Timer;
+	//闪烁计时器
+	private var flashingTimer:Timer;
 	//当前索引
 	private var _index:int;
 	//总数
 	private var _totalIndex:int;
 	//回调
-	private var callBack:Function;
+	private var flashingCallBackHandler:Handler;
 	//面板
 	private var panel:SlotsPanelUI;
-	//选中框
-	private var selectImg:Image;
 	//内容容器
 	private var contentSpt:Sprite;
 	private var bgSpt:Sprite;
 	private var frameSpt:Sprite;
+	//选中框
 	private var selectedImg:Image;
+	private var flashingIndex:int;
 	//选择按钮
 	public var selectedBtn:Button;
 	//标题
@@ -37,7 +40,7 @@ public class SlotsPanel extends Sprite
 	{
 		this._index = 0;
 		this.totalIndex = 0;
-		this.callBack = null;
+		this.flashingIndex = 0;
 		
 		this.panel = new SlotsPanelUI();
 		this.addChild(this.panel);
@@ -47,7 +50,7 @@ public class SlotsPanel extends Sprite
 		this.contentSpt = this.panel.contentSpt;
 		this.frameSpt = this.panel.frameSpt;
 		this.bgSpt = this.panel.bgSpt;
-		
+		this.flashingCallBackHandler = null;
 		this.selectedImg = this.panel.selectedImg;
 	}
 	
@@ -63,9 +66,9 @@ public class SlotsPanel extends Sprite
 		if (count > GameConstant.NUM_MAX) count = GameConstant.NUM_MAX;
 		for (var i:int = 0; i < count; ++i)
 		{
-			var numImg:Image = this.contentSpt.getChildByName("m" + (i + 1)) as Image;
-			numImg.autoSize = true;
-			numImg.skin = imgAry[i];
+			var icon:Sprite = this.contentSpt.getChildByName("m" + (i + 1)) as Sprite;
+			var image:Image = new Image(imgAry[i]);
+			icon.addChild(image);
 		}
 	}
 	
@@ -74,10 +77,10 @@ public class SlotsPanel extends Sprite
 	 */
 	public function clearIcon():void
 	{
-		for (var i:int = 0; i < GameConstant.NUM_MAX; i++) 
+		for (var i:int = 0; i < GameConstant.NUM_MAX; ++i) 
 		{
-			var numImg:Image = this.contentSpt.getChildByName("m" + (i + 1)) as Image;
-			numImg.skin = "";
+			var icon:Sprite = this.contentSpt.getChildByName("m" + (i + 1)) as Sprite;
+			icon.removeChildren(0, 1);
 		}
 	}
 	
@@ -125,12 +128,12 @@ public class SlotsPanel extends Sprite
 	 * 开始
 	 * @param	delay	每一格的时间
 	 */
-	public function start(delay:int, callBack:Function = null):void
+	public function start(delay:int):void
 	{
 		if (!this.timer) this.timer = new Timer();
 		this.timer.clear(this, loopHandler);
 		this.timer.loop(delay, this, loopHandler);
-		this.callBack = callBack;
+		if (!this.flashingTimer) this.flashingTimer = new Timer();
 	}
 	
 	/**
@@ -140,6 +143,33 @@ public class SlotsPanel extends Sprite
 	{
 		if (!this.timer) return;
 		this.timer.clear(this, loopHandler);
+	}
+	
+	/**
+	 * 闪烁
+	 */
+	public function flashing(handler:Handler = null):void
+	{
+		if (!this.flashingTimer) this.flashingTimer = new Timer();
+		this.flashingTimer.clear(this, flashingLoopHandler);
+		this.flashingTimer.loop(80, this, flashingLoopHandler);
+		this.flashingCallBackHandler = handler;
+	}
+	
+	/**
+	 * 循环
+	 */
+	private function flashingLoopHandler():void 
+	{
+		this.selectedImg.visible = !this.selectedImg.visible;
+		this.flashingIndex++;
+		if (this.flashingIndex >= 10)
+		{
+			this.flashingIndex = 0;
+			this.flashingTimer.clear(this, flashingLoopHandler);
+			if (this.flashingCallBackHandler)
+				this.flashingCallBackHandler.run();
+		}
 	}
 	
 	/**
@@ -154,9 +184,6 @@ public class SlotsPanel extends Sprite
 		var frameImg:Image = this.frameSpt.getChildByName("frame" + (this._index + 1)) as Image;
 		this.selectedImg.x = frameImg.x;
 		this.selectedImg.y = frameImg.y;
-		
-		if (this.callBack && this.callBack is Function)
-			this.callBack.call();
 	}
 	
 	/**

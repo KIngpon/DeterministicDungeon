@@ -379,7 +379,7 @@ var Laya=window.Laya=(function(window,document){
 		Laya.stage=null;
 		Laya.timer=null;
 		Laya.loader=null;
-		Laya.version="1.7.7";
+		Laya.version="1.7.8beta";
 		Laya.render=null
 		Laya._currentStage=null
 		Laya._isinit=false;
@@ -890,7 +890,7 @@ var Laya=window.Laya=(function(window,document){
 		/**
 		*派发事件。
 		*@param type 事件类型。
-		*@param data （可选）回调数据。<b>注意：</b>如果是需要传递多个参数 p1,p2,p3,...可以使用数组结构如：[p1,p2,p3,...] ；如果需要回调单个参数 p 是一个数组，则需要使用结构如：[p]，其他的单个参数 p ，可以直接传入参数 p。
+		*@param data （可选）回调数据。<b>注意：</b>如果是需要传递多个参数 p1,p2,p3,...可以使用数组结构如：[p1,p2,p3,...] ；如果需要回调单个参数 p ，且 p 是一个数组，则需要使用结构如：[p]，其他的单个参数 p ，可以直接传入参数 p。
 		*@return 此事件类型是否有侦听者，如果有侦听者则值为 true，否则值为 false。
 		*/
 		__proto.event=function(type,data){
@@ -1358,8 +1358,7 @@ var Laya=window.Laya=(function(window,document){
 			}
 			this._one=null;
 			this._render=this._renderEmpty;
-			this._sp && (this._sp._renderType &=~0x01);
-			this._sp && (this._sp._renderType &=~0x200);
+			this._sp && (this._sp._renderType &=~0x01 & ~0x200);
 			this._repaint();
 			if (this._vectorgraphArray){
 				for (i=0,len=this._vectorgraphArray.length;i < len;i++){
@@ -1440,14 +1439,14 @@ var Laya=window.Laya=(function(window,document){
 			(width===void 0)&& (width=0);
 			(height===void 0)&& (height=0);
 			(alpha===void 0)&& (alpha=1);
-			if (!tex || alpha < 0.01)return;
+			if (!tex || alpha < 0.01)return null;
 			if (!width)width=tex.sourceWidth;
 			if (!height)height=tex.sourceHeight;
 			var wRate=width / tex.sourceWidth;
 			var hRate=height / tex.sourceHeight;
 			width=tex.width *wRate;
 			height=tex.height *hRate;
-			if (tex.loaded && (width <=0 || height <=0))return;
+			if (tex.loaded && (width <=0 || height <=0))return null;
 			x+=tex.offsetX *wRate;
 			y+=tex.offsetY *hRate;
 			this._sp && (this._sp._renderType |=0x200);
@@ -1474,6 +1473,7 @@ var Laya=window.Laya=(function(window,document){
 				tex.once("loaded",this,this._textureLoaded,[tex,args]);
 			}
 			this._repaint();
+			return args;
 		}
 
 		/**
@@ -1622,6 +1622,14 @@ var Laya=window.Laya=(function(window,document){
 		*/
 		__proto.alpha=function(value){
 			this._saveToCmd(Render._context._alpha,[value]);
+		}
+
+		/**
+		*设置当前透明度。
+		*@param value 透明度。
+		*/
+		__proto.setAlpha=function(value){
+			this._saveToCmd(Render._context._setAlpha,[value]);
 		}
 
 		/**
@@ -3325,6 +3333,12 @@ var Laya=window.Laya=(function(window,document){
 					list.push(e);
 				}
 			},true);
+			canvas.addEventListener("touchcancel",function(e){
+				if (MouseManager.enabled){
+					e.preventDefault();
+					list.push(e);
+				}
+			},true);
 			canvas.addEventListener('mousewheel',function(e){
 				if (MouseManager.enabled)list.push(e);
 			});
@@ -3485,6 +3499,7 @@ var Laya=window.Laya=(function(window,document){
 						}
 						break ;
 					case "touchend":
+					case "touchcancel":
 						MouseManager._isTouchRespond=true;
 						_this._isLeftMouse=true;
 						var touchends=evt.changedTouches;
@@ -5128,6 +5143,16 @@ var Laya=window.Laya=(function(window,document){
 			}
 		}
 
+		SoundManager.disposeSoundIfNotUsed=function(url){
+			var i=0;
+			for (i=SoundManager._channels.length-1;i >=0;i--){
+				if (SoundManager._channels[i].url==url){
+					return;
+				}
+			}
+			SoundManager.destroySound(url);
+		}
+
 		SoundManager._visibilityChange=function(){
 			if (Laya.stage.isVisibility){
 				SoundManager._stageOnFocus();
@@ -5165,7 +5190,7 @@ var Laya=window.Laya=(function(window,document){
 		SoundManager.playSound=function(url,loops,complete,soundClass,startTime){
 			(loops===void 0)&& (loops=1);
 			(startTime===void 0)&& (startTime=0);
-			if (!SoundManager._isActive)return null;
+			if (!SoundManager._isActive || !url)return null;
 			if (SoundManager._muted)return null;
 			url=URL.formatURL(url);
 			if (url==SoundManager._tMusic){
@@ -5189,6 +5214,7 @@ var Laya=window.Laya=(function(window,document){
 			};
 			var channel;
 			channel=tSound.play(startTime,loops);
+			if (!channel)return null;
 			channel.url=url;
 			channel.volume=(url==SoundManager._tMusic)? SoundManager.musicVolume :SoundManager.soundVolume;
 			channel.completeHandler=complete;
@@ -5209,7 +5235,7 @@ var Laya=window.Laya=(function(window,document){
 			url=URL.formatURL(url);
 			SoundManager._tMusic=url;
 			if (SoundManager._musicChannel)SoundManager._musicChannel.stop();
-			return SoundManager._musicChannel=SoundManager.playSound(url,loops,complete,null,startTime);
+			return SoundManager._musicChannel=SoundManager.playSound(url,loops,complete,AudioSound,startTime);
 		}
 
 		SoundManager.stopSound=function(url){
@@ -5246,8 +5272,8 @@ var Laya=window.Laya=(function(window,document){
 		}
 
 		SoundManager.stopMusic=function(){
-			SoundManager._tMusic=null;
 			if (SoundManager._musicChannel)SoundManager._musicChannel.stop();
+			SoundManager._tMusic=null;
 		}
 
 		SoundManager.setSoundVolume=function(volume,url){
@@ -5300,6 +5326,7 @@ var Laya=window.Laya=(function(window,document){
 		SoundManager._musicPosition=0;
 		SoundManager._musicCompleteHandler=null;
 		SoundManager._soundClass=null
+		SoundManager.autoReleaseSound=true;
 		return SoundManager;
 	})()
 
@@ -6172,11 +6199,11 @@ var Laya=window.Laya=(function(window,document){
 			_next._fun.call(_next,sprite,context,x,y);
 		}
 
-		__proto._childs=function(sprite,context,x,y){
+		__proto._childs_max=function(sprite,context,x,y){
 			var style=sprite._style;
-			var _tf=style._tf;
-			x=x-_tf.translateX+style.paddingLeft;
-			y=y-_tf.translateY+style.paddingTop;
+			var tf=style._tf;
+			x=x-tf.translateX+style.paddingLeft;
+			y=y-tf.translateY+style.paddingTop;
 			if (style._calculation){
 				var words=sprite._getWords();
 				if (words){
@@ -6209,15 +6236,41 @@ var Laya=window.Laya=(function(window,document){
 			}
 		}
 
+		__proto._childs=function(sprite,context,x,y){
+			if (sprite._childRenderMax){
+				this._childs_max(sprite,context,x,y);
+				return;
+			};
+			var childs=sprite._childs,n=childs.length,ele;
+			for (var i=0;i < n;++i)
+			(ele=(childs [i]))._style.visible && ele.render(context,x,y);
+		}
+
 		__proto._canvas=function(sprite,context,x,y){
+			var _cacheCanvas=sprite._$P.cacheCanvas;
+			if (!_cacheCanvas){
+				this._next._fun.call(this._next,sprite,context,x,y);
+				return;
+			}
+			_cacheCanvas.type==='bitmap' ? (Stat.canvasBitmap++):(Stat.canvasNormal++);
+			var tx=_cacheCanvas.ctx;
+			if (sprite._needRepaint()|| !tx){
+				this._canvas_repaint(sprite,context,x,y);
+			}
+			else{
+				var tRec=_cacheCanvas._cacheRec;
+				context.drawCanvas(tx.canvas,x+tRec.x,y+tRec.y,tRec.width,tRec.height);
+			}
+		}
+
+		__proto._canvas_repaint=function(sprite,context,x,y){
 			var _cacheCanvas=sprite._$P.cacheCanvas;
 			var _next=this._next;
 			if (!_cacheCanvas){
-				_next._fun.call(_next,sprite,context,x,y);
+				_next._fun.call(_next,sprite,tx,x,y);
 				return;
 			};
 			var tx=_cacheCanvas.ctx;
-			var _realRepaint=sprite._needRepaint();
 			var _repaint=sprite._needRepaint()|| (!tx);
 			var canvas;
 			var left;
@@ -10090,26 +10143,31 @@ var Laya=window.Laya=(function(window,document){
 		}
 
 		__proto.selectedBtnMouseDown=function(){
-			console.log("selectedBtnMouseDown");
 			this.slots.stop();
+			this.slots.flashing(Handler.create(this,this.flashingCompleteHandler));
+		}
+
+		__proto.flashingCompleteHandler=function(){
+			this.slots.visible=false;
+			this.gameStage.playerAtk(Handler.create(this,this.playerAtkComplete));
 		}
 
 		/**
 		*角色移动结束
 		*/
 		__proto.playerMoveComplete=function(){
-			this.gameStage.enemyMove(Handler.create(this,this.enemyMoveComplete));
+			this.gameStage.enemyMove(Handler.create(this,this.slotsInit));
 		}
 
 		/**
 		*敌人移动结束
 		*/
-		__proto.enemyMoveComplete=function(){
+		__proto.slotsInit=function(){
 			console.log("选择伤害界面");
 			this.slots.visible=true;
 			this.slots.initData(0,3);
-			this.slots.initIcon(["comp/num0.png","comp/num1.png","comp/num2.png"]);
 			this.slots.initIconBg("frame/slotsNumBg.png");
+			this.slots.initIcon(["comp/num0.png","comp/num1.png","comp/num2.png"]);
 			this.slots.start(100);
 		}
 
@@ -10140,7 +10198,7 @@ var Laya=window.Laya=(function(window,document){
 		__proto.playerHurtComplete=function(){
 			this.roundIndex++;
 			if (this.roundIndex > 3-1)this.roundIndex=0;
-			this.gameStage.playerAtk(Handler.create(this,this.playerAtkComplete));
+			this.slotsInit();
 		}
 
 		GameStageMediator.NAME="GameStageMediator";
@@ -11095,7 +11153,7 @@ var Laya=window.Laya=(function(window,document){
 
 		/**
 		*<p>加载资源。资源加载错误时，本对象会派发 Event.ERROR 事件，事件回调参数值为加载出错的资源地址。</p>
-		*<p>因为返回值为 LoaderManager 对象本身，所以可以使用如下语法：loaderManager.load(...).load(...);</p>
+		*<p>因为返回值为 LoaderManager 对象本身，所以可以使用如下语法：Laya.loader.load(...).load(...);</p>
 		*@param url 要加载的单个资源地址或资源信息数组。比如：简单数组：["a.png","b.png"]；复杂数组[{url:"a.png",type:Loader.IMAGE,size:100,priority:1},{url:"b.json",type:Loader.JSON,size:50,priority:1}]。
 		*@param complete 加载结束回调。根据url类型不同分为2种情况：1. url为String类型，也就是单个资源地址，如果加载成功，则回调参数值为加载完成的资源，否则为null；2. url为数组类型，指定了一组要加载的资源，如果全部加载成功，则回调参数值为true，否则为false。
 		*@param progress 加载进度回调。回调参数值为当前资源的加载进度信息(0-1)。
@@ -11400,15 +11458,30 @@ var Laya=window.Laya=(function(window,document){
 		__proto.load=function(url){
 			url=URL.formatURL(url);
 			this.url=url;
-			var ad=AudioSound._audioCache[url];
+			var ad;
+			if (url==SoundManager._tMusic){
+				AudioSound._initMusicAudio();
+				ad=AudioSound._musicAudio;
+				if (ad.src !=url){
+					AudioSound._audioCache[ad.src]=null;
+					ad=null;
+				}
+				}else{
+				ad=AudioSound._audioCache[url];
+			}
 			if (ad && ad.readyState >=2){
 				this.event("complete");
 				return;
 			}
 			if (!ad){
-				ad=Browser.createElement("audio");
-				ad.src=url;
+				if (url==SoundManager._tMusic){
+					AudioSound._initMusicAudio();
+					ad=AudioSound._musicAudio;
+					}else{
+					ad=Browser.createElement("audio");
+				}
 				AudioSound._audioCache[url]=ad;
+				ad.src=url;
 			}
 			ad.addEventListener("canplaythrough",onLoaded);
 			ad.addEventListener("error",onErr);
@@ -11447,7 +11520,11 @@ var Laya=window.Laya=(function(window,document){
 			(loops===void 0)&& (loops=0);
 			if (!this.url)return null;
 			var ad;
-			ad=AudioSound._audioCache[this.url];
+			if (this.url==SoundManager._tMusic){
+				ad=AudioSound._musicAudio;
+				}else{
+				ad=AudioSound._audioCache[this.url];
+			}
 			if (!ad)return null;
 			var tAd;
 			tAd=Pool.getItem("audio:"+this.url);
@@ -11457,8 +11534,13 @@ var Laya=window.Laya=(function(window,document){
 					tAd.src=ad.src;
 				}
 			}
-			else{
-				tAd=tAd ? tAd :ad.cloneNode(true);
+			else {
+				if (this.url==SoundManager._tMusic){
+					AudioSound._initMusicAudio();
+					tAd=AudioSound._musicAudio;
+					}else{
+					tAd=tAd ? tAd :ad.cloneNode(true);
+				}
 			};
 			var channel=new AudioSoundChannel(tAd);
 			channel.url=this.url;
@@ -11480,7 +11562,24 @@ var Laya=window.Laya=(function(window,document){
 			return ad.duration;
 		});
 
+		AudioSound._initMusicAudio=function(){
+			if (AudioSound._musicAudio)return;
+			if (!AudioSound._musicAudio)AudioSound._musicAudio=Browser.createElement("audio");
+			Browser.document.addEventListener("touchstart",AudioSound._makeMusicOK);
+		}
+
+		AudioSound._makeMusicOK=function(){
+			Browser.document.removeEventListener("touchstart",AudioSound._makeMusicOK);
+			if (!AudioSound._musicAudio.src){
+				AudioSound._musicAudio.src="";
+				AudioSound._musicAudio.load();
+				}else{
+				AudioSound._musicAudio.play();
+			}
+		}
+
 		AudioSound._audioCache={};
+		AudioSound._musicAudio=null
 		return AudioSound;
 	})(EventDispatcher)
 
@@ -11790,7 +11889,7 @@ var Laya=window.Laya=(function(window,document){
 
 	/**
 	*<p> <code>HttpRequest</code> 通过封装 HTML <code>XMLHttpRequest</code> 对象提供了对 HTTP 协议的完全的访问，包括做出 POST 和 HEAD 请求以及普通的 GET 请求的能力。 <code>HttpRequest</code> 只提供以异步的形式返回 Web 服务器的响应，并且能够以文本或者二进制的形式返回内容。</p>
-	*<p><b>注意：</b>建议每次请求都使用新的 <code>HttpRequest</code> 对象，因为每次调用该对象的send方法时，都会清空之前设置的数据，并重置 HTTP 请求的状态，这会导致之前还未返回响应的请求被重置，从而得不到之前请求的响应结果。
+	*<p><b>注意：</b>建议每次请求都使用新的 <code>HttpRequest</code> 对象，因为每次调用该对象的send方法时，都会清空之前设置的数据，并重置 HTTP 请求的状态，这会导致之前还未返回响应的请求被重置，从而得不到之前请求的响应结果。</p>
 	*/
 	//class laya.net.HttpRequest extends laya.events.EventDispatcher
 	var HttpRequest=(function(_super){
@@ -11994,6 +12093,13 @@ var Laya=window.Laya=(function(window,document){
 			}
 			if (type==="image" || type==="htmlimage" || type==="nativeimage")return this._loadImage(url);
 			if (type==="sound")return this._loadSound(url);
+			if (type=="atlas"){
+				if (Loader.preLoadedAtlasConfigMap[url]){
+					this.onLoaded(Loader.preLoadedAtlasConfigMap[url]);
+					delete Loader.preLoadedAtlasConfigMap[url];
+					return;
+				}
+			}
 			if (!this._http){
 				this._http=new HttpRequest();
 				this._http.on("progress",this,this.onProgress);
@@ -12038,6 +12144,7 @@ var Laya=window.Laya=(function(window,document){
 			function clear (){
 				image.onload=null;
 				image.onerror=null;
+				delete Loader.imgCache[url]
 			};
 			var onload=function (){
 				clear();
@@ -12053,9 +12160,11 @@ var Laya=window.Laya=(function(window,document){
 				image.onload=onload;
 				image.onerror=onerror;
 				image.src=url;
+				Loader.imgCache[url]=image;
 				}else {
 				new HTMLImage.create(url,{onload:onload,onerror:onerror,onCreate:function (img){
 						image=img;
+						Loader.imgCache[url]=img;
 				}});
 			}
 		}
@@ -12150,6 +12259,7 @@ var Laya=window.Laya=(function(window,document){
 						Loader.loadedMap[url].url=url;
 						map.push(url);
 					}
+					delete this._data.pics;
 					this.complete(this._data);
 				}
 				}else if (type=="font"){
@@ -12254,6 +12364,10 @@ var Laya=window.Laya=(function(window,document){
 			}
 		}
 
+		Loader.setAtlasConfigs=function(url,config){
+			Loader.preLoadedAtlasConfigMap[URL.formatURL(url)]=config;
+		}
+
 		Loader.getRes=function(url){
 			return Loader.loadedMap[URL.formatURL(url)];
 		}
@@ -12298,10 +12412,12 @@ var Laya=window.Laya=(function(window,document){
 		Loader.groupMap={};
 		Loader.maxTimeOut=100;
 		Loader.loadedMap={};
+		Loader.preLoadedAtlasConfigMap={};
 		Loader.atlasMap={};
 		Loader._loaders=[];
 		Loader._isWorking=false;
 		Loader._startIndex=0;
+		Loader.imgCache={};
 		return Loader;
 	})(EventDispatcher)
 
@@ -12372,16 +12488,18 @@ var Laya=window.Laya=(function(window,document){
 		__proto.destroy=function(forceDispose){
 			(forceDispose===void 0)&& (forceDispose=false);
 			if (this.bitmap && (this.bitmap).useNum > 0){
+				var temp=this.bitmap;
 				if (forceDispose){
-					this.bitmap.dispose();
-					(this.bitmap).useNum=0;
+					this.bitmap=null;
+					temp.dispose();
+					(temp).useNum=0;
 					}else {
-					(this.bitmap).useNum--;
-					if ((this.bitmap).useNum==0){
-						this.bitmap.dispose();
+					(temp).useNum--;
+					if ((temp).useNum==0){
+						this.bitmap=null;
+						temp.dispose();
 					}
 				}
-				this.bitmap=null;
 				if (this.url && this===Laya.loader.getRes(this.url))Laya.loader.clearRes(this.url,forceDispose);
 				this._loaded=false;
 			}
@@ -12394,6 +12512,7 @@ var Laya=window.Laya=(function(window,document){
 		__proto.load=function(url){
 			var _$this=this;
 			this._loaded=false;
+			url=URL.customFormat(url);
 			var fileBitmap=(this.bitmap || (this.bitmap=HTMLImage.create(url)));
 			if (fileBitmap)fileBitmap.useNum++;
 			var _this=this;
@@ -13696,6 +13815,7 @@ var Laya=window.Laya=(function(window,document){
 			this._renderType=0;
 			this._optimizeScrollRect=false;
 			this._texture=null;
+			this._childRenderMax=false;
 			this.mouseThrough=false;
 			this.autoSize=false;
 			this.hitTestPrior=false;
@@ -13734,7 +13854,8 @@ var Laya=window.Laya=(function(window,document){
 		}
 
 		/**
-		*设置对象bounds大小，如果有设置，则不再通过getBounds计算，合理使用能提高性能。
+		*<p>设置对象在自身坐标系下的边界范围。与 <code>getSelfBounds</code> 对应。当 autoSize==true 时，会影响对象宽高。设置后，当需要获取自身边界范围时，就不再需要计算，合理使用能提高性能。比如 <code>getBounds</code> 会优先使用 <code>setBounds</code> 指定的值，如果没有指定则进行计算，此计算会对性能消耗比较大。</p>
+		*<p><b>注意：</b> <code>setBounds</code> 与 <code>getBounds</code> 并非对应相等关系， <code>getBounds</code> 获取的是本对象在父容器坐标系下的边界范围，通过设置 <code>setBounds</code> 会影响 <code>getBounds</code> 的结果。</p>
 		*@param bound bounds矩形区域
 		*/
 		__proto.setBounds=function(bound){
@@ -13743,7 +13864,7 @@ var Laya=window.Laya=(function(window,document){
 
 		/**
 		*<p>获取本对象在父容器坐标系的矩形显示区域。</p>
-		*<p><b>注意：</b>计算量较大，尽量少用。</p>
+		*<p><b>注意：</b> 1.计算量较大，尽量少用，如果需要频繁使用，可以通过手动设置 <code>setBounds</code> 来缓存自身边界信息，从而避免比较消耗性能的计算。2. <code>setBounds</code> 与 <code>getBounds</code> 并非对应相等关系， <code>getBounds</code> 获取的是本对象在父容器坐标系下的边界范围，通过设置 <code>setBounds</code> 会影响 <code>getBounds</code> 的结果。</p>
 		*@return 矩形区域。
 		*/
 		__proto.getBounds=function(){
@@ -13752,11 +13873,12 @@ var Laya=window.Laya=(function(window,document){
 		}
 
 		/**
-		*获取本对象在自己坐标系的矩形显示区域。
-		*<p><b>注意：</b>计算量较大，尽量少用。</p>
+		*获取对象在自身坐标系的边界范围。与 <code>setBounds</code> 对应。
+		*<p><b>注意：</b>计算量较大，尽量少用，如果需要频繁使用，可以提前手动设置 <code>setBounds</code> 来缓存自身边界信息，从而避免比较消耗性能的计算。</p>
 		*@return 矩形区域。
 		*/
 		__proto.getSelfBounds=function(){
+			if (this._$P.uBounds)return this._$P.uBounds;
 			if (!this._$P.mBounds)this._set$P("mBounds",new Rectangle());
 			return Rectangle._getWrapRec(this._getBoundPointsM(false),this._$P.mBounds);
 		}
@@ -13851,7 +13973,7 @@ var Laya=window.Laya=(function(window,document){
 		*@return 样式 Style 。
 		*/
 		__proto.getStyle=function(){
-			this._style===Style.EMPTY && (this._style=new Style());
+			this._style===Style.EMPTY && (this._style=new Style(),this._childRenderMax=true);
 			return this._style;
 		}
 
@@ -13930,7 +14052,7 @@ var Laya=window.Laya=(function(window,document){
 
 		/**
 		*<p>设置轴心点。相当于分别设置pivotX和pivotY属性。</p>
-		*<p>因为返回值为Sprite对象本身，所以可以使用如下语法：spr.pivot(...).pos(50,100);</p>
+		*<p>因为返回值为Sprite对象本身，所以可以使用如下语法：spr.pivot(...).pos(...);</p>
 		*@param x X轴心点。
 		*@param y Y轴心点。
 		*@return 返回对象本身。
@@ -13943,7 +14065,7 @@ var Laya=window.Laya=(function(window,document){
 
 		/**
 		*<p>设置宽高。相当于分别设置width和height属性。</p>
-		*<p>因为返回值为Sprite对象本身，所以可以使用如下语法：spr.size(...).pos(50,100);</p>
+		*<p>因为返回值为Sprite对象本身，所以可以使用如下语法：spr.size(...).pos(...);</p>
 		*@param width 宽度值。
 		*@param hegiht 高度值。
 		*@return 返回对象本身。
@@ -13956,7 +14078,7 @@ var Laya=window.Laya=(function(window,document){
 
 		/**
 		*<p>设置缩放。相当于分别设置scaleX和scaleY属性。</p>
-		*<p>因为返回值为Sprite对象本身，所以可以使用如下语法：spr.scale(...).pos(50,100);</p>
+		*<p>因为返回值为Sprite对象本身，所以可以使用如下语法：spr.scale(...).pos(...);</p>
 		*@param scaleX X轴缩放比例。
 		*@param scaleY Y轴缩放比例。
 		*@param speedMode （可选）是否极速模式，正常是调用this.scaleX=value进行赋值，极速模式直接调用内部函数处理，如果未重写scaleX,scaleY属性，建议设置为急速模式性能更高。
@@ -13988,7 +14110,7 @@ var Laya=window.Laya=(function(window,document){
 
 		/**
 		*<p>设置倾斜角度。相当于分别设置skewX和skewY属性。</p>
-		*<p>因为返回值为Sprite对象本身，所以可以使用如下语法：spr.skew(...).pos(50,100);</p>
+		*<p>因为返回值为Sprite对象本身，所以可以使用如下语法：spr.skew(...).pos(...);</p>
 		*@param skewX 水平倾斜角度。
 		*@param skewY 垂直倾斜角度。
 		*@return 返回对象本身
@@ -14500,7 +14622,15 @@ var Laya=window.Laya=(function(window,document){
 				if (this._$P["hasFilter"]){
 					this._set$P("cacheForFilters",true);
 					}else {
-					if (cacheCanvas)Pool.recover("cacheCanvas",cacheCanvas);
+					if (cacheCanvas){
+						var cc=cacheCanvas;
+						if (cc && cc.ctx){
+							Pool.recover("RenderContext",cc.ctx);
+							cc.ctx.canvas.size(0,0);
+							cc.ctx=null;
+						}
+						Pool.recover("cacheCanvas",cacheCanvas);
+					}
 					this._$P.cacheCanvas=null;
 					this._renderType &=~0x10;
 					this.conchModel && this.conchModel.cacheAs(0);
@@ -14585,7 +14715,7 @@ var Laya=window.Laya=(function(window,document){
 			var ele=this;
 			while (ele){
 				if (ele===Laya.stage)break ;
-				scale *=ele.scaleX;
+				scale *=ele.scaleY;
 				ele=ele.parent;
 			}
 			return scale;
@@ -14601,7 +14731,10 @@ var Laya=window.Laya=(function(window,document){
 			this._set$P("hitArea",value);
 		});
 
-		/**设置cacheAs为非空时此值才有效，staticCache=true时，子对象变化时不会自动更新缓存，只能通过调用reCache方法手动刷新。*/
+		/**
+		*是否静态缓存此对象的当前帧的最终属性。为 true 时，子对象变化时不会自动更新缓存，但是可以通过调用 reCache 方法手动刷新。
+		*<b>注意：</b> 1. 设置 cacheAs 为非空和非"none"时才有效。 2. 由于渲染的时机在脚本执行之后，也就是说当前帧渲染的是对象的最终属性，所以如果在当前帧渲染之前、设置静态缓存之后改变对象属性，则最终渲染结果表现的是对象的最终属性。
+		*/
 		__getset(0,__proto,'staticCache',function(){
 			return this._$P.staticCache;
 			},function(value){
@@ -14715,6 +14848,7 @@ var Laya=window.Laya=(function(window,document){
 			if (style._tf.skewX!==value){
 				style.setSkewX(value);
 				this._tfChanged=true;
+				this.conchModel && this.conchModel.skew(value,style._tf.skewY);
 				this._renderType |=0x04;
 				var p=this._parent;
 				if (p && p._repaint===0){
@@ -15001,6 +15135,7 @@ var Laya=window.Laya=(function(window,document){
 		*彻底清理资源。
 		*/
 		__proto.dispose=function(){
+			if (this.disposed)return;
 			this._resourceManager.removeResource(this);
 			_super.prototype.dispose.call(this);
 		}
@@ -15111,8 +15246,11 @@ var Laya=window.Laya=(function(window,document){
 			this._audio.pause();
 			this._audio.removeEventListener("ended",this._onEnd);
 			this._audio.removeEventListener("canplay",this._resumePlay);
-			if(!Browser.onIE)
-				Pool.recover("audio:"+this.url,this._audio);
+			if (!Browser.onIE){
+				if (this._audio!=AudioSound._musicAudio){
+					Pool.recover("audio:"+this.url,this._audio);
+				}
+			}
 			Browser.removeElement(this._audio);
 			this._audio=null;
 		}
@@ -15281,6 +15419,8 @@ var Laya=window.Laya=(function(window,document){
 			this.isStopped=true;
 			SoundManager.removeChannel(this);
 			this.completeHandler=null;
+			if(SoundManager.autoReleaseSound)
+				Laya.timer.once(5000,null,SoundManager.disposeSoundIfNotUsed,[this.url],false);
 		}
 
 		__proto.pause=function(){
@@ -15292,6 +15432,8 @@ var Laya=window.Laya=(function(window,document){
 				this.gain.disconnect();
 			this.isStopped=true;
 			SoundManager.removeChannel(this);
+			if(SoundManager.autoReleaseSound)
+				Laya.timer.once(5000,null,SoundManager.disposeSoundIfNotUsed,[this.url],false);
 		}
 
 		__proto.resume=function(){
@@ -15832,21 +15974,22 @@ var Laya=window.Laya=(function(window,document){
 	var SlotsPanel=(function(_super){
 		function SlotsPanel(){
 			this._$3_timer=null;
+			this.flashingTimer=null;
 			this._index=0;
 			this._totalIndex=0;
-			this.callBack=null;
+			this.flashingCallBackHandler=null;
 			this.panel=null;
-			this.selectImg=null;
 			this.contentSpt=null;
 			this.bgSpt=null;
 			this.frameSpt=null;
 			this.selectedImg=null;
+			this.flashingIndex=0;
 			this.selectedBtn=null;
 			this.titleTxt=null;
 			SlotsPanel.__super.call(this);
 			this._index=0;
 			this.totalIndex=0;
-			this.callBack=null;
+			this.flashingIndex=0;
 			this.panel=new SlotsPanelUI();
 			this.addChild(this.panel);
 			this.selectedBtn=this.panel.selectBtn;
@@ -15854,6 +15997,7 @@ var Laya=window.Laya=(function(window,document){
 			this.contentSpt=this.panel.contentSpt;
 			this.frameSpt=this.panel.frameSpt;
 			this.bgSpt=this.panel.bgSpt;
+			this.flashingCallBackHandler=null;
 			this.selectedImg=this.panel.selectedImg;
 		}
 
@@ -15869,9 +16013,9 @@ var Laya=window.Laya=(function(window,document){
 			var count=imgAry.length;
 			if (count > 9)count=9;
 			for (var i=0;i < count;++i){
-				var numImg=this.contentSpt.getChildByName("m"+(i+1));
-				numImg.autoSize=true;
-				numImg.skin=imgAry[i];
+				var icon=this.contentSpt.getChildByName("m"+(i+1));
+				var image=new Image(imgAry[i]);
+				icon.addChild(image);
 			}
 		}
 
@@ -15879,9 +16023,9 @@ var Laya=window.Laya=(function(window,document){
 		*清空数字icon
 		*/
 		__proto.clearIcon=function(){
-			for (var i=0;i < 9;i++){
-				var numImg=this.contentSpt.getChildByName("m"+(i+1));
-				numImg.skin="";
+			for (var i=0;i < 9;++i){
+				var icon=this.contentSpt.getChildByName("m"+(i+1));
+				icon.removeChildren(0,1);
 			}
 		}
 
@@ -15924,11 +16068,11 @@ var Laya=window.Laya=(function(window,document){
 		*开始
 		*@param delay 每一格的时间
 		*/
-		__proto.start=function(delay,callBack){
+		__proto.start=function(delay){
 			if (!this._$3_timer)this._$3_timer=new Timer();
 			this.timer.clear(this,this.loopHandler);
 			this.timer.loop(delay,this,this.loopHandler);
-			this.callBack=callBack;
+			if (!this.flashingTimer)this.flashingTimer=new Timer();
 		}
 
 		/**
@@ -15937,6 +16081,30 @@ var Laya=window.Laya=(function(window,document){
 		__proto.stop=function(){
 			if (!this._$3_timer)return;
 			this.timer.clear(this,this.loopHandler);
+		}
+
+		/**
+		*闪烁
+		*/
+		__proto.flashing=function(handler){
+			if (!this.flashingTimer)this.flashingTimer=new Timer();
+			this.flashingTimer.clear(this,this.flashingLoopHandler);
+			this.flashingTimer.loop(80,this,this.flashingLoopHandler);
+			this.flashingCallBackHandler=handler;
+		}
+
+		/**
+		*循环
+		*/
+		__proto.flashingLoopHandler=function(){
+			this.selectedImg.visible=!this.selectedImg.visible;
+			this.flashingIndex++;
+			if (this.flashingIndex >=10){
+				this.flashingIndex=0;
+				this.flashingTimer.clear(this,this.flashingLoopHandler);
+				if (this.flashingCallBackHandler)
+					this.flashingCallBackHandler.run();
+			}
 		}
 
 		/**
@@ -15949,8 +16117,6 @@ var Laya=window.Laya=(function(window,document){
 			var frameImg=this.frameSpt.getChildByName("frame"+(this._index+1));
 			this.selectedImg.x=frameImg.x;
 			this.selectedImg.y=frameImg.y;
-			if (this.callBack && (typeof this.callBack=='function'))
-				this.callBack.call();
 		}
 
 		/**
@@ -16192,7 +16358,6 @@ var Laya=window.Laya=(function(window,document){
 			this._lastVisibleLineIndex=-1;
 			this._words=null;
 			this._charSize={};
-			this._fontActallyUsed=null;
 			this.underline=false;
 			this._underlineColor=null;
 			Text.__super.call(this);
@@ -16276,7 +16441,7 @@ var Laya=window.Laya=(function(window,document){
 		__proto.renderText=function(begin,visibleLineCount){
 			var graphics=this.graphics;
 			graphics.clear(true);
-			var ctxFont=(this.italic ? "italic " :"")+(this.bold ? "bold " :"")+this.fontSize+"px "+this._fontActallyUsed;
+			var ctxFont=(this.italic ? "italic " :"")+(this.bold ? "bold " :"")+this.fontSize+"px "+(Browser.onIPhone ? (laya.display.Text._fontFamilyMap[this.font] || this.font):this.font);
 			Browser.context.font=ctxFont;
 			var padding=this.padding;
 			var startX=padding[3];
@@ -16706,18 +16871,8 @@ var Laya=window.Laya=(function(window,document){
 				this._currBitmapFont=null;
 				this.scale(1,1);
 			}
-			this._fontActallyUsed=value;
 			if (Text._bitmapFonts && Text._bitmapFonts[value]){
 				this._currBitmapFont=Text._bitmapFonts[value];
-			}
-			else {
-				if (Browser.onIPhone && Text._fontFamilyMapList.indexOf(value)>-1){
-					var language=Browser.window.navigator.language;
-					if (language=="zh-cn")
-						this._fontActallyUsed+="-简";
-					else if (language=="zh-tw")
-					this._fontActallyUsed+="-繁";
-				}
 			}
 			this._getCSSStyle().fontFamily=value;
 			this.isChanged=true;
@@ -16939,11 +17094,11 @@ var Laya=window.Laya=(function(window,document){
 
 		Text.supportFont=function(font){
 			Browser.context.font="10px sans-serif";
-			var arialFontWidth=Browser.context.measureText("abcji").width;
+			var defaultFontWidth=Browser.context.measureText("abcji").width;
 			Browser.context.font="10px "+font;
 			var customFontWidth=Browser.context.measureText("abcji").width;
-			console.log(arialFontWidth,customFontWidth);
-			if (arialFontWidth==customFontWidth)
+			console.log(defaultFontWidth,customFontWidth);
+			if (defaultFontWidth==customFontWidth)
 				return false;
 			else
 			return true;
@@ -16954,9 +17109,10 @@ var Laya=window.Laya=(function(window,document){
 		Text.VISIBLE="visible";
 		Text.SCROLL="scroll";
 		Text.HIDDEN="hidden";
+		Text.CharacterCache=true;
 		Text._bitmapFonts=null
 		__static(Text,
-		['_fontFamilyMapList',function(){return this._fontFamilyMapList=["报隶","黑体","楷体","兰亭黑","隶变","凌慧体","翩翩体","苹方","手札体","宋体","娃娃体","魏碑","行楷","雅痞","圆体"];}
+		['_fontFamilyMap',function(){return this._fontFamilyMap={"报隶" :"报隶-简","黑体" :"黑体-简","楷体" :"楷体-简","兰亭黑" :"兰亭黑-简","隶变" :"隶变-简","凌慧体" :"凌慧体-简","翩翩体" :"翩翩体-简","苹方" :"苹方-简","手札体" :"手札体-简","宋体" :"宋体-简","娃娃体" :"娃娃体-简","魏碑" :"魏碑-简","行楷" :"行楷-简","雅痞" :"雅痞-简","圆体" :"圆体-简"};}
 		]);
 		return Text;
 	})(Sprite)
@@ -18047,6 +18203,7 @@ var Laya=window.Laya=(function(window,document){
 		__proto.destroy=function(){
 			this._ctx && this._ctx.destroy();
 			this._ctx=null;
+			this.dispose();
 		}
 
 		/**
@@ -21674,7 +21831,7 @@ var Laya=window.Laya=(function(window,document){
 			this.typeset();
 			input.setColor(this._originColor);
 			input.setFontSize(this.fontSize);
-			input.setFontFace(this._fontActallyUsed);
+			input.setFontFace(Browser.onIPhone ? (Text._fontFamilyMap[this.font] || this.font):this.font);
 			if (Render.isConchApp){
 				input.setMultiAble && input.setMultiAble(this._multiline);
 			}
@@ -22206,7 +22363,7 @@ var Laya=window.Laya=(function(window,document){
 		/**
 		*<p>根据指定的动画模版初始化当前动画序列帧。选择动画模版的过程如下：1. 动画模版缓存池中key为cacheName的动画模版；2. 如果不存在，则加载指定的图片集合并创建动画模版。注意：只有指定不为空的cacheName，才能将创建好的动画模版以此为key缓存到动画模版缓存池，否则不进行缓存。</p>
 		*<p>动画模版缓存池是以一定的内存开销来节省CPU开销，当相同的动画模版被多次使用时，相比于每次都创建新的动画模版，使用动画模版缓存池，只需创建一次，缓存之后多次复用，从而节省了动画模版创建的开销。</p>
-		*<p>因为返回值为Animation对象本身，所以可以使用如下语法：loadImages(...).loadImages(...).play(...);。</p>
+		*<p>因为返回值为Animation对象本身，所以可以使用如下语法：ani.loadImages(...).loadImages(...).play(...);。</p>
 		*@param urls 图片路径集合。需要创建动画模版时，会以此为数据源。参数形如：[url1,url2,url3,...]。
 		*@param cacheName （可选）动画模板在动画模版缓存池中的key。如果此参数不为空，表示使用动画模版缓存池。如果动画模版缓存池中存在key为cacheName的动画模版，则使用此模版。否则，创建新的动画模版，如果cacheName不为空，则以cacheName为key缓存到动画模版缓存池中，如果cacheName为空，不进行缓存。
 		*@return 返回Animation对象本身。
@@ -22224,7 +22381,7 @@ var Laya=window.Laya=(function(window,document){
 		*<p>根据指定的动画模版初始化当前动画序列帧。选择动画模版的过程如下：1. 动画模版缓存池中key为cacheName的动画模版；2. 如果不存在，则加载指定的图集并创建动画模版。</p>
 		*<p>注意：只有指定不为空的cacheName，才能将创建好的动画模版以此为key缓存到动画模版缓存池，否则不进行缓存。</p>
 		*<p>动画模版缓存池是以一定的内存开销来节省CPU开销，当相同的动画模版被多次使用时，相比于每次都创建新的动画模版，使用动画模版缓存池，只需创建一次，缓存之后多次复用，从而节省了动画模版创建的开销。</p>
-		*<p>因为返回值为Animation对象本身，所以可以使用如下语法：loadAtlas(...).loadAtlas(...).play(...);。</p>
+		*<p>因为返回值为Animation对象本身，所以可以使用如下语法：ani.loadAtlas(...).loadAtlas(...).play(...);。</p>
 		*@param url 图集路径。需要创建动画模版时，会以此为数据源。
 		*@param loaded （可选）使用指定图集初始化动画完毕的回调。
 		*@param cacheName （可选）动画模板在动画模版缓存池中的key。如果此参数不为空，表示使用动画模版缓存池。如果动画模版缓存池中存在key为cacheName的动画模版，则使用此模版。否则，创建新的动画模版，如果cacheName不为空，则以cacheName为key缓存到动画模版缓存池中，如果cacheName为空，不进行缓存。
@@ -22251,7 +22408,7 @@ var Laya=window.Laya=(function(window,document){
 		*<p>加载并解析由LayaAir IDE制作的动画文件，此文件中可能包含多个动画。默认帧率为在IDE中设计的帧率，如果调用过set interval，则使用此帧间隔对应的帧率。加载后创建动画模版，并缓存到动画模版缓存池，key "url#动画名称" 对应相应动画名称的动画模板，key "url#" 对应动画模版集合的默认动画模版。</p>
 		*<p>注意：如果调用本方法前，还没有预加载动画使用的图集，请将atlas参数指定为对应的图集路径，否则会导致动画创建失败。</p>
 		*<p>动画模版缓存池是以一定的内存开销来节省CPU开销，当相同的动画模版被多次使用时，相比于每次都创建新的动画模版，使用动画模版缓存池，只需创建一次，缓存之后多次复用，从而节省了动画模版创建的开销。</p>
-		*<p>因为返回值为Animation对象本身，所以可以使用如下语法：loadAnimation(...).loadAnimation(...).play(...);。</p>
+		*<p>因为返回值为Animation对象本身，所以可以使用如下语法：ani.loadAnimation(...).loadAnimation(...).play(...);。</p>
 		*@param url 动画文件路径。可由LayaAir IDE创建并发布。
 		*@param loaded （可选）使用指定动画资源初始化动画完毕的回调。
 		*@param atlas （可选）动画用到的图集地址（可选）。
@@ -26506,14 +26663,15 @@ var Laya=window.Laya=(function(window,document){
 			(alpha===void 0)&& (alpha=1);
 			var tNodeG;
 			tNodeG=this._nodeGDic[node.compId]=this._getNodeGraphicData(node.compId,frame,this._nodeGDic[node.compId]);
-			if (!tNodeG.resultTransform)
-				tNodeG.resultTransform=new Matrix();
+			var tGraphicAlpha=tNodeG.alpha *alpha;
+			if (tGraphicAlpha < 0.01)return;
+			if (!tNodeG.resultTransform){
+				tNodeG.resultTransform=Matrix.create();
+			};
 			var tResultTransform;
 			tResultTransform=tNodeG.resultTransform;
 			Matrix.mul(tNodeG.transform,parentTransfrom,tResultTransform);
 			var tTex;
-			var tGraphicAlpha=tNodeG.alpha *alpha;
-			if (tGraphicAlpha < 0.01)return;
 			if (tNodeG.skin){
 				tTex=this._getTextureByUrl(tNodeG.skin);
 				if (tTex){
@@ -26652,10 +26810,10 @@ var Laya=window.Laya=(function(window,document){
 
 		__proto._getNodeGraphicData=function(nodeID,frame,rst){
 			if (!rst)
-				rst=new GraphicNode();
+				rst=GraphicNode.create();
 			if (!rst.transform){
-				rst.transform=new Matrix();
-				}else {
+				rst.transform=Matrix.create();
+				}else{
 				rst.transform.identity();
 			};
 			var node=this.getNodeDataByID(nodeID);
@@ -26834,6 +26992,14 @@ var Laya=window.Laya=(function(window,document){
 			this.animationList=null;
 			this.animationDic=null;
 			this._gList=null;
+			if (this._nodeGDic){
+				var key;
+				var tGNode;
+				for (key in this._nodeGDic){
+					tGNode=this._nodeGDic[key];
+					if (tGNode)tGNode.recover();
+				}
+			}
 			this._nodeGDic=null;
 		}
 
@@ -26876,6 +27042,25 @@ var Laya=window.Laya=(function(window,document){
 					this.alpha=1;
 				}
 				__class(GraphicNode,'');
+				var __proto=GraphicNode.prototype;
+				__proto.recover=function(){
+					this.skin=null;
+					this.width=0;
+					this.height=0;
+					this.alpha=1;
+					if (this.transform){
+						this.transform.destroy();
+						this.transform=null;
+					}
+					if (this.resultTransform){
+						this.resultTransform.destroy();
+						this.resultTransform=null;
+					}
+					Pool.recover("GraphicNode",this);
+				}
+				GraphicNode.create=function(){
+					return Pool.getItemByClass("GraphicNode",GraphicNode);
+				}
 				return GraphicNode;
 			})()
 		}
@@ -27723,7 +27908,7 @@ var Laya=window.Laya=(function(window,document){
 		}
 
 		__static(SlotsPanelUI,
-		['uiView',function(){return this.uiView={"type":"Dialog","props":{"width":1024,"height":640,"alpha":100},"child":[{"type":"Image","props":{"y":325,"x":512,"skin":"frame/slotsPanelBg.png","anchorY":0.5,"anchorX":0.5}},{"type":"Image","props":{"y":188,"x":512,"skin":"comp/slotsPanelTitleBg.png","anchorY":0.5,"anchorX":0.5}},{"type":"Image","props":{"y":142,"x":512,"skin":"comp/slotsTitle.png","anchorX":0.5}},{"type":"Label","props":{"y":208,"x":512,"width":219,"var":"titleTxt","text":"房间敌人数量","overflow":"visible","height":25,"fontSize":20,"font":"SimHei","color":"#033297","bold":true,"anchorY":0.5,"anchorX":0.5,"align":"center"}},{"type":"Button","props":{"y":460,"x":758,"var":"selectBtn","stateNum":"3","skin":"btn/selectBtn.png","anchorY":1,"anchorX":0.5}},{"type":"Sprite","props":{"y":231,"x":373,"width":279,"var":"bgSpt","height":224},"child":[{"type":"Image","props":{"y":7,"x":0,"width":84,"name":"bg1","height":63}},{"type":"Image","props":{"y":7,"x":97,"width":84,"name":"bg2","height":63}},{"type":"Image","props":{"y":7,"x":193,"width":84,"name":"bg3","height":63}},{"type":"Image","props":{"y":80,"x":0,"width":84,"name":"bg4","height":63}},{"type":"Image","props":{"y":80,"x":97,"width":84,"name":"bg5","height":63}},{"type":"Image","props":{"y":80,"x":193,"width":84,"name":"bg6","height":63}},{"type":"Image","props":{"y":152,"x":0,"width":84,"name":"bg7","height":63}},{"type":"Image","props":{"y":152,"x":97,"width":84,"name":"bg8","height":63}},{"type":"Image","props":{"y":152,"x":193,"width":84,"name":"bg9","height":63}}]},{"type":"Sprite","props":{"y":231,"x":373,"width":279,"var":"contentSpt","height":224},"child":[{"type":"Image","props":{"y":38.5,"x":42,"width":84,"name":"m1","height":63,"anchorY":0.5,"anchorX":0.5}},{"type":"Image","props":{"y":38.5,"x":139,"width":84,"name":"m2","height":63,"anchorY":0.5,"anchorX":0.5}},{"type":"Image","props":{"y":38.5,"x":235,"width":84,"name":"m3","height":63,"anchorY":0.5,"anchorX":0.5}},{"type":"Image","props":{"y":110.5,"x":42,"width":84,"name":"m4","height":63,"anchorY":0.5,"anchorX":0.5}},{"type":"Image","props":{"y":110.5,"x":139,"width":84,"name":"m5","height":63,"anchorY":0.5,"anchorX":0.5}},{"type":"Image","props":{"y":110.5,"x":235,"width":84,"name":"m6","height":63,"anchorY":0.5,"anchorX":0.5}},{"type":"Image","props":{"y":183.5,"x":42,"width":84,"name":"m7","height":63,"anchorY":0.5,"anchorX":0.5}},{"type":"Image","props":{"y":183.5,"x":139,"width":84,"name":"m8","height":63,"anchorY":0.5,"anchorX":0.5}},{"type":"Image","props":{"y":183.5,"x":235,"width":84,"name":"m9","height":63,"anchorY":0.5,"anchorX":0.5}}]},{"type":"Sprite","props":{"y":231,"x":373,"width":279,"var":"frameSpt","height":224},"child":[{"type":"Image","props":{"y":7,"x":0,"width":84,"pivotX":0.5,"name":"frame1","height":63}},{"type":"Image","props":{"y":7,"x":97,"width":84,"name":"frame2","height":63}},{"type":"Image","props":{"y":7,"x":193,"width":84,"name":"frame3","height":63}},{"type":"Image","props":{"y":80,"x":0,"width":84,"name":"frame4","height":63}},{"type":"Image","props":{"y":80,"x":97,"width":84,"name":"frame5","height":63}},{"type":"Image","props":{"y":80,"x":193,"width":84,"name":"frame6","height":63}},{"type":"Image","props":{"y":152,"x":0,"width":84,"name":"frame7","height":63}},{"type":"Image","props":{"y":152,"x":97,"width":84,"name":"frame8","height":63}},{"type":"Image","props":{"y":152,"x":193,"width":84,"name":"frame9","height":63}},{"type":"Image","props":{"y":7,"var":"selectedImg","skin":"frame/slotsSelectedBg.png"}}]}]};}
+		['uiView',function(){return this.uiView={"type":"Dialog","props":{"width":1024,"height":640,"alpha":100},"child":[{"type":"Image","props":{"y":325,"x":512,"skin":"frame/slotsPanelBg.png","anchorY":0.5,"anchorX":0.5}},{"type":"Image","props":{"y":188,"x":512,"skin":"comp/slotsPanelTitleBg.png","anchorY":0.5,"anchorX":0.5}},{"type":"Image","props":{"y":142,"x":512,"skin":"comp/slotsTitle.png","anchorX":0.5}},{"type":"Label","props":{"y":208,"x":512,"width":219,"var":"titleTxt","text":"房间敌人数量","overflow":"visible","height":25,"fontSize":20,"font":"SimHei","color":"#033297","bold":true,"anchorY":0.5,"anchorX":0.5,"align":"center"}},{"type":"Button","props":{"y":463,"x":758,"var":"selectBtn","stateNum":"3","skin":"btn/selectBtn.png","anchorY":1,"anchorX":0.5}},{"type":"Sprite","props":{"y":231,"x":373,"width":279,"var":"bgSpt","height":224},"child":[{"type":"Image","props":{"y":7,"x":0,"width":84,"name":"bg1","height":63}},{"type":"Image","props":{"y":7,"x":97,"width":84,"name":"bg2","height":63}},{"type":"Image","props":{"y":7,"x":193,"width":84,"name":"bg3","height":63}},{"type":"Image","props":{"y":80,"x":0,"width":84,"name":"bg4","height":63}},{"type":"Image","props":{"y":80,"x":97,"width":84,"name":"bg5","height":63}},{"type":"Image","props":{"y":80,"x":193,"width":84,"name":"bg6","height":63}},{"type":"Image","props":{"y":152,"x":0,"width":84,"name":"bg7","height":63}},{"type":"Image","props":{"y":152,"x":97,"width":84,"name":"bg8","height":63}},{"type":"Image","props":{"y":152,"x":193,"width":84,"name":"bg9","height":63}}]},{"type":"Sprite","props":{"y":231,"x":373,"width":279,"var":"contentSpt","height":224},"child":[{"type":"Sprite","props":{"y":7,"x":0,"width":84,"name":"m1","height":63}},{"type":"Sprite","props":{"y":7,"x":97,"width":84,"name":"m2","height":63}},{"type":"Sprite","props":{"y":7,"x":193,"width":84,"name":"m3","height":63}},{"type":"Sprite","props":{"y":80,"x":0,"width":84,"name":"m4","height":63}},{"type":"Sprite","props":{"y":80,"x":97,"width":84,"name":"m5","height":63}},{"type":"Sprite","props":{"y":80,"x":193,"width":84,"name":"m6","height":63}},{"type":"Sprite","props":{"y":152,"x":0,"width":84,"name":"m7","height":63}},{"type":"Sprite","props":{"y":152,"x":97,"width":84,"name":"m8","height":63}},{"type":"Sprite","props":{"y":152,"x":193,"width":84,"name":"m9","height":63}}]},{"type":"Sprite","props":{"y":231,"x":373,"width":279,"var":"frameSpt","height":224},"child":[{"type":"Image","props":{"y":7,"x":0,"width":84,"pivotX":0.5,"name":"frame1","height":63}},{"type":"Image","props":{"y":7,"x":97,"width":84,"name":"frame2","height":63}},{"type":"Image","props":{"y":7,"x":193,"width":84,"name":"frame3","height":63}},{"type":"Image","props":{"y":80,"x":0,"width":84,"name":"frame4","height":63}},{"type":"Image","props":{"y":80,"x":97,"width":84,"name":"frame5","height":63}},{"type":"Image","props":{"y":80,"x":193,"width":84,"name":"frame6","height":63}},{"type":"Image","props":{"y":152,"x":0,"width":84,"name":"frame7","height":63}},{"type":"Image","props":{"y":152,"x":97,"width":84,"name":"frame8","height":63}},{"type":"Image","props":{"y":152,"x":193,"width":84,"name":"frame9","height":63}},{"type":"Image","props":{"y":7,"var":"selectedImg","skin":"frame/slotsSelectedBg.png"}}]}]};}
 		]);
 		return SlotsPanelUI;
 	})(Dialog)

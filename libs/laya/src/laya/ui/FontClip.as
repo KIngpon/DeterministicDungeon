@@ -24,11 +24,11 @@ package laya.ui {
 		protected var _spaceX:int;
 		/**Y方向间隙*/
 		protected var _spaceY:int;
-		/**@private水平对齐方式*/
+		/**@private 水平对齐方式*/
 		private var _align:String = "left";
-		/**@private显示文字宽*/
+		/**@private 显示文字宽*/
 		private var _wordsW:Number = 0;
-		/**@private显示文字高*/
+		/**@private 显示文字高*/
 		private var _wordsH:Number=0;
 		
 		/**

@@ -112,6 +112,11 @@ package laya.display {
 		public static var SCROLL:String = "scroll";
 		/**hidden 不显示超出文本域的字符。*/
 		public static var HIDDEN:String = "hidden";
+		/**
+		 * WebGL渲染文字时是否启用字符缓存，对于字形多的语种，禁用缓存。<br>
+		 * 对于字形随字母组合变化的语种，如阿拉伯文，启用将使显示错误。但是即使禁用，自动换行也会在错误的地方截断。
+		 */
+		public static var CharacterCache:Boolean = true;
 		/**位图字体字典。*/
 		private static var _bitmapFonts:Object;
 		/** @private */
@@ -141,14 +146,12 @@ package laya.display {
 		/**  @private */
 		protected var _charSize:Object = {};
 		/**
-		 * 存在于这个列表中的字体，在IPhone上，会变成 字体-简|繁
+		 * 存在于这个映射表中的字体，在IPhone上，会变成 字体-简|繁
 		 * 这个字体列表不包含全部可能的字体集。
 		 * 这些字体在不同国家或语言地区的设备上可能名字也不一样。
 		 * 所以这个方式不能从根源上解决不同设备的字体集差异。
 		 */
-		private static var _fontFamilyMapList = ["报隶", "黑体", "楷体", "兰亭黑", "隶变", "凌慧体", "翩翩体", "苹方", "手札体", "宋体", "娃娃体", "魏碑", "行楷", "雅痞", "圆体"];
-		/** 实际使用的字体，如果设置的字体是 黑体，IPhone上可能是 黑体-简 */
-		protected var _fontActallyUsed:String;
+		protected static var _fontFamilyMap:Object = {"报隶" : "报隶-简", "黑体" : "黑体-简", "楷体" : "楷体-简", "兰亭黑" : "兰亭黑-简", "隶变" : "隶变-简", "凌慧体" : "凌慧体-简", "翩翩体" : "翩翩体-简", "苹方" : "苹方-简", "手札体" : "手札体-简", "宋体" : "宋体-简", "娃娃体" : "娃娃体-简", "魏碑" : "魏碑-简", "行楷" : "行楷-简", "雅痞" : "雅痞-简", "圆体" : "圆体-简"};
 		
 		/**
 		 * <p>overflow 指定文本超出文本域后的行为。其值为"hidden"、"visible"和"scroll"之一。</p>
@@ -334,20 +337,8 @@ package laya.display {
 				_currBitmapFont = null;
 				scale(1, 1);
 			}
-			_fontActallyUsed = value;
 			if (_bitmapFonts && _bitmapFonts[value]) {
 				_currBitmapFont = _bitmapFonts[value];
-			}
-			else {
-				// 在IPhone上，自动修改部分中文字体集
-				if (Browser.onIPhone && _fontFamilyMapList.indexOf(value) > -1)
-				{
-					var language:String = Browser.window.navigator.language;
-					if (language == "zh-cn")
-						_fontActallyUsed += "-简";
-					else if (language == "zh-tw")
-						_fontActallyUsed += "-繁";
-				}
 			}
 			
 			_getCSSStyle().fontFamily = value;
@@ -554,7 +545,7 @@ package laya.display {
 			var graphics:Graphics = this.graphics;
 			graphics.clear(true);
 			
-			var ctxFont:String = (italic ? "italic " : "") + (bold ? "bold " : "") + fontSize + "px " + _fontActallyUsed;
+			var ctxFont:String = (italic ? "italic " : "") + (bold ? "bold " : "") + fontSize + "px " + (Browser.onIPhone ? (Text._fontFamilyMap[font] || font) : font);
 			Browser.context.font = ctxFont;
 			
 			//处理垂直对齐
@@ -1030,12 +1021,12 @@ package laya.display {
 		public static function supportFont(font:String):Boolean
 		{
 			Browser.context.font = "10px sans-serif";
-			var arialFontWidth = Browser.context.measureText("abcji").width;
+			var defaultFontWidth:Number = Browser.context.measureText("abcji").width;
 			Browser.context.font = "10px " + font;
-			var customFontWidth = Browser.context.measureText("abcji").width;
+			var customFontWidth:Number = Browser.context.measureText("abcji").width;
 			
-			console.log(arialFontWidth, customFontWidth);
-			if (arialFontWidth == customFontWidth)
+			console.log(defaultFontWidth, customFontWidth);
+			if (defaultFontWidth == customFontWidth)
 				return false;
 			else
 				return true;
