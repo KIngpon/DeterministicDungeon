@@ -2,6 +2,7 @@ package laya.utils {
 	import laya.utils.Utils;
 	
 	/**
+	 * @private
 	 * <code>Color</code> 是一个颜色值处理类。
 	 */
 	public class Color {
@@ -35,10 +36,18 @@ package laya.utils {
 				if (str === null) str = "#000000";
 				
 				str.charAt(0) == '#' && (str = str.substr(1));
+				var len:Number = str.length;
+				if (len == 3 || len == 4) {
+					var temp:String = "";
+					for (var i:int = 0; i < len; i++) {
+						temp += (str[i] + str[i]);
+					}
+					str = temp;
+				}
 				var color:int = numColor = parseInt(str, 16);
 				var flag:Boolean = (str.length == 8);
 				if (flag) {
-					_color = [parseInt(str.substr(0,2),16) / 255, ((0x00FF0000 & color) >> 16) / 255, ((0x0000FF00 & color) >> 8) / 255, (0x000000FF & color) / 255];
+					_color = [parseInt(str.substr(0, 2), 16) / 255, ((0x00FF0000 & color) >> 16) / 255, ((0x0000FF00 & color) >> 8) / 255, (0x000000FF & color) / 255];
 					return;
 				}
 			} else {

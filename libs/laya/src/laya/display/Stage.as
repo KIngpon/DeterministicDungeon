@@ -7,6 +7,7 @@ package laya.display {
 	import laya.renders.RenderContext;
 	import laya.resource.HTMLCanvas;
 	import laya.utils.Browser;
+	import laya.utils.Color;
 	import laya.utils.RunDriver;
 	import laya.utils.Stat;
 	import laya.utils.VectorGraphManager;
@@ -17,7 +18,7 @@ package laya.display {
 	 */
 	[Event(name = "resize", type = "laya.events.Event")]
 	/**
-	 * 舞台获得焦点时调度。比如浏览器或者当前标签被切换到后台后，重新切换回来时。
+	 * 舞台获得焦点时调度。比如浏览器或者当前标签处于后台，重新切换回来时进行调度。
 	 * @eventType Event.FOCUS
 	 */
 	[Event(name = "focus", type = "laya.events.Event")]
@@ -27,14 +28,25 @@ package laya.display {
 	 */
 	[Event(name = "blur", type = "laya.events.Event")]
 	/**
+	 * 舞台焦点变化时调度，使用Laya.stage.isFocused可以获取当前舞台是否获得焦点。
+	 * @eventType Event.FOCUS_CHANGE
+	 */
+	[Event(name = "focuschange", type = "laya.events.Event")]
+	/**
+	 * 舞台可见性发生变化时调度（比如浏览器或者当前标签被切换到后台后调度），使用Laya.stage.isVisibility可以获取当前是否处于显示状态。
+	 * @eventType Event.VISIBILITY_CHANGE
+	 */
+	[Event(name = "visibilitychange", type = "laya.events.Event")]
+	/**
 	 * 浏览器全屏更改时调度，比如进入全屏或者退出全屏。
 	 * @eventType Event.FULL_SCREEN_CHANGE
 	 */
 	[Event(name = "fullscreenchange", type = "laya.events.Event")]
 	
 	/**
-	 * <p> <code>Stage</code> 类是显示对象的根节点。</p>
-	 * 可以通过 Laya.stage 访问。
+	 * <p> <code>Stage</code> 是舞台类，显示列表的根节点，所有显示对象都在舞台上显示。通过 Laya.stage 单例访问。</p>
+	 * <p>Stage提供几种适配模式，不同的适配模式会产生不同的画布大小，画布越大，渲染压力越大，所以要选择合适的适配方案。</p>
+	 * <p>Stage提供不同的帧率模式，帧率越高，渲染压力越大，越费电，合理使用帧率甚至动态更改帧率有利于改进手机耗电。</p>
 	 */
 	public class Stage extends Sprite {
 		/**应用保持设计宽高不变，不缩放不变型，stage的宽高等于设计宽高。*/
@@ -47,10 +59,12 @@ package laya.display {
 		public static const SCALE_NOBORDER:String = "noborder";
 		/**应用保持设计宽高不变，不缩放不变型，stage的宽高等于屏幕宽高。*/
 		public static const SCALE_FULL:String = "full";
-		/**应用保持设计宽度不变，高度根据屏幕比缩放，stage的宽度等于设计宽度，高度根据屏幕比率大小而变化*/
+		/**应用保持设计宽度不变，高度根据屏幕比缩放，stage的宽度等于设计高度，高度根据屏幕比率大小而变化*/
 		public static const SCALE_FIXED_WIDTH:String = "fixedwidth";
 		/**应用保持设计高度不变，宽度根据屏幕比缩放，stage的高度等于设计宽度，宽度根据屏幕比率大小而变化*/
 		public static const SCALE_FIXED_HEIGHT:String = "fixedheight";
+		/**应用保持设计比例不变，全屏显示全部内容(类似showall，但showall非全屏，会有黑边)，根据屏幕长宽比，自动选择使用SCALE_FIXED_WIDTH或SCALE_FIXED_HEIGHT*/
+		public static const SCALE_FIXED_AUTO:String = "fixedauto";
 		
 		/**画布水平居左对齐。*/
 		public static const ALIGN_LEFT:String = "left";
@@ -85,64 +99,82 @@ package laya.display {
 		public var focus:Node;
 		/**@private 相对浏览器左上角的偏移，弃用，请使用_canvasTransform。*/
 		public var offset:Point = new Point();
-		///**@private 开发者自己设置的画布偏移*/
-		//private var _offset:Point;
-		/**帧率类型，支持三种模式：fast-60帧(默认)，slow-30帧，mouse-30帧，但鼠标活动后会自动加速到60，鼠标不动2秒后降低为30帧，以节省消耗。*/
+		/**帧率类型，支持三种模式：fast-60帧(默认)，slow-30帧，mouse-30帧（鼠标活动后会自动加速到60，鼠标不动2秒后降低为30帧，以节省消耗），sleep-1帧。*/
 		public var frameRate:String = "fast";
 		/**设计宽度（初始化时设置的宽度Laya.init(width,height)）*/
-		public var desginWidth:Number = 0;
+		public var designWidth:Number = 0;
 		/**设计高度（初始化时设置的高度Laya.init(width,height)）*/
-		public var desginHeight:Number = 0;
+		public var designHeight:Number = 0;
 		/**画布是否发生翻转。*/
 		public var canvasRotation:Boolean = false;
-		/**画布旋转角度。*/
+		/**画布的旋转角度。*/
 		public var canvasDegree:int = 0;
-		/**设置是否渲染，设置为false，可以停止渲染，画面会停留到最后一次渲染上，减少cpu消耗，此设置不影响时钟*/
+		/**
+		 * <p>设置是否渲染，设置为false，可以停止渲染，画面会停留到最后一次渲染上，减少cpu消耗，此设置不影响时钟。</p>
+		 * <p>比如非激活状态，可以设置renderingEnabled=true以节省消耗。</p>
+		 * */
 		public var renderingEnabled:Boolean = true;
+		/**是否启用屏幕适配，可以适配后，在某个时候关闭屏幕适配，防止某些操作导致的屏幕以外改变*/
+		public var screenAdaptationEnabled:Boolean = true;
 		
-		/** @private */
+		/**@private */
 		public var _canvasTransform:Matrix = new Matrix();
-		/** @private */
+		/**@private */
 		private var _screenMode:String = "none";
-		/** @private */
+		/**@private */
 		private var _scaleMode:String = "noscale";
-		/** @private */
+		/**@private */
 		private var _alignV:String = "top";
-		/** @private */
+		/**@private */
 		private var _alignH:String = "left";
-		/** @private */
+		/**@private */
 		private var _bgColor:String = "black";
-		/** @private */
+		/**@private */
 		private var _mouseMoveTime:Number = 0;
-		/** @private */
+		/**@private */
 		private var _renderCount:int = 0;
-		/** @private */
+		/**@private */
 		private var _safariOffsetY:Number = 0;
 		/**@private */
 		private var _frameStartTime:Number;
 		/**@private */
-		private var _previousOrientation:int;
+		private var _previousOrientation:int = Browser.window.orientation;
+		/**@private */
+		private var _isFocused:Boolean;
+		/**@private */
+		private var _isVisibility:Boolean;
 		/**@private 3D场景*/
 		public var _scenes:Array;
+		/**@private webgl Color*/
+		public var _wgColor:Array;
 		
+		/**场景类，引擎中只有一个stage实例，此实例可以通过Laya.stage访问。*/
 		public function Stage() {
 			transform = Matrix.create();
 			_scenes = [];
+			//重置默认值，请不要修改
 			this.mouseEnabled = true;
 			this.hitTestPrior = true;
 			this.autoSize = false;
 			this._displayedInStage = true;
+			this._isFocused = true;
+			this._isVisibility = true;
 			
-			var _this:Stage = this;
 			var window:* = Browser.window;
+			var _this:Stage = this;
 			
 			window.addEventListener("focus", function():void {
+				_isFocused = true;
 				_this.event(Event.FOCUS);
+				_this.event(Event.FOCUS_CHANGE);
 			});
 			window.addEventListener("blur", function():void {
+				_isFocused = false;
 				_this.event(Event.BLUR);
+				_this.event(Event.FOCUS_CHANGE);
 				if (_this._isInputting()) Input["inputElement"].target.focus = false;
 			});
+			
 			// 各种浏览器兼容
 			var hidden:String = "hidden", state:String = "visibilityState", visibilityChange:String = "visibilitychange";
 			var document:* = window.document;
@@ -163,11 +195,12 @@ package laya.display {
 			window.document.addEventListener(visibilityChange, visibleChangeFun);
 			function visibleChangeFun():void {
 				if (Browser.document[state] == "hidden") {
-					_this.event(Event.BLUR);
+					_isVisibility = false;
 					if (_this._isInputting()) Input["inputElement"].target.focus = false;
 				} else {
-					_this.event(Event.FOCUS);
+					_isVisibility = true;
 				}
+				_this.event(Event.VISIBILITY_CHANGE);
 			}
 			window.addEventListener("resize", function():void {
 				// 处理屏幕旋转。旋转后收起输入法。
@@ -197,6 +230,7 @@ package laya.display {
 		}
 		
 		/**
+		 * @private
 		 * 在移动端输入时，输入法弹出期间不进行画布尺寸重置。
 		 */
 		private function _isInputting():Boolean {
@@ -204,34 +238,69 @@ package laya.display {
 		}
 		
 		override public function set width(value:Number):void {
-			this.desginWidth = value;
+			this.designWidth = value;
 			super.width = value;
 			Laya.timer.callLater(this, _changeCanvasSize);
 		}
 		
 		override public function set height(value:Number):void {
-			this.desginHeight = value;
+			this.designHeight = value;
 			super.height = value;
 			Laya.timer.callLater(this, _changeCanvasSize);
 		}
 		
-		/** @private */
+		override public function get transform():Matrix {
+			if (_tfChanged) _adjustTransform();
+			return _transform ||= Matrix.create();
+		}
+		
+		/**@private 已经弃用，请使用designWidth代替*/
+		//[Deprecated]
+		public function get desginWidth():Number {
+			console.debug("desginWidth已经弃用，请使用designWidth代替");
+			return designWidth;
+		}
+		
+		/**@private 已经弃用，请使用designHeight代替*/
+		//[Deprecated]
+		public function get desginHeight():Number {
+			console.debug("desginHeight已经弃用，请使用designHeight代替");
+			return designHeight;
+		}
+		
+		/**
+		 * 舞台是否获得焦点。
+		 */
+		public function get isFocused():Boolean {
+			return _isFocused;
+		}
+		
+		/**
+		 * 舞台是否处于可见状态(是否进入后台)。
+		 */
+		public function get isVisibility():Boolean {
+			return _isVisibility;
+		}
+		
+		/**@private */
 		private function _changeCanvasSize():void {
 			setScreenSize(Browser.clientWidth * Browser.pixelRatio, Browser.clientHeight * Browser.pixelRatio);
 		}
 		
-		/** @private */
+		/**@private */
 		protected function _resetCanvas():void {
+			if (!screenAdaptationEnabled) return;
 			var canvas:HTMLCanvas = Render._mainCanvas;
 			var canvasStyle:* = canvas.source.style;
-			canvas.size(1, 1);
-			canvasStyle.transform = canvasStyle.webkitTransform = canvasStyle.msTransform = canvasStyle.mozTransform = canvasStyle.oTransform = "";
-			visible = false;
+			//canvas.size(1, 1);
+			//canvasStyle.transform = canvasStyle.webkitTransform = canvasStyle.msTransform = canvasStyle.mozTransform = canvasStyle.oTransform = "";
+			//visible = false;
 			Laya.timer.once(100, this, this._changeCanvasSize);
+			//_changeCanvasSize();
 		}
 		
 		/**
-		 * 设置屏幕大小，场景会根据屏幕大小进行适配。
+		 * 设置屏幕大小，场景会根据屏幕大小进行适配。可以动态调用此方法，来更改游戏显示的大小。
 		 * @param	screenWidth		屏幕宽度。
 		 * @param	screenHeight	屏幕高度。
 		 */
@@ -256,32 +325,32 @@ package laya.display {
 			var canvasStyle:* = canvas.source.style;
 			var mat:Matrix = this._canvasTransform.identity();
 			var scaleMode:String = this._scaleMode;
-			var scaleX:Number = screenWidth / desginWidth
-			var scaleY:Number = screenHeight / desginHeight;
-			var canvasWidth:Number = desginWidth;
-			var canvasHeight:Number = desginHeight;
+			var scaleX:Number = screenWidth / designWidth
+			var scaleY:Number = screenHeight / designHeight;
+			var canvasWidth:Number = designWidth;
+			var canvasHeight:Number = designHeight;
 			var realWidth:Number = screenWidth;
 			var realHeight:Number = screenHeight;
 			var pixelRatio:Number = Browser.pixelRatio;
-			_width = desginWidth;
-			_height = desginHeight;
+			_width = designWidth;
+			_height = designHeight;
 			
 			//处理缩放模式
 			switch (scaleMode) {
 			case SCALE_NOSCALE: 
 				scaleX = scaleY = 1;
-				realWidth = desginWidth;
-				realHeight = desginHeight;
+				realWidth = designWidth;
+				realHeight = designHeight;
 				break;
 			case SCALE_SHOWALL: 
 				scaleX = scaleY = Math.min(scaleX, scaleY);
-				canvasWidth = realWidth = Math.round(desginWidth * scaleX);
-				canvasHeight = realHeight = Math.round(desginHeight * scaleY);
+				canvasWidth = realWidth = Math.round(designWidth * scaleX);
+				canvasHeight = realHeight = Math.round(designHeight * scaleY);
 				break;
 			case SCALE_NOBORDER: 
 				scaleX = scaleY = Math.max(scaleX, scaleY);
-				realWidth = Math.round(desginWidth * scaleX);
-				realHeight = Math.round(desginHeight * scaleY);
+				realWidth = Math.round(designWidth * scaleX);
+				realHeight = Math.round(designHeight * scaleY);
 				break;
 			case SCALE_FULL: 
 				scaleX = scaleY = 1;
@@ -290,13 +359,20 @@ package laya.display {
 				break;
 			case SCALE_FIXED_WIDTH: 
 				scaleY = scaleX;
-				_height = screenHeight / scaleX;
-				canvasHeight = Math.round(screenHeight / scaleX);
+				_height = canvasHeight = Math.round(screenHeight / scaleX);
 				break;
 			case SCALE_FIXED_HEIGHT: 
 				scaleX = scaleY;
-				_width = screenWidth / scaleY;
-				canvasWidth = Math.round(screenWidth / scaleY);
+				_width = canvasWidth = Math.round(screenWidth / scaleY);
+				break;
+			case SCALE_FIXED_AUTO: 
+				if ((screenWidth / screenHeight) < (designWidth / designHeight)) {
+					scaleY = scaleX;
+					_height = canvasHeight = Math.round(screenHeight / scaleX);
+				} else {
+					scaleX = scaleY;
+					_width = canvasWidth = Math.round(screenWidth / scaleY);
+				}
 				break;
 			}
 			
@@ -326,17 +402,11 @@ package laya.display {
 			else if (_alignV === ALIGN_BOTTOM) offset.y = screenHeight - realHeight;
 			else offset.y = (screenHeight - realHeight) * 0.5 / pixelRatio;
 			
-			////处理用户自行设置的画布偏移
-			//if (!_offset) {
-			//_offset = new Point(parseInt(canvasStyle.left) || 0, parseInt(canvasStyle.top) || 0);
-			//canvasStyle.left = canvasStyle.top = "0px";
-			//}
-			//offset.x += _offset.x;
-			//offset.y += _offset.y;
+			//处理用户自行设置的画布偏移
 			offset.x = Math.round(offset.x);
 			offset.y = Math.round(offset.y);
 			mat.translate(offset.x, offset.y);
-			if (_safariOffsetY && parseInt(canvasStyle.top) === 0) canvasStyle.top = _safariOffsetY + "px";
+			if (_safariOffsetY) mat.translate(0, _safariOffsetY);
 			
 			//处理横竖屏
 			canvasDegree = 0;
@@ -356,19 +426,17 @@ package laya.display {
 			mat.d = _formatData(mat.d);
 			mat.tx = _formatData(mat.tx);
 			mat.ty = _formatData(mat.ty);
-			//if (Math.abs(mat.a) < 0.00000001) mat.a = mat.d = 0;
-			//if (Math.abs(mat.tx) < 0.00000001) mat.tx = 0;
-			//if (Math.abs(mat.ty) < 0.00000001) mat.ty = 0;
 			canvasStyle.transformOrigin = canvasStyle.webkitTransformOrigin = canvasStyle.msTransformOrigin = canvasStyle.mozTransformOrigin = canvasStyle.oTransformOrigin = "0px 0px 0px";
 			canvasStyle.transform = canvasStyle.webkitTransform = canvasStyle.msTransform = canvasStyle.mozTransform = canvasStyle.oTransform = "matrix(" + mat.toString() + ")";
 			//修正用户自行设置的偏移
-			//var rect:* = canvas.source.getBoundingClientRect();
+			if (_safariOffsetY) mat.translate(0, -_safariOffsetY);
 			mat.translate(parseInt(canvasStyle.left) || 0, parseInt(canvasStyle.top) || 0);
 			visible = true;
 			_repaint = 1;
 			event(Event.RESIZE);
 		}
 		
+		/**@private */
 		private function _formatData(value:Number):Number {
 			if (Math.abs(value) < 0.000001) return 0;
 			if (Math.abs(1 - value) < 0.001) return value > 0 ? 1 : -1;
@@ -376,7 +444,7 @@ package laya.display {
 		}
 		
 		/**
-		 * <p>缩放模式。</p>
+		 * <p>缩放模式。默认值为 "noscale"。</p>
 		 * <p><ul>取值范围：
 		 * <li>"noscale" ：不缩放；</li>
 		 * <li>"exactfit" ：全屏不等比缩放；</li>
@@ -385,8 +453,8 @@ package laya.display {
 		 * <li>"full" ：不缩放，stage的宽高等于屏幕宽高；</li>
 		 * <li>"fixedwidth" ：宽度不变，高度根据屏幕比缩放；</li>
 		 * <li>"fixedheight" ：高度不变，宽度根据屏幕比缩放；</li>
+		 * <li>"fixedauto" ：根据宽高比，自动选择使用fixedwidth或fixedheight；</li>
 		 * </ul></p>
-		 * 默认值为 "noscale"。
 		 */
 		public function get scaleMode():String {
 			return _scaleMode;
@@ -398,13 +466,12 @@ package laya.display {
 		}
 		
 		/**
-		 * 水平对齐方式。
+		 * <p>水平对齐方式。默认值为"left"。</p>
 		 * <p><ul>取值范围：
 		 * <li>"left" ：居左对齐；</li>
 		 * <li>"center" ：居中对齐；</li>
 		 * <li>"right" ：居右对齐；</li>
 		 * </ul></p>
-		 * 默认值为"left"。
 		 */
 		public function get alignH():String {
 			return _alignH;
@@ -416,7 +483,7 @@ package laya.display {
 		}
 		
 		/**
-		 * 垂直对齐方式。
+		 * <p>垂直对齐方式。默认值为"top"。</p>
 		 * <p><ul>取值范围：
 		 * <li>"top" ：居顶部对齐；</li>
 		 * <li>"middle" ：居中对齐；</li>
@@ -440,6 +507,15 @@ package laya.display {
 		public function set bgColor(value:String):void {
 			_bgColor = value;
 			conchModel && conchModel.bgColor(value);
+			
+			if (Render.isWebGL) {
+				if (value && value !== "black" && value !== "#000000") {
+					_wgColor = Color.create(value)._color;
+				} else {
+					_wgColor = null;
+				}
+			}
+			
 			if (value) {
 				Render.canvas.style.background = value;
 			} else {
@@ -447,7 +523,7 @@ package laya.display {
 			}
 		}
 		
-		/** 鼠标在 Stage 上的 X 轴坐标。*/
+		/**鼠标在 Stage 上的 X 轴坐标。*/
 		override public function get mouseX():Number {
 			// River: 加入了round.
 			return Math.round(MouseManager.instance.mouseX / clientScaleX);
@@ -475,7 +551,7 @@ package laya.display {
 		}
 		
 		/**
-		 * 场景布局类型。
+		 * <p>场景布局类型。</p>
 		 * <p><ul>取值范围：
 		 * <li>"none" ：不更改屏幕</li>
 		 * <li>"horizontal" ：自动横屏</li>
@@ -499,24 +575,26 @@ package laya.display {
 		override public function parentRepaint():void {
 		}
 		
-		/** @private */
+		/**@private */
 		public function _loop():Boolean {
 			render(Render.context, 0, 0);
 			return true;
 		}
 		
-		/** @private */
+		/**@private */
 		private function _onmouseMove(e:Event):void {
 			_mouseMoveTime = Browser.now();
 		}
 		
-		/**获得距当前帧开始后，过了多少时间，单位为毫秒
-		 * 可以用来判断函数内时间消耗，控制每帧函数处理消耗的时间过长，导致帧率下降*/
+		/**
+		 * <p>获得距当前帧开始后，过了多少时间，单位为毫秒。</p>
+		 * <p>可以用来判断函数内时间消耗，通过合理控制每帧函数处理消耗时长，避免一帧做事情太多，对复杂计算分帧处理，能有效降低帧率波动。</p>
+		 */
 		public function getTimeFromFrameStart():Number {
 			return Browser.now() - _frameStartTime;
 		}
 		
-		public override function set visible(value:Boolean):void {
+		override public function set visible(value:Boolean):void {
 			if (this.visible !== value) {
 				super.visible = value;
 				var style:* = Render._mainCanvas.source.style;
@@ -535,7 +613,7 @@ package laya.display {
 			_renderCount++;
 			Render.isFlash && repaint();
 			
-			if (!visible) {
+			if (!this._style.visible) {
 				if (_renderCount % 5 === 0) {
 					Stat.loopCount++;
 					MouseManager.instance.runEvent();
@@ -556,14 +634,22 @@ package laya.display {
 				MouseManager.instance.runEvent();
 				Laya.timer._update();
 				
+				var scene:*;
 				var i:int, n:int;
-				for (i = 0, n = _scenes.length; i < n; i++) {
-					var scene:* = _scenes[i];
-					(scene) && (scene._updateScene());
+				if (Render.isConchNode) {
+					for (i = 0, n = _scenes.length; i < n; i++) {
+						scene = _scenes[i];
+						(scene) && (scene._updateSceneConch());
+					}
+				} else {
+					for (i = 0, n = _scenes.length; i < n; i++) {
+						scene = _scenes[i];
+						(scene) && (scene._updateScene());
+					}
 				}
 				
 				if (Render.isConchNode) {//NATIVE
-					var customList:Array = Sprite.CustomList;
+					var customList:Array = Sprite["CustomList"];
 					for (i = 0, n = customList.length; i < n; i++) {
 						var customItem:* = customList[i];
 						customItem.customRender(customItem.customContext, 0, 0);
@@ -590,7 +676,10 @@ package laya.display {
 			}
 		}
 		
-		/**是否开启全屏，用户点击后进入全屏*/
+		/**
+		 * <p>是否开启全屏，用户点击后进入全屏。</p>
+		 * <p>兼容性提示：部分浏览器不允许点击进入全屏，比如Iphone等。</p>
+		 */
 		public function set fullScreenEnabled(value:Boolean):void {
 			var document:* = Browser.document;
 			var canvas:* = Render.canvas;
@@ -630,7 +719,7 @@ package laya.display {
 			Laya.stage.event(Event.FULL_SCREEN_CHANGE);
 		}
 		
-		/**退出全屏*/
+		/**退出全屏模式*/
 		public function exitFullscreen():void {
 			var document:* = Browser.document;
 			if (document.exitFullscreen) {

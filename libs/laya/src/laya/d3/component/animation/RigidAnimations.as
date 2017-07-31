@@ -34,19 +34,35 @@ package laya.d3.component.animation {
 		 * @param value 地址。
 		 */
 		override public function set url(value:String):void {
-			super.url = value;
-			_curOriginalData = null;
-			_curAnimationDatas = null;
-			_tempCurAnimationData = null;
-			(_templet._animationDatasCache) || (_templet._animationDatasCache = []);
+			trace("Warning: discard property,please use templet property instead.");
+			var templet:AnimationTemplet = Laya.loader.create(value, null, null, AnimationTemplet);
+			if (_templet !== templet) {
+				if (_player.state !== AnimationState.stopped)
+					_player.stop(true);
+				
+				_templet = templet;
+				_player.templet = templet;
+				_curOriginalData = null;
+				_curAnimationDatas = null;
+				_tempCurAnimationData = null;
+				(_templet._animationDatasCache) || (_templet._animationDatasCache = []);
+				event(Event.ANIMATION_CHANGED, this);
+			}
 		}
 		
 		override public function set templet(value:AnimationTemplet):void {
-			super.templet = value;
-			_curOriginalData = null;
-			_curAnimationDatas = null;
-			_tempCurAnimationData = null;
-			(_templet._animationDatasCache) || (_templet._animationDatasCache = []);
+			if (_templet !== value) {
+				if (_player.state !== AnimationState.stopped)
+					_player.stop(true);
+				
+				_templet = value;
+				_player.templet = value;
+				_curOriginalData = null;
+				_curAnimationDatas = null;
+				_tempCurAnimationData = null;
+				(_templet._animationDatasCache) || (_templet._animationDatasCache = []);
+				event(Event.ANIMATION_CHANGED, this);
+			}
 		}
 		
 		/**
@@ -65,7 +81,6 @@ package laya.d3.component.animation {
 			var nodes:Vector.<Object> = _templet.getNodes(currentAnimationClipIndex);
 			var curParentSprite:Node = _owner;//节点初始父节点
 			var nodeLength:int = nodes.length;
-			
 			var pathStart:int = 0;
 			var extentDatas:Uint16Array = new Uint16Array(_templet.getPublicExtData());
 			for (var i:int = 0; i < nodeLength; i++) {

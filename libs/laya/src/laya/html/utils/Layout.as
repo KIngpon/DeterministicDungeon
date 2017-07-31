@@ -33,6 +33,7 @@ package laya.html.utils {
 		}
 		
 		public static function layout(element:Sprite):Array {
+			if (!element || !element._style) return null;
 			if ((element._style._type & CSSStyle.ADDLAYOUTED) === 0)
 				return null;
 			
@@ -240,7 +241,7 @@ package laya.html.utils {
 				}
 				for (i = 0, n = lines.length; i < n; i++) {
 					lines[i].updatePos(0, tWidth, i, tY, align, valign, lineHeight);
-					tY += Math.max(lineHeight, lines[i].h);
+					tY += Math.max(lineHeight, lines[i].h+leading);
 				}
 				y = tY;
 			}

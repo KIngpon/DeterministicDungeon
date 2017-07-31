@@ -26,8 +26,8 @@ public class Random
         if (width < 0)
             width = start - stop;
             
-        var n:int = parseInt((width + step - 1) / step);
-        return parseInt(random() * n) * step + Math.min(start, stop);
+        var n:int = (width + step - 1) / step;
+        return random() * n * step + Math.min(start, stop);
     }
     
     /**
@@ -87,7 +87,7 @@ public class Random
         if (!sequence.hasOwnProperty('length'))
             throw new Error('无法对此对象执行此操作');
             
-        var index:int = parseInt(random() * sequence.length);
+        var index:int = random() * sequence.length;
         if (sequence is String)
             return String(sequence).charAt(index);
         else
@@ -118,9 +118,9 @@ public class Random
         var indices:Array = [];
         for (var i:Number = 0; i < num; i++)
         {
-            var index:int = parseInt(random() * len);
+            var index:int = random() * len;
             while (indices.indexOf(index) >= 0)
-                index = parseInt(random() * len);
+                index = random() * len;
             
             selected.push(sequence[index]);
             indices.push(index);

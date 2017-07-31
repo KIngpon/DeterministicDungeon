@@ -3,65 +3,39 @@ package laya.d3.shader {
 	import laya.d3.core.Sprite3D;
 	import laya.d3.core.material.BaseMaterial;
 	import laya.d3.core.render.RenderElement;
-	import laya.d3.core.scene.BaseScene;
+	import laya.d3.core.scene.Scene;
 	import laya.d3.graphics.VertexBuffer3D;
+	import laya.d3.resource.SolidColorTextureCube;
 	import laya.renders.Render;
-	import laya.resource.Resource;
 	import laya.utils.Stat;
 	import laya.utils.StringKey;
 	import laya.webgl.WebGL;
 	import laya.webgl.WebGLContext;
 	import laya.webgl.shader.BaseShader;
-	import laya.webgl.utils.ShaderCompile;
 	
 	public class Shader3D extends BaseShader {
 		/*[DISABLE-ADD-VARIABLE-DEFAULT-VALUE]*/
+		/**shader变量提交周期，逐渲染单元。*/
 		public static const PERIOD_RENDERELEMENT:int = 0;
+		/**shader变量提交周期，逐材质。*/
 		public static const PERIOD_MATERIAL:int = 1;
+		/**shader变量提交周期，逐精灵和相机，注：因为精灵包含MVP矩阵，为复合属性，所以摄像机发生变化时也应提交。*/
 		public static const PERIOD_SPRITE:int = 2;
+		/**shader变量提交周期，逐相机。*/
 		public static const PERIOD_CAMERA:int = 3;
+		/**shader变量提交周期，逐场景。*/
 		public static const PERIOD_SCENE:int = 4;
 		
-	
-		
-		private static var _TEXTURES:Array = /*[STATIC SAFE]*/ [WebGLContext.TEXTURE0, WebGLContext.TEXTURE1, WebGLContext.TEXTURE2, WebGLContext.TEXTURE3, WebGLContext.TEXTURE4, WebGLContext.TEXTURE5, WebGLContext.TEXTURE6,, WebGLContext.TEXTURE7, WebGLContext.TEXTURE8];
-		private static var _includeFiles:* = {}; //shader里面inlcude的小文件
+		private static var _TEXTURES:Array = /*[STATIC SAFE]*/ [WebGLContext.TEXTURE0, WebGLContext.TEXTURE1, WebGLContext.TEXTURE2, WebGLContext.TEXTURE3, WebGLContext.TEXTURE4, WebGLContext.TEXTURE5, WebGLContext.TEXTURE6,WebGLContext.TEXTURE7, WebGLContext.TEXTURE8];
+		public static var _includeFiles:* = {}; //shader里面inlcude的小文件
 		private static var _count:int = 0;
-		public static var _preCompileShader:* = {}; //存储预编译结果，可以通过名字获得内容,目前不支持#ifdef嵌套和条件
 		
 		protected static var shaderParamsMap:Object = {"float": WebGLContext.FLOAT, "int": WebGLContext.INT, "bool": WebGLContext.BOOL, "vec2": WebGLContext.FLOAT_VEC2, "vec3": WebGLContext.FLOAT_VEC3, "vec4": WebGLContext.FLOAT_VEC4, "ivec2": WebGLContext.INT_VEC2, "ivec3": WebGLContext.INT_VEC3, "ivec4": WebGLContext.INT_VEC4, "bvec2": WebGLContext.BOOL_VEC2, "bvec3": WebGLContext.BOOL_VEC3, "bvec4": WebGLContext.BOOL_VEC4, "mat2": WebGLContext.FLOAT_MAT2, "mat3": WebGLContext.FLOAT_MAT3, "mat4": WebGLContext.FLOAT_MAT4, "sampler2D": WebGLContext.SAMPLER_2D, "samplerCube": WebGLContext.SAMPLER_CUBE};
-		
-		public static const SHADERNAME2ID:Number = 0.0002;
-		
+	
 		public static var nameKey:StringKey = new StringKey();
 		
-		public static var sharders:Array = /*[STATIC SAFE]*/ (sharders = [], sharders.length = 0x20, sharders);
-		
-		public static function getShader(name:*):Shader3D {
-			return sharders[name];
-		}
-		
-		public static function create(vs:String, ps:String, saveName:*, attributeMap:Object , sceneUniformMap:Object, cameraUniformMap:Object, spriteUniformMap:Object, materialUniformMap:Object, renderElementUniformMap:Object):Shader3D {
-			return new Shader3D(vs, ps, saveName,attributeMap, sceneUniformMap,cameraUniformMap,spriteUniformMap,materialUniformMap,renderElementUniformMap);
-		}
-		
-		/**
-		 * 根据宏动态生成shader文件，支持#include?COLOR_FILTER "parts/ColorFilter_ps_logic.glsl";条件嵌入文件
-		 * @param	name
-		 * @param	vs
-		 * @param	ps
-		 * @param	define 宏定义，格式:{name:value...}
-		 * @return
-		 */
-		public static function withCompile(nameID:int, shaderDefine:ShaderDefines3D, shaderName:Number):Shader3D {
-			var shader:Shader3D = sharders[shaderName];
-			if (shader)
-				return shader;
-			
-			var pre:ShaderCompile3D = _preCompileShader[SHADERNAME2ID * nameID];
-			if (!pre)
-				throw new Error("withCompile shader err!" + nameID);
-			return pre.createShader(shaderDefine.toNameDic(), shaderName);
+		public static function create(vs:String, ps:String, attributeMap:Object , sceneUniformMap:Object, cameraUniformMap:Object, spriteUniformMap:Object, materialUniformMap:Object, renderElementUniformMap:Object):Shader3D {
+			return new Shader3D(vs, ps,attributeMap, sceneUniformMap,cameraUniformMap,spriteUniformMap,materialUniformMap,renderElementUniformMap);
 		}
 		
 		public static function addInclude(fileName:String, txt:String):void {
@@ -72,16 +46,7 @@ package laya.d3.shader {
 			_includeFiles[fileName] = txt;
 		}
 	
-		/**
-		 * 预编译shader文件，主要是处理宏定义
-		 * @param	nameID,一般是特殊宏+shaderNameID*0.0002组成的一个浮点数当做唯一标识
-		 * @param	vs
-		 * @param	ps
-		 */
-		public static function preCompile(nameID:int, vs:String, ps:String,attributeMap:Object, uniformMap:Object):void {
-			var id:Number = SHADERNAME2ID * nameID;
-			_preCompileShader[id] = new ShaderCompile3D(id, vs, ps,attributeMap, uniformMap, _includeFiles);
-		}
+		
 		
 		private var customCompile:Boolean = false;
 		
@@ -114,8 +79,6 @@ package laya.d3.shader {
 		/**@private */
 		public  var _uploadLoopCount:int;
 		/**@private */
-		public  var _uploadCameraID:int;
-		/**@private */
 		public  var _uploadRenderElement:RenderElement;//TODO:是否会被篡改
 		/**@private */
 		public  var _uploadMaterial:BaseMaterial;
@@ -124,7 +87,7 @@ package laya.d3.shader {
 		/**@private */
 		public  var _uploadCamera:BaseCamera;
 		/**@private */
-		public  var _uploadScene:BaseScene;
+		public  var _uploadScene:Scene;
 		/**@private */
 		public  var _uploadVertexBuffer:VertexBuffer3D;
 		
@@ -135,7 +98,7 @@ package laya.d3.shader {
 		 * @param	name:
 		 * @param	nameMap 帮助里要详细解释为什么需要nameMap
 		 */
-		public function Shader3D(vs:String, ps:String, saveName:*, attributeMap:Object, sceneUniformMap:Object, cameraUniformMap:Object, spriteUniformMap:Object,materialUniformMap:Object,renderElementUniformMap:Object) {
+		public function Shader3D(vs:String, ps:String, attributeMap:Object, sceneUniformMap:Object, cameraUniformMap:Object, spriteUniformMap:Object,materialUniformMap:Object,renderElementUniformMap:Object) {
 			if ((!vs) || (!ps)) throw "Shader Error";
 			if (Render.isConchApp || Render.isFlash) {
 				customCompile = true;
@@ -149,7 +112,7 @@ package laya.d3.shader {
 			_spriteUniformMap = spriteUniformMap;
 			_materialUniformMap = materialUniformMap;
 			_renderElementUniformMap = renderElementUniformMap;
-			saveName != null && (sharders[saveName] = this);
+			recreateResource();
 		}
 		
 		override protected function recreateResource():void {
@@ -187,6 +150,7 @@ package laya.d3.shader {
 			_vshader = _createShader(gl, text[0], WebGLContext.VERTEX_SHADER);
 			_pshader = _createShader(gl, text[1], WebGLContext.FRAGMENT_SHADER);
 			
+
 			gl.attachShader(_program, _vshader);
 			gl.attachShader(_program, _pshader);
 			gl.linkProgram(_program);
@@ -241,32 +205,27 @@ package laya.d3.shader {
 				one.value = [one.location, null];
 				one.codename = one.name;
 				
-				if (_sceneUniformMap[one.codename] != null)
-				{
+				if (_sceneUniformMap[one.codename] != null){
 					one.name = _sceneUniformMap[one.codename];
 					_sceneUniformParamsMap.push(one.name);
 				   _sceneUniformParamsMap.push(one);
 				}
-				else if  (_cameraUniformMap[one.codename] != null)
-				{
+				else if  (_cameraUniformMap[one.codename] != null){
 					one.name = _cameraUniformMap[one.codename];
 					_cameraUniformParamsMap.push(one.name);
 				   _cameraUniformParamsMap.push(one);
 				}
-				else if  (_spriteUniformMap[one.codename] != null)
-				{
+				else if  (_spriteUniformMap[one.codename] != null){
 					one.name = _spriteUniformMap[one.codename];
 					_spriteUniformParamsMap.push(one.name);
 				   _spriteUniformParamsMap.push(one);
 				}
-				else if  (_materialUniformMap[one.codename] != null)
-				{
+				else if  (_materialUniformMap[one.codename] != null){
 					one.name = _materialUniformMap[one.codename];
 					_materialUniformParamsMap.push(one.name);
 				   _materialUniformParamsMap.push(one);
 				}
-				else if  (_renderElementUniformMap[one.codename] != null)
-				{
+				else if  (_renderElementUniformMap[one.codename] != null){
 					one.name = _renderElementUniformMap[one.codename];
 					_renderElementUniformParamsMap.push(one.name);
 				   _renderElementUniformParamsMap.push(one);
@@ -308,8 +267,10 @@ package laya.d3.shader {
 					one.fun = this._uniform1i;
 					break;
 				case WebGLContext.FLOAT_MAT2: 
+					one.fun = this._uinformMatrix2fv;
+					break;
 				case WebGLContext.FLOAT_MAT3: 
-					throw new Error("compile shader err!");
+					one.fun = this._uinformMatrix3fv;
 					break;
 				default: 
 					throw new Error("compile shader err!");
@@ -434,6 +395,16 @@ package laya.d3.shader {
 			return 1;
 		}
 		
+		private function _uinformMatrix2fv(one:*, value:*):int {
+			WebGL.mainContext.uniformMatrix2fv(one.location, false, value);
+			return 1;
+		}
+
+		private function _uinformMatrix3fv(one:*, value:*):int {
+			WebGL.mainContext.uniformMatrix3fv(one.location, false, value);
+			return 1;
+		}
+		
 		private function _uniform1i(one:*, value:*):int {
 			var uploadedValue:Array = one.uploadedValue;
 			if (uploadedValue[0] !== value) {
@@ -497,12 +468,15 @@ package laya.d3.shader {
 				uploadedValue[0] = _curActTexIndex;
 				gl.uniform1i(one.location, _curActTexIndex);
 				gl.activeTexture(_TEXTURES[_curActTexIndex]);
-				WebGLContext.bindTexture(gl, WebGLContext.TEXTURE_2D, value);
+				
+				if(value)
+				   WebGLContext.bindTexture(gl, WebGLContext.TEXTURE_2D, value);
 				_curActTexIndex++;
 				return 1;
 			} else {
 				gl.activeTexture(_TEXTURES[uploadedValue[0]]);
-				WebGLContext.bindTexture(gl, WebGLContext.TEXTURE_2D, value);
+				if(value)
+				   WebGLContext.bindTexture(gl, WebGLContext.TEXTURE_2D, value);
 				return 0;
 			}
 		}
@@ -514,12 +488,18 @@ package laya.d3.shader {
 				uploadedValue[0] = _curActTexIndex;
 				gl.uniform1i(one.location, _curActTexIndex);
 				gl.activeTexture(_TEXTURES[_curActTexIndex]);
-				WebGLContext.bindTexture(gl, WebGLContext.TEXTURE_CUBE_MAP, value);
+				if(value)
+				   WebGLContext.bindTexture(gl, WebGLContext.TEXTURE_CUBE_MAP, value);
+				else
+			 	   WebGLContext.bindTexture(gl, WebGLContext.TEXTURE_CUBE_MAP, SolidColorTextureCube.grayTexture.source);
 				_curActTexIndex++;
 				return 1;
 			} else {
 				gl.activeTexture(_TEXTURES[uploadedValue[0]]);
-				WebGLContext.bindTexture(gl, WebGLContext.TEXTURE_CUBE_MAP, value);
+				if(value)
+				   WebGLContext.bindTexture(gl, WebGLContext.TEXTURE_CUBE_MAP, value);
+				else
+				   WebGLContext.bindTexture(gl, WebGLContext.TEXTURE_CUBE_MAP, SolidColorTextureCube.grayTexture.source);
 				return 0;
 			}
 		}
@@ -537,11 +517,11 @@ package laya.d3.shader {
 		}
 		
 		
-		public function bind():void{
+		public function bind():Boolean{
 			BaseShader.activeShader = this;
 			BaseShader.bindShader = this;
 			activeResource();
-			WebGLContext.UseProgram(_program);
+			return WebGLContext.UseProgram(_program);
 		}
 		
 		

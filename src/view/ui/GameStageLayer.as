@@ -7,7 +7,7 @@ import laya.utils.Handler;
 import laya.utils.Tween;
 /**
  * ...战斗场景
- * @author ...
+ * @author ...Kanon
  */
 public class GameStageLayer extends Sprite 
 {
@@ -59,7 +59,7 @@ public class GameStageLayer extends Sprite
 	public function playerMove(targetX:Number, complete:Handler = null):void
 	{
 		if (!this.player) return;
-		Tween.to(this.player, { x: targetX}, 800, Ease.linearNone, complete);
+		Tween.to(this.player, { x: targetX}, 1000, Ease.linearNone, complete);
 	}
 	
 	/**
@@ -72,7 +72,10 @@ public class GameStageLayer extends Sprite
 		for (var i:int = 0; i < count; ++i) 
 		{
 			var enemy:Sprite = this.enemyAry[i];
-			Tween.to(enemy, { x: enemy.x - 300}, 800, Ease.linearNone, complete);
+			if (i == 0) 
+				Tween.to(enemy, { x: enemy.x - 300}, 1000, Ease.linearNone, complete);
+			else
+				Tween.to(enemy, { x: enemy.x - 300}, 1000, Ease.linearNone);
 		}
 	}
 	

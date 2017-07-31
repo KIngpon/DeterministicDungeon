@@ -20,9 +20,9 @@ package laya.ui {
 	 * <p> <code>Clip</code> 可将一张图片，按横向分割数量 <code>clipX</code> 、竖向分割数量 <code>clipY</code> ，
 	 * 或横向分割每个切片的宽度 <code>clipWidth</code> 、竖向分割每个切片的高度 <code>clipHeight</code> ，
 	 * 从左向右，从上到下，分割组合为一个切片动画。</p>
+	 * Image和Clip组件是唯一支持异步加载的两个组件，比如clip.skin = "abc/xxx.png"，其他UI组件均不支持异步加载。
 	 *
-	 * @example 以下示例代码，创建了一个 <code>Clip</code> 实例。
-	 * <listing version="3.0">
+	 * @example <caption>以下示例代码，创建了一个 <code>Clip</code> 实例。</caption>
 	 * package
 	 *	{
 	 *		import laya.ui.Clip;
@@ -57,8 +57,7 @@ package laya.ui {
 	 *			}
 	 *		}
 	 *	}
-	 * </listing>
-	 * <listing version="3.0">
+	 * @example
 	 * Laya.init(640, 800);//设置游戏画布宽高
 	 * Laya.stage.bgColor = "#efefef";//设置画布的背景颜色
 	 * var clip;
@@ -83,8 +82,7 @@ package laya.ui {
 	 *         clip.play();
 	 *     }
 	 * }
-	 * </listing>
-	 * <listing version="3.0">
+	 * @example
 	 * import Clip = laya.ui.Clip;
 	 * import Handler = laya.utils.Handler;
 	 * class Clip_Example {
@@ -113,7 +111,6 @@ package laya.ui {
 	 *     }
 	 * }
 	 *
-	 * </listing>
 	 */
 	public class Clip extends Component {
 		/**@private */
@@ -158,7 +155,7 @@ package laya.ui {
 		}
 		
 		/**@inheritDoc */
-		override public function destroy(clearFromCache:Boolean = false):void {
+		override public function destroy(destroyChild:Boolean = true):void {
 			super.destroy(true);
 			_bitmap && _bitmap.destroy();
 			_bitmap = null;
@@ -178,18 +175,12 @@ package laya.ui {
 			graphics = _bitmap = new AutoBitmap();
 		}
 		
-		/**@inheritDoc */
-		override protected function initialize():void {
-			on(Event.DISPLAY, this, _onDisplay);
-			on(Event.UNDISPLAY, this, _onDisplay);
-		}
-		
 		/**@private	 */
 		protected function _onDisplay(e:Event = null):void {
 			if (_isPlaying) {
 				if (_displayedInStage) play();
 				else stop();
-			} else if (_autoPlay && _displayedInStage) {
+			} else if (_autoPlay) {
 				play();
 			}
 		}
@@ -218,7 +209,7 @@ package laya.ui {
 		}
 		
 		public function set clipX(value:int):void {
-			_clipX = value;
+			_clipX = value || 1;
 			_setClipChanged()
 		}
 		
@@ -228,7 +219,7 @@ package laya.ui {
 		}
 		
 		public function set clipY(value:int):void {
-			_clipY = value;
+			_clipY = value || 1;
 			_setClipChanged()
 		}
 		
@@ -279,17 +270,17 @@ package laya.ui {
 		 */
 		protected function loadComplete(url:String, img:Texture):void {
 			if (url === _skin && img) {
-				_clipWidth || (_clipWidth = Math.ceil(img.sourceWidth / _clipX));
-				_clipHeight || (_clipHeight = Math.ceil(img.sourceHeight / _clipY));
+				var w:Number = _clipWidth || Math.ceil(img.sourceWidth / _clipX);
+				var h:Number = _clipHeight || Math.ceil(img.sourceHeight / _clipY);
 				
-				var key:String = _skin + _clipWidth + _clipHeight;
+				var key:String = _skin + w + h;
 				var clips:Array = AutoBitmap.getCache(key);
 				if (clips) _sources = clips;
 				else {
 					_sources = [];
 					for (var i:int = 0; i < _clipY; i++) {
 						for (var j:int = 0; j < _clipX; j++) {
-							_sources.push(Texture.createFromTexture(img, _clipWidth * j, _clipHeight * i, _clipWidth, _clipHeight));
+							_sources.push(Texture.createFromTexture(img, w * j, h * i, w, h));
 						}
 					}
 					AutoBitmap.setCache(key, _sources);
@@ -435,6 +426,9 @@ package laya.ui {
 			this.index = 0;
 			this._index++;
 			Laya.timer.loop(this.interval, this, _loop);
+			
+			on(Event.DISPLAY, this, _onDisplay);
+			on(Event.UNDISPLAY, this, _onDisplay);
 		}
 		
 		/**

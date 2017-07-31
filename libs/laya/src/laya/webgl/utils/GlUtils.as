@@ -10,7 +10,7 @@ package laya.webgl.utils {
 		}
 		
 		// 填充几何图形的Vb
-		private static var _fillLineArray:Array =/*[STATIC SAFE]*/ [[0, 0, /*0,*/ 0, 0, 0, 0, /*0,*/ 0, 0, 0, 0, /*0,*/ 0, 0, 0, 0, /*0,*/ 0, 0]];
+		private static var _fillLineArray:Array =/*[STATIC SAFE]*/ [0, 0, /*0,*/ 0, 0, 0, 0, /*0,*/ 0, 0, 0, 0, /*0,*/ 0, 0, 0, 0, /*0,*/ 0, 0];
 		
 		/**
 		 *  初始化全局IB,IB索引如下:
@@ -20,7 +20,7 @@ package laya.webgl.utils {
 		 *	 |__\|
 		 *	 3   2
 		 */
-		public static function fillIBQuadrangle(buffer:IndexBuffer2D, count:int/*Quadrangle count*/):Boolean {
+		public static function fillIBQuadrangle(buffer:IndexBuffer2D, count:int):Boolean {
 			if (count > 65535 / 4) {
 				throw Error("IBQuadrangle count:" + count + " must<:" + Math.floor(65535 / 4));
 				return false;
@@ -45,7 +45,7 @@ package laya.webgl.utils {
 			return true;
 		}
 		
-		public static function expandIBQuadrangle(buffer:IndexBuffer2D, count:int/*Quadrangle count*/):void {
+		public static function expandIBQuadrangle(buffer:IndexBuffer2D, count:int):void {
 			buffer.bufferLength >= (count * 6 * Buffer2D.SHORT) || fillIBQuadrangle(buffer, count);
 		}
 		
@@ -152,21 +152,6 @@ package laya.webgl.utils {
 			var vpos:int = (vb._byteLength >> 2)/*FLOAT32*/;// + WebGLContext2D._RECTVBSIZE;
 			vb.byteLength = ((vpos + WebGLContext2D._RECTVBSIZE) << 2);
 			var vbdata:* = vb.getFloat32Array();
-			/*
-			for (var i:int = 0; i < 16; i++)
-			{
-				vbdata[vpos + i] = vbdata[vpos + i-16];
-			}
-			
-			vbdata[vpos] 	 += dx;
-			vbdata[vpos + 1] += dy;
-			vbdata[vpos + 4] += dx;
-			vbdata[vpos + 5] += dy;
-			vbdata[vpos + 8] += dx;
-			vbdata[vpos + 9] += dy;
-			vbdata[vpos + 12]+= dx;
-			vbdata[vpos + 13]+= dy;
-			*/
 			for (var i:int=0,ci:int=vpos -16; i < 4; i++) {
 				vbdata[vpos] = vbdata[ci] + dx;++vpos;++ci;
 				vbdata[vpos] = vbdata[ci] + dy;++vpos;++ci;				
@@ -213,8 +198,7 @@ package laya.webgl.utils {
 			{
 				cBx = clip.x, cBy = clip.y, cEx = clip.width + cBx, cEy = clip.height + cBy;
 			}
-			
-			if (mType !== 1 && (toBx >= cEx || toBy >= cEy || toEx <= cBx || toEy <= cBy))
+			if (mType !== 1 && ( Math.min(toBx,toEx) >= cEx ||  Math.min(toBy ,toEy)>= cEy ||  Math.max(toEx,toBx) <= cBx || Math.max(toEy,toBy) <= cBy))
 				return false;
 			
 			var vpos:int = (vb._byteLength >> 2)/*FLOAT32*/;// + WebGLContext2D._RECTVBSIZE;

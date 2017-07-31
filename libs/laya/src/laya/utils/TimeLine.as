@@ -2,11 +2,13 @@ package laya.utils {
 	import laya.events.Event;
 	import laya.events.EventDispatcher;
 	
-	/**整个缓动结束的时候会调度
+	/**
+	 * 整个缓动结束的时候会调度
 	 * @eventType Event.COMPLETE
 	 */
 	[Event(name = "complete", type = "laya.events.Event")]
-	/**当缓动到达标签时会调度。
+	/**
+	 * 当缓动到达标签时会调度。
 	 * @eventType Event.LABEL
 	 */
 	[Event(name = "label", type = "laya.events.Event")]
@@ -52,6 +54,7 @@ package laya.utils {
 		public static function to(target:*, props:Object, duration:Number, ease:Function = null, offset:Number = 0):TimeLine {
 			return (new TimeLine()).to(target, props, duration, ease, offset);
 		}
+		
 		/**
 		 * 从 props 属性，缓动到当前状态。
 		 * @param	target		target 目标对象(即将更改属性值的对象)
@@ -63,6 +66,7 @@ package laya.utils {
 		public static function from(target:*, props:Object, duration:Number, ease:Function = null, offset:Number = 0):TimeLine {
 			return (new TimeLine()).from(target, props, duration, ease, offset);
 		}
+		
 		/**
 		 * 控制一个对象，从当前点移动到目标点。
 		 * @param	target		要控制的对象。
@@ -251,6 +255,7 @@ package laya.utils {
 		 * @param	loop 是否循环播放。
 		 */
 		public function play(timeOrLabel:* = 0, loop:Boolean = false):void {
+			if (!_tweenDataList) return;
 			if (_startTimeSort) {
 				_startTimeSort = false;
 				//对数据排序
@@ -306,8 +311,13 @@ package laya.utils {
 			if (_currTime >= _startTime) {
 				if (_loopKey) {
 					_complete();
+					if (!_tweenDataList) return;
 					gotoTime(0);
 				} else {
+					for (var p:* in _tweenDic) {
+						tTween = _tweenDic[p];
+						tTween.complete();
+					}
 					_complete();
 					pause();
 					return;
@@ -318,6 +328,11 @@ package laya.utils {
 			var tFrameTime:Number = tNow - _lastTime;
 			var tCurrTime:Number = _currTime += tFrameTime * scale;
 			_lastTime = tNow;
+			
+			for (p in _tweenDic) {
+				tTween = _tweenDic[p];
+				tTween._updateEase(tCurrTime);
+			}
 			
 			var tTween:Tween;
 			if (_tweenDataList.length != 0 && _index < _tweenDataList.length) {
@@ -332,16 +347,14 @@ package laya.utils {
 						tTween.setStartTime(tCurrTime);
 						tTween.gid = _gidIndex;
 						_tweenDic[_gidIndex] = tTween;
+						tTween._updateEase(tCurrTime);
 					} else {
 						this.event(Event.LABEL, tTweenData.data);
 					}
 				}
 			}
 			
-			for (var p:* in _tweenDic) {
-				tTween = _tweenDic[p];
-				tTween._updateEase(tCurrTime);
-			}
+			
 		}
 		
 		/**
@@ -376,7 +389,7 @@ package laya.utils {
 		}
 		
 		/**
-		 * 得到总帧数据
+		 * 得到总帧数。
 		 */
 		public function get total():int {
 			_total = Math.floor(_startTime / 1000 * _frameRate);

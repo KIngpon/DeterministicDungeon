@@ -1,6 +1,7 @@
 package laya.ui {
 	import laya.events.Event;
 	import laya.maths.Point;
+	import laya.net.Loader;
 	import laya.utils.Handler;
 	
 	/**
@@ -62,6 +63,8 @@ package laya.ui {
 		/**@private */
 		protected var _bg:Image;
 		/**@private */
+		protected var _progress:Image;
+		/**@private */
 		protected var _bar:Button;
 		/**@private */
 		protected var _tx:Number;
@@ -87,8 +90,10 @@ package laya.ui {
 			super.destroy(destroyChild);
 			_bg && _bg.destroy(destroyChild);
 			_bar && _bar.destroy(destroyChild);
+			_progress && _progress.destroy(destroyChild);
 			_bg = null;
 			_bar = null;
+			_progress = null;
 			changeHandler = null;
 		}
 		
@@ -102,24 +107,24 @@ package laya.ui {
 		override protected function initialize():void {
 			_bar.on(Event.MOUSE_DOWN, this, onBarMouseDown);
 			_bg.sizeGrid = _bar.sizeGrid = "4,4,4,4,0";
+			if (_progress) _progress.sizeGrid = _bar.sizeGrid;
 			allowClickBack = true;
 		}
 		
 		/**
 		 * @private
 		 * 滑块的的 <code>Event.MOUSE_DOWN</code> 事件侦听处理函数。
-		 * @param e
 		 */
 		protected function onBarMouseDown(e:Event):void {
 			_globalSacle || (_globalSacle = new Point());
-			_globalSacle.setTo(globalScaleX, globalScaleY);
+			_globalSacle.setTo(globalScaleX || 0.01, globalScaleY || 0.01);
 			
 			_maxMove = isVertical ? (height - _bar.height) : (width - _bar.width);
 			_tx = Laya.stage.mouseX;
 			_ty = Laya.stage.mouseY;
 			Laya.stage.on(Event.MOUSE_MOVE, this, mouseMove);
 			Laya.stage.once(Event.MOUSE_UP, this, mouseUp);
-			
+			Laya.stage.once(Event.MOUSE_OUT, this, mouseUp);
 			//显示提示
 			showValueText();
 		}
@@ -153,17 +158,17 @@ package laya.ui {
 		
 		/**
 		 * @private
-		 * @param e
 		 */
 		private function mouseUp(e:Event):void {
 			Laya.stage.off(Event.MOUSE_MOVE, this, mouseMove);
+			Laya.stage.off(Event.MOUSE_UP, this, mouseUp);
+			Laya.stage.off(Event.MOUSE_OUT, this, mouseUp);
 			sendChangeEvent(Event.CHANGED);
 			hideValueText();
 		}
 		
 		/**
 		 * @private
-		 * @param e
 		 */
 		private function mouseMove(e:Event):void {
 			var oldValue:Number = _value;
@@ -172,11 +177,13 @@ package laya.ui {
 				if (_bar.y > _maxMove) _bar.y = _maxMove;
 				else if (_bar.y < 0) _bar.y = 0;
 				_value = _bar.y / _maxMove * (_max - _min) + _min;
+				if(_progress) _progress.height = _bar.y+0.5*_bar.height;
 			} else {
 				_bar.x += (Laya.stage.mouseX - _tx) / _globalSacle.x;
 				if (_bar.x > _maxMove) _bar.x = _maxMove;
 				else if (_bar.x < 0) _bar.x = 0;
 				_value = _bar.x / _maxMove * (_max - _min) + _min;
+				if(_progress) _progress.width = _bar.x+0.5*_bar.width;
 			}
 			
 			_tx = Laya.stage.mouseX;
@@ -192,7 +199,6 @@ package laya.ui {
 		
 		/**
 		 * @private
-		 * @param type
 		 */
 		protected function sendChangeEvent(type:String = Event.CHANGE):void {
 			event(type);
@@ -201,7 +207,6 @@ package laya.ui {
 		
 		/**
 		 * @copy laya.ui.Image#skin
-		 * @return
 		 */
 		public function get skin():String {
 			return _skin;
@@ -212,7 +217,19 @@ package laya.ui {
 				_skin = value;
 				_bg.skin = _skin;
 				_bar.skin = _skin.replace(".png", "$bar.png");
+				var progressSkin:String = _skin.replace(".png", "$progress.png");
+				if (Loader.getRes(progressSkin))
+				{
+					if (!_progress)
+					{
+						addChild(_progress = new Image());
+						_progress.sizeGrid = _bar.sizeGrid;
+						setChildIndex(_progress, 1);
+					}
+					_progress.skin = progressSkin;
+				} 
 				setBarPoint();
+				callLater(changeValue);
 			}
 		}
 		
@@ -249,7 +266,6 @@ package laya.ui {
 		 * <p>数据格式："上边距,右边距,下边距,左边距,是否重复填充(值为0：不重复填充，1：重复填充)"，以逗号分隔。
 		 * <ul><li>例如："4,4,4,4,1"</li></ul></p>
 		 * @see laya.ui.AutoBitmap.sizeGrid
-		 * @return
 		 */
 		public function get sizeGrid():String {
 			return _bg.sizeGrid;
@@ -258,6 +274,7 @@ package laya.ui {
 		public function set sizeGrid(value:String):void {
 			_bg.sizeGrid = value;
 			_bar.sizeGrid = value;
+			if (_progress) _progress.sizeGrid = _bar.sizeGrid;
 		}
 		
 		/**
@@ -274,8 +291,7 @@ package laya.ui {
 		}
 		
 		/**
-		 * 表示当前的刻度值。默认值为1。
-		 * @return
+		 * 滑动的刻度值，滑动数值为tick的整数倍。默认值为1。
 		 */
 		public function get tick():Number {
 			return _tick;
@@ -300,8 +316,17 @@ package laya.ui {
 			_value = _value > _max ? _max : _value < _min ? _min : _value;
 			var num:Number = _max - _min;
 			if (num === 0) num = 1;
-			if (isVertical) _bar.y = (_value - _min) / num * (height - _bar.height);
-			else _bar.x = (_value - _min) / num * (width - _bar.width);
+			if (isVertical)
+			{
+				_bar.y = (_value - _min) / num * (height - _bar.height);
+				if(_progress) _progress.height = _bar.y+0.5*_bar.height;
+			} 
+			else
+			{
+				_bar.x = (_value - _min) / num * (width - _bar.width);
+				if(_progress) _progress.width = _bar.x+0.5*_bar.width;
+			}
+			
 		}
 		
 		/**

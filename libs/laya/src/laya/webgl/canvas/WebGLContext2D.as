@@ -140,11 +140,10 @@ package laya.webgl.canvas
 			this._isMain = true;
 		}
 		
-		public function clearBG(r:Number, g:Number, b:Number, a:Number):void
-		{
+		public function clearBG(r:Number, g:Number, b:Number, a:Number):void{
 			var gl:WebGLContext = WebGL.mainContext;
 			gl.clearColor(r, g, b, a);
-			gl.clear(WebGLContext.COLOR_BUFFER_BIT | WebGLContext.DEPTH_BUFFER_BIT);
+			gl.clear(WebGLContext.COLOR_BUFFER_BIT);
 		}
 		
 		public function _getSubmits():Array
@@ -204,6 +203,7 @@ package laya.webgl.canvas
 			_width = w;
 			_height = h;
 			_targets && (_targets.size(w, h));
+			_canvas.memorySize -=_canvas.memorySize;//webGLCanvas为0;
 		}
 		
 		public function set asBitmap(value:Boolean):void
@@ -214,6 +214,7 @@ package laya.webgl.canvas
 				_targets.repaint = true;
 				if (!_width || !_height)
 					throw Error("asBitmap no size!");
+					_targets.setSP(sprite);
 				_targets.size(_width, _height);
 			}
 			else
@@ -301,7 +302,7 @@ package laya.webgl.canvas
 				if (_curMat.bTransform)
 				{
 					SaveTransform.save(this);
-					_curMat.transformPoint(Point.TEMP.setTo(x, y));
+					_curMat.transformPointN(Point.TEMP.setTo(x, y));
 					x = Point.TEMP.x;
 					y = Point.TEMP.y;
 				}
@@ -342,11 +343,6 @@ package laya.webgl.canvas
 			}
 		}
 		
-		override public function measureText(text:String):*
-		{
-			return RunDriver.measureText(text, _other.font.toString());
-		}
-		
 		override public function set font(str:String):void
 		{
 			if (str == _other.font.toString())
@@ -356,7 +352,7 @@ package laya.webgl.canvas
 			_other.font === FontInContext.EMPTY ? (_other.font = new FontInContext(str)) : (_other.font.setFont(str));
 		}
 		
-		private function _fillText(txt:*, words:Vector.<HTMLChar>, x:Number, y:Number, fontStr:String, color:String, textAlign:String):void
+		private function _fillText(txt:*, words:Vector.<HTMLChar>, x:Number, y:Number, fontStr:String, color:String,strokeColor:String,lineWidth:int,textAlign:String):void
 		{
 			var shader:Shader2D = _shader2D;
 			var curShader:Value2D = _curSubmit.shaderValue;
@@ -366,7 +362,7 @@ package laya.webgl.canvas
 			{
 				if (shader.ALPHA !== curShader.ALPHA)
 					shader.glTexture = null;
-				DrawText.drawText(this, txt, words, _curMat, font, textAlign || _other.textAlign, color, null, -1, x, y);
+				DrawText.drawText(this, txt, words, _curMat, font, textAlign || _other.textAlign, color, strokeColor, lineWidth, x, y);
 			}
 			else
 			{
@@ -378,65 +374,37 @@ package laya.webgl.canvas
 					shader.colorAdd = colorAdd;
 				}
 				//shader.defines.add(ShaderDefines2D.COLORADD);
-				DrawText.drawText(this, txt, words, _curMat, font, textAlign || _other.textAlign, color, null, -1, x, y);
+				DrawText.drawText(this, txt, words, _curMat, font, textAlign || _other.textAlign, color, strokeColor,lineWidth, x, y);
 					//shader.defines.setValue(preDef);
 			}
 		}
 		
 		public override function fillWords(words:Vector.<HTMLChar>, x:Number, y:Number, fontStr:String, color:String):void
 		{
-			words.length > 0 && _fillText(null, words, x, y, fontStr, color, null);
+			_fillText(null, words, x, y, fontStr, color,null,-1, null);
 		}
 		
 		override public function fillText(txt:*, x:Number, y:Number, fontStr:String, color:String, textAlign:String):void
 		{
-			txt.length > 0 && _fillText(txt, null, x, y, fontStr, color, textAlign);
+			_fillText(txt, null, x, y, fontStr, color,null,-1, textAlign);
 		}
 		
 		override public function strokeText(txt:*, x:Number, y:Number, fontStr:String, color:String, lineWidth:Number, textAlign:String):void
 		{
-			if (txt.length === 0)
-				return;
-			var shader:Shader2D = _shader2D;
-			var curShader:Value2D = _curSubmit.shaderValue;
-			var font:FontInContext = fontStr ? (_fontTemp.setFont(fontStr), _fontTemp) : _other.font;
-			
-			if (AtlasResourceManager.enabled)
-			{
-				if (shader.ALPHA !== curShader.ALPHA)
-				{
-					shader.glTexture = null;
-				}
-				DrawText.drawText(this, txt, null, _curMat, font, textAlign || _other.textAlign, null, color, lineWidth || 1, x, y);
-			}
-			else
-			{
-				var preDef:int = _shader2D.defines.getValue();
-				
-				var colorAdd:Array = color ? Color.create(color)._color : shader.colorAdd;
-				if (shader.ALPHA !== curShader.ALPHA || colorAdd !== shader.colorAdd || curShader.colorAdd !== shader.colorAdd)
-				{
-					shader.glTexture = null;
-					shader.colorAdd = colorAdd;
-				}
-				
-				//shader.defines.add(ShaderDefines2D.COLORADD);
-				DrawText.drawText(this, txt, null, _curMat, font, textAlign || _other.textAlign, null, color, lineWidth || 1, x, y);
-					//shader.defines.setValue(preDef);
-			}
+		    _fillText(txt, null, x, y, fontStr, null, color, lineWidth || 1, textAlign);
 		}
 		
 		override public function fillBorderText(txt:*, x:Number, y:Number, fontStr:String, fillColor:String, borderColor:String, lineWidth:int, textAlign:String):void
 		{
-			if (txt.length === 0)
-				return;
+			_fillBorderText(txt, null, x, y, fontStr, fillColor, borderColor, lineWidth, textAlign);
+		}
+		private  function _fillBorderText(txt:*,words:Vector.<HTMLChar>, x:Number, y:Number, fontStr:String, fillColor:String, borderColor:String, lineWidth:int, textAlign:String):void{
 			if (!AtlasResourceManager.enabled)
 			{
-				strokeText(txt, x, y, fontStr, borderColor, lineWidth, textAlign);
-				fillText(txt, x, y, fontStr, fillColor, textAlign);
+				_fillText(txt, words, x, y, fontStr, null, borderColor, lineWidth || 1, textAlign);
+				_fillText(txt, words, x, y, fontStr,fillColor,null,-1, textAlign);
 				return;
 			}
-			
 			//判断是否大图合集
 			var shader:Shader2D = _shader2D;
 			var curShader:Value2D = _curSubmit.shaderValue;
@@ -444,7 +412,11 @@ package laya.webgl.canvas
 				shader.glTexture = null;
 			
 			var font:FontInContext = fontStr ? (_fontTemp.setFont(fontStr), _fontTemp) : _other.font;
-			DrawText.drawText(this, txt, null, _curMat, font, textAlign || _other.textAlign, fillColor, borderColor, lineWidth || 1, x, y);
+			DrawText.drawText(this, txt, words, _curMat, font, textAlign || _other.textAlign, fillColor, borderColor, lineWidth || 1, x, y);
+		}
+		
+		override public function fillBorderWords(words:Vector.<HTMLChar>, x:Number, y:Number, font:String, color:String, borderColor:String, lineWidth:int):void {	
+			_fillBorderText(null, words, x, y, font, color, borderColor, lineWidth,null);
 		}
 		
 		override public function fillRect(x:Number, y:Number, width:Number, height:Number, fillStyle:*):void
@@ -474,6 +446,12 @@ package laya.webgl.canvas
 		}
 		
 		public override function fillTexture(texture:Texture, x:Number, y:Number, width:Number, height:Number, type:String, offset:Point, other:*):void {
+			if (!(texture.loaded && texture.bitmap && texture.source)){
+				if (this.sprite){
+					Laya.timer.callLater(this,this._repaintSprite);
+				}
+				return;
+			};
 			var vb:VertexBuffer2D = _vb;
 			var w:Number = texture.bitmap.width, h:Number = texture.bitmap.height, uv:Array = texture.uv;
 			var ox:Number = offset.x % texture.width, oy:Number = offset.y % texture.height;
@@ -579,12 +557,12 @@ package laya.webgl.canvas
 				
 				shaderValue.u_offset[0] = tx;
 				shaderValue.u_offset[1] = ty;
-				var curShader:Value2D = _curSubmit.shaderValue;
-				var shader:Shader2D = _shader2D;
+				//var curShader:Value2D = _curSubmit.shaderValue;
+				//var shader:Shader2D = _shader2D;
 				
 				if (AtlasResourceManager.enabled && !this._isMain) //而且不是主画布
 					submit.addTexture(texture, (vb._byteLength >> 2) - WebGLContext2D._RECTVBSIZE);
-				submit._preIsSameTextureShader = _curSubmit._renderType === Submit.TYPE_FILLTEXTURE && shader.ALPHA === curShader.ALPHA;
+				//submit._preIsSameTextureShader = _curSubmit._renderType === Submit.TYPE_FILLTEXTURE && shader.ALPHA === curShader.ALPHA;
 				_curSubmit = submit;
 		        
 				submit._renderType = Submit.TYPE_FILLTEXTURE;
@@ -856,8 +834,14 @@ package laya.webgl.canvas
 		
 		override public function drawTextureWithTransform(tex:Texture, x:Number, y:Number, width:Number, height:Number, transform:Matrix, tx:Number, ty:Number, alpha:Number):void
 		{
+			if (!transform)
+			{
+				_drawTextureM(tex, x, y, width, height, tx, ty, null, alpha);
+				return;
+			}
 			var curMat:Matrix = _curMat;
-			
+			var prex:Number = _x;
+			var prey:Number = _y;
 			(tx !== 0 || ty !== 0) && (_x = tx * curMat.a + ty * curMat.c, _y = ty * curMat.d + tx * curMat.b);
 			
 			if (transform && curMat.bTransform)
@@ -872,7 +856,8 @@ package laya.webgl.canvas
 				_y += curMat.ty;
 			}
 			_drawTextureM(tex, x, y, width, height, 0, 0, transform, alpha);
-			_x = _y = 0;
+			_x = prex; 
+			_y = prey;
 		}
 		
 		public function fillQuadrangle(tex:Texture, x:Number, y:Number, point4:Array, m:Matrix):void
@@ -911,6 +896,7 @@ package laya.webgl.canvas
 		
 		override public function drawTexture2(x:Number, y:Number, pivotX:Number, pivotY:Number, transform:Matrix, alpha:Number, blendMode:String, args:Array):void
 		{
+			if (alpha == 0) return;
 			var curMat:Matrix = _curMat;
 			_x = x * curMat.a + y * curMat.c;
 			_y = y * curMat.d + x * curMat.b;
@@ -1199,6 +1185,9 @@ package laya.webgl.canvas
 		
 		public function movePath(x:Number, y:Number):void
 		{
+			var _x1:Number=x, _y1:Number=y;
+			x = _curMat.a * _x1 + _curMat.c * _y1 + _curMat.tx;
+			y = _curMat.b * _x1 + _curMat.d * _y1	+_curMat.ty;
 			mX += x;
 			mY += y;
 		}
@@ -1237,6 +1226,7 @@ package laya.webgl.canvas
 					if (mHaveLineKey)
 					{
 						var tShapeLine:IShape = VectorGraphManager.getInstance().shapeLineDic[mId];
+						tShapeLine.rebuild(tPath.tempArray);
 						tPath.setGeomtry(tShapeLine);
 					}
 					else
@@ -1246,13 +1236,13 @@ package laya.webgl.canvas
 				}
 				
 				tPath.update();
-				var tArray:Array = RenderState2D.getMatrArray();
-				RenderState2D.mat2MatArray(_curMat, tArray);
+				//var tArray:Array = RenderState2D.getMatrArray();
+				//RenderState2D.mat2MatArray(_curMat, tArray);
 				var tPosArray:Array = [mX, mY];
 				var tempSubmit:Submit = Submit.createShape(this, tPath.ib, tPath.vb, tPath.count, tPath.offset, Value2D.create(ShaderDefines2D.PRIMITIVE, 0));
 				tempSubmit.shaderValue.ALPHA = _shader2D.ALPHA;
 				(tempSubmit.shaderValue as PrimitiveSV).u_pos = tPosArray;
-				tempSubmit.shaderValue.u_mmat2 = tArray;
+				tempSubmit.shaderValue.u_mmat2 = RenderState2D.TEMPMAT4_ARRAY;
 				_submits[_submits._length++] = tempSubmit;
 			}
 		}
@@ -1280,16 +1270,45 @@ package laya.webgl.canvas
 			}
 		}
 		
-		public function moveTo(x:Number, y:Number):void
+		public function moveTo(x:Number, y:Number,b:Boolean=true):void
 		{
 			var tPath:Path = _getPath();
+			if (b)
+			{
+				var _x1:Number = x, _y1:Number = y;
+				x = _curMat.a * _x1 + _curMat.c * _y1;
+				y = _curMat.b * _x1 + _curMat.d * _y1;
+			}
 			tPath.addPoint(x, y);
 		}
 		
-		public function lineTo(x:Number, y:Number):void
+		public function lineTo(x:Number, y:Number,b:Boolean=true):void
 		{
 			var tPath:Path = _getPath();
+			if (b)
+			{
+				var _x1:Number = x, _y1:Number = y;
+				x = _curMat.a * _x1 + _curMat.c * _y1;
+				y = _curMat.b * _x1 + _curMat.d * _y1;
+			}
 			tPath.addPoint(x, y);
+		}
+		
+		override public function drawCurves(x:Number, y:Number, args:Array):void
+		{
+			setPathId(-1);
+			beginPath();
+			strokeStyle = args[3];
+			lineWidth = args[4];
+			var points:Array = args[2];
+			x += args[0], y += args[1];
+			movePath(x, y);
+			moveTo(points[0], points[1]);
+			var i:int = 2, n:int = points.length;
+			while (i < n) {
+				quadraticCurveTo( points[i++],  points[i++],  points[i++],  points[i++]);
+			}
+			stroke();
 		}
 		
 		override public function arcTo(x1:Number, y1:Number, x2:Number, y2:Number, r:Number):void
@@ -1307,6 +1326,13 @@ package laya.webgl.canvas
 			var dx0:Number, dy0:Number, dx1:Number, dy1:Number, a:Number, d:Number, cx:Number, cy:Number, a0:Number, a1:Number;
 			var dir:Boolean;
 			// Calculate tangential circle to lines (x0,y0)-(x1,y1) and (x1,y1)-(x2,y2).
+			var _x1:Number = x1, _y1:Number = y1;
+			x1 = _curMat.a * _x1 + _curMat.c * _y1;
+			y1 = _curMat.b * _x1 + _curMat.d * _y1;
+		    _x1 = x2, _y1 = y2;
+			x2 = _curMat.a * _x1 + _curMat.c * _y1;
+			y2 =  _curMat.b *_x1+ _curMat.d * _y1;
+			r =   _curMat.a * r + _curMat.c * r;
 			dx0 = x0 - x1;
 			dy0 = y0 - y1;
 			dx1 = x2 - x1;
@@ -1347,15 +1373,17 @@ package laya.webgl.canvas
 				a1 = Math.atan2(dx1, -dy1);
 				dir = true;
 			}
-			arc(cx, cy, r, a0, a1, dir);
+			arc(cx, cy, r, a0, a1, dir,false);
 		}
 		
-		public function arc(cx:Number, cy:Number, r:Number, startAngle:Number, endAngle:Number, counterclockwise:Boolean = false):void
+		public function arc(cx:Number, cy:Number, r:Number, startAngle:Number, endAngle:Number, counterclockwise:Boolean = false,b:Boolean=true):void
 		{
 			if (mId != -1)
 			{
-				if (mHaveKey)
+				var tShape:IShape = VectorGraphManager.getInstance().shapeDic[this.mId];
+				if (tShape)
 				{
+					if (mHaveKey && !tShape.needUpdate(_curMat))
 					return;
 				}
 				cx = 0;
@@ -1416,6 +1444,7 @@ package laya.webgl.canvas
 			
 			nvals = 0;
 			var tPath:Path = _getPath();
+			var _x1:Number, _y1:Number;
 			for (i = 0; i <= ndivs; i++)
 			{
 				a = startAngle + da * (i / ndivs);
@@ -1423,6 +1452,12 @@ package laya.webgl.canvas
 				dy = Math.sin(a);
 				x = cx + dx * r;
 				y = cy + dy * r;
+				if (b)
+				{
+					_x1 = x,_y1 = y;
+					x = _curMat.a * _x1 + _curMat.c * _y1;
+					y = _curMat.b * _x1 + _curMat.d * _y1;
+				}
 				if (x != _path.getEndPointX() || y != _path.getEndPointY())
 				{
 					tPath.addPoint(x, y);
@@ -1432,6 +1467,12 @@ package laya.webgl.canvas
 			dy = Math.sin(endAngle);
 			x = cx + dx * r;
 			y = cy + dy * r;
+			if (b)
+			{
+				_x1 = x,_y1 = y;
+				x = _curMat.a * _x1 + _curMat.c * _y1;
+				y = _curMat.b * _x1 + _curMat.d * _y1;
+			}
 			if (x != _path.getEndPointX() || y != _path.getEndPointY())
 			{
 				tPath.addPoint(x, y);
@@ -1442,12 +1483,18 @@ package laya.webgl.canvas
 		{
 			var tBezier:Bezier = Bezier.I;
 			var tResultArray:Array = [];
+			var _x1:Number=x, _y1:Number=y;
+			x = _curMat.a * _x1 + _curMat.c * _y1 ;
+			y = _curMat.b * _x1 + _curMat.d * _y1;
+			_x1 = cpx, _y1 = cpy;
+			cpx = _curMat.a * _x1 + _curMat.c * _y1;
+			cpy = _curMat.b * _x1 + _curMat.d * _y1;
 			var tArray:Array = tBezier.getBezierPoints([_path.getEndPointX(), _path.getEndPointY(), cpx, cpy, x, y], 30, 2);
 			for (var i:int = 0, n:int = tArray.length / 2; i < n; i++)
 			{
-				lineTo(tArray[i * 2], tArray[i * 2 + 1]);
+				lineTo(tArray[i * 2], tArray[i * 2 + 1],false);
 			}
-			lineTo(x, y);
+			lineTo(x, y,false);
 		}
 		
 		override public function rect(x:Number, y:Number, width:Number, height:Number):void
@@ -1490,18 +1537,22 @@ package laya.webgl.canvas
 				if (mHaveKey)
 				{
 					var tShape:IShape = VectorGraphManager.getInstance().shapeDic[mId];
+					tShape.setMatrix(_curMat);
+					tShape.rebuild(tPath.tempArray);
 					tPath.setGeomtry(tShape);
 				}
 				else
 				{
-					VectorGraphManager.getInstance().addShape(mId, tPath.polygon(x, y, points, color, lineWidth ? lineWidth : 1, boderColor));
+					var t:IShape = tPath.polygon(x, y, points, color, lineWidth ? lineWidth : 1, boderColor);
+					VectorGraphManager.getInstance().addShape(mId, t);
+					t.setMatrix(_curMat);
 				}
 			}
 			
 			tPath.update();
 			var tPosArray:Array = [mX, mY];
-			var tArray:Array = RenderState2D.getMatrArray();
-			RenderState2D.mat2MatArray(_curMat, tArray);
+			//var tArray:Array = RenderState2D.getMatrArray();
+			//RenderState2D.mat2MatArray(_curMat, tArray);
 			var tempSubmit:Submit;
 			if (!isConvexPolygon)
 			{
@@ -1512,7 +1563,7 @@ package laya.webgl.canvas
 				tempSubmit = Submit.createShape(this, tPath.ib, tPath.vb, tPath.count, tPath.offset, Value2D.create(ShaderDefines2D.PRIMITIVE, 0));
 				tempSubmit.shaderValue.ALPHA = _shader2D.ALPHA;
 				(tempSubmit.shaderValue as PrimitiveSV).u_pos = tPosArray;
-				tempSubmit.shaderValue.u_mmat2 = tArray;
+				tempSubmit.shaderValue.u_mmat2 =  RenderState2D.EMPTYMAT4_ARRAY;
 				_submits[_submits._length++] = tempSubmit;
 				submit = SubmitStencil.create(5);
 				addRenderObject(submit);
@@ -1521,7 +1572,7 @@ package laya.webgl.canvas
 			tempSubmit = Submit.createShape(this, tPath.ib, tPath.vb, tPath.count, tPath.offset, Value2D.create(ShaderDefines2D.PRIMITIVE, 0));
 			tempSubmit.shaderValue.ALPHA = _shader2D.ALPHA;
 			(tempSubmit.shaderValue as PrimitiveSV).u_pos = tPosArray;
-			tempSubmit.shaderValue.u_mmat2 = tArray;
+			tempSubmit.shaderValue.u_mmat2 = RenderState2D.EMPTYMAT4_ARRAY;
 			_submits[_submits._length++] = tempSubmit;
 			if (!isConvexPolygon)
 			{
@@ -1534,6 +1585,7 @@ package laya.webgl.canvas
 				if (mHaveLineKey)
 				{
 					var tShapeLine:IShape = VectorGraphManager.getInstance().shapeLineDic[mId];
+					tShapeLine.rebuild(tPath.tempArray);
 					tPath.setGeomtry(tShapeLine);
 				}
 				else
@@ -1543,7 +1595,7 @@ package laya.webgl.canvas
 				tPath.update();
 				tempSubmit = Submit.createShape(this, tPath.ib, tPath.vb, tPath.count, tPath.offset, Value2D.create(ShaderDefines2D.PRIMITIVE, 0));
 				tempSubmit.shaderValue.ALPHA = _shader2D.ALPHA;
-				tempSubmit.shaderValue.u_mmat2 = tArray;
+				tempSubmit.shaderValue.u_mmat2 = RenderState2D.EMPTYMAT4_ARRAY;
 				_submits[_submits._length++] = tempSubmit;
 			}
 		}

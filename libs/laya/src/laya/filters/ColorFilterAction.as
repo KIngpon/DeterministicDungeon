@@ -1,6 +1,7 @@
 package laya.filters {
 	
 	/**
+	 * @private
 	 * <code>ColorFilterAction</code> 是一个颜色滤镜应用类。
 	 */
 	public class ColorFilterAction implements IFilterAction {
@@ -22,7 +23,6 @@ package laya.filters {
 			var canvas:* = srcCanvas.ctx.ctx.canvas;
 			
 			if (canvas.width == 0 || canvas.height == 0) return canvas;
-
 			
 			var imgdata:* = ctx.getImageData(0, 0, canvas.width, canvas.height);
 			

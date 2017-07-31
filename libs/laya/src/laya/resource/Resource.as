@@ -1,13 +1,8 @@
 package laya.resource {
 	import laya.events.Event;
 	import laya.events.EventDispatcher;
+	import laya.net.Loader;
 	import laya.utils.Stat;
-	
-	///**
-	//* 当设置内存尺寸时调度。回调参数为内存变化量。
-	//* @eventType Event.MEMORY_CHANGED
-	//*/
-	//[Event(name = "memorychanged", type = "laya.events.Event")]
 	
 	/**
 	 * 释放资源时调度。
@@ -28,11 +23,12 @@ package laya.resource {
 	[Event(name = "recovered", type = "laya.events.Event")]
 	
 	/**
+	 * @private
 	 * <code>Resource</code> 资源存取类。
 	 */
-	public class Resource extends EventDispatcher implements ICreateResource,IDispose{
+	public class Resource extends EventDispatcher implements ICreateResource, IDispose {
 		/**唯一标识ID计数器*/
-		private static var _uniqueIDCounter:int = 0/*int.MIN_VALUE*/;
+		private static var _uniqueIDCounter:int = 0;
 		/**此类型已载入资源*/
 		private static var _loadedResources:Vector.<Resource> = new Vector.<Resource>();
 		/**是否对已载入资源排序（开启会有性能损耗）*/
@@ -100,7 +96,7 @@ package laya.resource {
 			}
 		}
 		
-		/**唯一标识ID(通常用于优化或识别)。*/
+		/**@private */
 		private var _id:int;
 		/**上次使用帧数。*/
 		private var _lastUseFrameCount:int;
@@ -108,19 +104,29 @@ package laya.resource {
 		private var _memorySize:int;
 		/**名字。*/
 		private var _name:String;
+		/**@private */
+		private var _url:String;
+		
 		/**是否已加载,限于首次加载。*/
-		protected var _loaded:Boolean = false;
+		private var __loaded:Boolean;
 		/**是否已释放。*/
 		private var _released:Boolean;
-		/** @private
-		 * 所属资源管理器，通常禁止修改，如果为null则不受资源管理器，可能受大图合集资源管理。
-		 * */
+		/**是否已处理。*/
+		private var _disposed:Boolean;
+		/** @private 所属资源管理器，通常禁止修改，如果为null则不受资源管理器，可能受大图合集资源管理。*/
 		public var _resourceManager:ResourceManager;
 		/**是否加锁，true为不能使用自动释放机制。*/
 		public var lock:Boolean;
 		
 		/**
-		 * 获取唯一标识ID(通常用于优化或识别)。
+		 * @private
+		 */
+		public function set _loaded(value:Boolean):void {
+			__loaded=value;
+		}
+		
+		/**
+		 * 获取唯一标识ID,通常用于识别。
 		 */
 		public function get id():int {
 			return _id;
@@ -171,22 +177,52 @@ package laya.resource {
 			return _released;
 		}
 		
-		public function get loaded():Boolean {
-			return _loaded;
+		/**
+		 * 是否已处理。
+		 */
+		public function get disposed():Boolean {
+			return _disposed;
 		}
+		
+		/**
+		 * 获取是否已加载完成。
+		 */
+		public function get loaded():Boolean {
+			return __loaded;
+		}
+		
+		
 		
 		public function set memorySize(value:int):void {
 			var offsetValue:int = value - _memorySize;
 			_memorySize = value;
-			//this.event(Event.MEMORY_CHANGED, offsetValue);
 			resourceManager && resourceManager.addSize(offsetValue);
+		}
+		
+		/**
+		 * 获取资源的URL地址。
+		 * @return URL地址。
+		 */
+		public function get url():String {
+			return _url;
+		}
+		
+		/**
+		 * 色湖之资源的URL地址。
+		 * @param value URL地址。
+		 */
+		public function set url(value:String):void {
+			_url = value;
 		}
 		
 		/**
 		 * 创建一个 <code>Resource</code> 实例。
 		 */
 		public function Resource() {
+			/*[DISABLE-ADD-VARIABLE-DEFAULT-VALUE]*/
 			_id = ++_uniqueIDCounter;
+			__loaded = true;
+			_disposed = false;
 			_loadedResources.push(this);
 			_isLoadedResourcesSorted = false;
 			_released = true;
@@ -196,7 +232,15 @@ package laya.resource {
 			(ResourceManager.currentResourceManager) && (ResourceManager.currentResourceManager.addResource(this));//资源管理器为空不加入资源管理队列，如受大图合集资源管理
 		}
 		
-		/** 重新创建资源。override it，同时修改memorySize属性、处理startCreate()和compoleteCreate() 方法。*/
+		/**
+		 * @private
+		 */
+		public function _endLoaded():void {
+			__loaded = true;
+			event(Event.LOADED, this);
+		}
+		
+		/** 重新创建资源,override it，同时修改memorySize属性、处理startCreate()和compoleteCreate() 方法。*/
 		protected function recreateResource():void {
 			startCreate();
 			completeCreate();//处理创建完成后相关操作
@@ -263,18 +307,20 @@ package laya.resource {
 		/**
 		 *@private
 		 */
-		public function onAsynLoaded(url:String, data:*):void {
+		public function onAsynLoaded(url:String, data:*, params:Array):void {
 			throw new Error("Resource: must override this function!");
 		}
 		
 		/**
-		 * <p>彻底清理资源。</p>
+		 * <p>彻底处理资源，处理后不能恢复。</p>
 		 * <p><b>注意：</b>会强制解锁清理。</p>
 		 */
 		public function dispose():void//待优化
 		{
 			if (_resourceManager !== null)
 				throw new Error("附属于resourceManager的资源不能独立释放！");
+			
+			_disposed = true;
 			lock = false;//解锁资源，强制清理
 			releaseResource();
 			var index:int = _loadedResources.indexOf(this);
@@ -282,6 +328,7 @@ package laya.resource {
 				_loadedResources.splice(index, 1);
 				_isLoadedResourcesSorted = false;
 			}
+			Loader.clearRes(url);
 		}
 		
 		/** 开始资源激活。*/

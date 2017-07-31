@@ -1,4 +1,5 @@
 package laya.d3.resource {
+	import laya.d3.math.Vector4;
 	import laya.d3.utils.Size;
 	import laya.renders.Render;
 	import laya.resource.Resource;
@@ -7,6 +8,7 @@ package laya.d3.resource {
 	 * <code>BaseTexture</code> 纹理的父类，抽象类，不允许实例。
 	 */
 	public class BaseTexture extends Resource {
+		
 		/** @private */
 		protected var _width:int;
 		/** @private */
@@ -23,6 +25,7 @@ package laya.d3.resource {
 		protected var _magFifter:int;
 		/** @private */
 		protected var _source:*;
+		/** @private */
 		public var _conchTexture:*//NATIVE
 		
 		/**
@@ -51,6 +54,13 @@ package laya.d3.resource {
 		 */
 		public function get repeat():Boolean {
 			return _repeat;
+		}
+		
+		/**
+		 * 是否使用重复模式纹理寻址
+		 */
+		public function set repeat(value:Boolean):void {
+			_repeat = value;
 		}
 		
 		/**
@@ -111,6 +121,14 @@ package laya.d3.resource {
 			activeResource();
 			return _source;
 		}
+		
+		/**
+		 * 获取纹理资源。
+		 */
+		public function get defaulteTexture():BaseTexture {
+			return SolidColorTexture2D.grayTexture;
+		}
+		
 		
 		/**
 		 * 创建一个 <code>BaseTexture</code> 实例。

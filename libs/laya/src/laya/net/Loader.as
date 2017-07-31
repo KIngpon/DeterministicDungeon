@@ -49,15 +49,15 @@ package laya.net {
 		public static const FONT:String = "font";
 		
 		/** 文件后缀和类型对应表。*/
-		public static var typeMap:Object = /*[STATIC SAFE]*/ {"png": "image", "jpg": "image", "jpeg": "image", "txt": "text", "json": "json", "xml": "xml", "als": "atlas", "mp3": "sound", "ogg": "sound", "wav": "sound", "part": "json", "fnt": "font"};
-		/**资源解析函数对应表，用来扩展更多类型的资源加载解析*/
+		public static var typeMap:Object = /*[STATIC SAFE]*/ {"png": "image", "jpg": "image", "jpeg": "image", "txt": "text", "json": "json", "xml": "xml", "als": "atlas", "atlas": "atlas", "mp3": "sound", "ogg": "sound", "wav": "sound", "part": "json", "fnt": "font"};
+		/**资源解析函数对应表，用来扩展更多类型的资源加载解析。*/
 		public static var parserMap:Object = /*[STATIC SAFE]*/ {};
-		/** 已加载的资源池。*/
-		public static const loadedMap:Object = {};
-		/** 资源分组。*/
+		/** 资源分组对应表。*/
 		public static const groupMap:Object = {};
 		/** 每帧回调最大超时时间，如果超时，则下帧再处理。*/
 		public static var maxTimeOut:int = 100;
+		/** @private 已加载的资源池。*/
+		public static const loadedMap:Object = {};
 		/**@private 已加载的图集资源池。*/
 		protected static const atlasMap:Object = {};
 		/**@private */
@@ -79,20 +79,21 @@ package laya.net {
 		protected var _http:HttpRequest;
 		
 		/**
-		 * 加载资源。
-		 * @param	url 地址
-		 * @param	type 类型，如果为null，则根据文件后缀，自动分析类型。
-		 * @param	cache 是否缓存数据。
-		 * @param	group 分组。
-		 * @param	ignoreCache 是否忽略缓存，强制重新加载
+		 * 加载资源。加载错误会派发 Event.ERROR 事件，参数为错误信息。
+		 * @param	url			资源地址。
+		 * @param	type		(default = null)资源类型。可选值为：Loader.TEXT、Loader.JSON、Loader.XML、Loader.BUFFER、Loader.IMAGE、Loader.SOUND、Loader.ATLAS、Loader.FONT。如果为null，则根据文件后缀分析类型。
+		 * @param	cache		(default = true)是否缓存数据。
+		 * @param	group		(default = null)分组名称。
+		 * @param	ignoreCache (default = false)是否忽略缓存，强制重新加载。
 		 */
 		public function load(url:String, type:String = null, cache:Boolean = true, group:String = null, ignoreCache:Boolean = false):void {
-			if (url.indexOf("data:image") === 0) this._type = IMAGE;
-			url = URL.formatURL(url);
 			this._url = url;
+			if (url.indexOf("data:image") === 0) type = IMAGE;
+			else url = URL.formatURL(url);
 			this._type = type || (type = getTypeFromUrl(url));
 			this._cache = cache;
 			this._data = null;
+			
 			if (!ignoreCache && loadedMap[url]) {
 				this._data = loadedMap[url];
 				event(Event.PROGRESS, 1);
@@ -139,7 +140,7 @@ package laya.net {
 		protected function getTypeFromUrl(url:String):String {
 			var type:String = Utils.getFileExtension(url);
 			if (type) return typeMap[type];
-			trace("Not recognize the resources suffix", url);
+			console.warn("Not recognize the resources suffix", url);
 			return "text";
 		}
 		
@@ -149,6 +150,7 @@ package laya.net {
 		 * @param	url 资源地址。
 		 */
 		protected function _loadImage(url:String):void {
+			url = URL.formatURL(url);
 			var _this:Loader = this;
 			var image:*;
 			function clear():void {
@@ -162,7 +164,7 @@ package laya.net {
 			};
 			var onerror:Function = function():void {
 				clear();
-				_this.event(Event.ERROR, "Load image filed");
+				_this.event(Event.ERROR, "Load image failed");
 			}
 			
 			if (_type === "nativeimage") {
@@ -197,7 +199,8 @@ package laya.net {
 			}
 			function soundOnErr():void {
 				clear();
-				_this.event(Event.ERROR, "Load sound filed");
+				sound.dispose();
+				_this.event(Event.ERROR, "Load sound failed");
 			}
 			function clear():void {
 				sound.offAll();
@@ -229,7 +232,7 @@ package laya.net {
 				complete(data);
 			} else if (type === ATLAS) {
 				//处理图集
-				if (!data.src) {
+				if (!data.src && !data._setContext) {
 					if (!_data) {
 						this._data = data;
 						//构造加载图片信息
@@ -239,11 +242,11 @@ package laya.net {
 							var split:String = _url.indexOf("/") >= 0 ? "/" : "\\";
 							var idx:int = _url.lastIndexOf(split);
 							var folderPath:String = idx >= 0 ? _url.substr(0, idx + 1) : "";
-							idx = _url.indexOf("?");
-							var ver:String;
-							ver = idx >= 0 ? _url.substr(idx) : "";
+							//idx = _url.indexOf("?");
+							//var ver:String;
+							//ver = idx >= 0 ? _url.substr(idx) : "";
 							for (var i:int = 0, len:int = toloadPics.length; i < len; i++) {
-								toloadPics[i] = folderPath + toloadPics[i] + ver;
+								toloadPics[i] = folderPath + toloadPics[i];
 							}
 						} else {
 							//不带图片信息
@@ -256,48 +259,33 @@ package laya.net {
 						data.pics = [];
 					}
 					event(Event.PROGRESS, 0.3 + 1 / toloadPics.length * 0.6);
-					return _loadImage(URL.formatURL(toloadPics.pop()));
+					return _loadImage(toloadPics.pop());
 				} else {
 					_data.pics.push(data);
 					if (_data.toLoads.length > 0) {
 						event(Event.PROGRESS, 0.3 + 1 / _data.toLoads.length * 0.6);
 						//有图片未加载
-						return _loadImage(URL.formatURL(_data.toLoads.pop()));
+						return _loadImage(_data.toLoads.pop());
 					}
 					var frames:Object = this._data.frames;
 					var cleanUrl:String = this._url.split("?")[0];
-					var directory:String = (this._data.meta && this._data.meta.prefix) ? URL.basePath + this._data.meta.prefix : cleanUrl.substring(0, cleanUrl.lastIndexOf(".")) + "/";
+					var directory:String = (this._data.meta && this._data.meta.prefix) ? this._data.meta.prefix : cleanUrl.substring(0, cleanUrl.lastIndexOf(".")) + "/";
 					var pics:Array = _data.pics;
-					var map:Array = atlasMap[this._url] || (atlasMap[this._url] = []);
+					var atlasURL:String = URL.formatURL(this._url);
+					var map:Array = atlasMap[atlasURL] || (atlasMap[atlasURL] = []);
 					map.dir = directory;
-					//var needSub:Boolean = Config.atlasEnable && Render.isWebGL;
 					for (var name:String in frames) {
 						var obj:Object = frames[name];//取对应的图
 						var tPic:Object = pics[obj.frame.idx ? obj.frame.idx : 0];//是否释放
-						var url:String = directory + name;
+						var url:String = URL.formatURL(directory + name);
 						
-						//if (needSub) {
-						//var merageInAtlas:Boolean = false;
-						//(obj.frame.w > Config.atlasLimitWidth || obj.frame.h > Config.atlasLimitHeight) && (merageInAtlas = true);
-						//var webGLSubImage:HTMLSubImage = new HTMLSubImage(Browser.canvas.source, obj.frame.x, obj.frame.y, obj.frame.w, obj.frame.h,tPic.image,tPic.image.src, merageInAtlas);
-						//var tex:Texture = new Texture(webGLSubImage);
-						//tex.offsetX = obj.spriteSourceSize.x;
-						//tex.offsetY = obj.spriteSourceSize.y;
-						//loadedMap[url] = tex;
-						//map.push(tex);
-						//} else {
 						cacheRes(url, Texture.create(tPic, obj.frame.x, obj.frame.y, obj.frame.w, obj.frame.h, obj.spriteSourceSize.x, obj.spriteSourceSize.y, obj.sourceSize.w, obj.sourceSize.h));
-						//loadedMap[url] = Texture.create(tPic, obj.frame.x, obj.frame.y, obj.frame.w, obj.frame.h, obj.spriteSourceSize.x, obj.spriteSourceSize.y, obj.sourceSize.w, obj.sourceSize.h);
 						loadedMap[url].url = url;
 						map.push(url);
-							//}
 					}
+					
 					/*[IF-FLASH]*/
 					map.sort();
-					
-					//if (needSub)
-					//for (i = 0; i < pics.length; i++)
-					//pics[i].dispose();//Sub后可直接释放
 					complete(this._data);
 				}
 			} else if (type == FONT) {
@@ -305,10 +293,9 @@ package laya.net {
 				if (!data.src) {
 					_data = data;
 					event(Event.PROGRESS, 0.5);
-					return _loadImage(URL.formatURL(_url.replace(".fnt", ".png")));
+					return _loadImage(_url.replace(".fnt", ".png"));
 				} else {
-					var bFont:BitmapFont;
-					bFont = new BitmapFont();
+					var bFont:BitmapFont = new BitmapFont();
 					bFont.parseFont(_data, data);
 					var tArr:Array = this._url.split(".fnt")[0].split("/");
 					var fontName:String = tArr[tArr.length - 1];
@@ -341,7 +328,7 @@ package laya.net {
 				_loaders[_startIndex].endLoad();
 				_startIndex++;
 				if (Browser.now() - startTimer > maxTimeOut) {
-					trace("loader callback cost a long time:" + (Browser.now() - startTimer) + " url=" + _loaders[_startIndex - 1].url);
+					console.warn("loader callback cost a long time:" + (Browser.now() - startTimer) + " url=" + _loaders[_startIndex - 1].url);
 					Laya.timer.frameOnce(1, null, checkNext);
 					return;
 				}
@@ -393,7 +380,7 @@ package laya.net {
 		public static function clearRes(url:String, forceDispose:Boolean = false):void {
 			url = URL.formatURL(url);
 			//删除图集
-			var arr:Array = atlasMap[url];
+			var arr:Array = getAtlas(url);
 			if (arr) {
 				for (var i:int = 0, n:int = arr.length; i < n; i++) {
 					var resUrl:String = arr[i];
@@ -439,7 +426,7 @@ package laya.net {
 		public static function cacheRes(url:String, data:*):void {
 			url = URL.formatURL(url);
 			if (loadedMap[url] != null) {
-				trace("Resources already exist,is repeated loading:", url);
+				console.warn("Resources already exist,is repeated loading:", url);
 			} else {
 				loadedMap[url] = data;
 			}
@@ -448,7 +435,7 @@ package laya.net {
 		/**
 		 * 设置资源分组。
 		 * @param url 资源地址。
-		 * @param group 分组名
+		 * @param group 分组名。
 		 */
 		public static function setGroup(url:String, group:String):void {
 			if (!groupMap[group]) groupMap[group] = [];
@@ -456,8 +443,8 @@ package laya.net {
 		}
 		
 		/**
-		 * 根据分组清理资源
-		 * @param group 分组名
+		 * 根据分组清理资源。
+		 * @param group 分组名。
 		 */
 		public static function clearResByGroup(group:String):void {
 			if (!groupMap[group]) return;

@@ -1,4 +1,5 @@
 package laya.ui {
+	import laya.display.Node;
 	import laya.display.Text;
 	import laya.events.Event;
 	import laya.net.Loader;
@@ -6,6 +7,7 @@ package laya.ui {
 	import laya.ui.AutoBitmap;
 	import laya.ui.UIUtils;
 	import laya.utils.Handler;
+	import laya.utils.Utils;
 	
 	/**
 	 * 当按钮的选中状态（ <code>selected</code> 属性）发生改变时调度。
@@ -17,8 +19,7 @@ package laya.ui {
 	 * <code>Button</code> 组件用来表示常用的多态按钮。 <code>Button</code> 组件可显示文本标签、图标或同时显示两者。	 *
 	 * <p>可以是单态，两态和三态，默认三态(up,over,down)。</p>
 	 *
-	 * @example 以下示例代码，创建了一个 <code>Button</code> 实例。
-	 * <listing version="3.0">
+	 * @example <caption>以下示例代码，创建了一个 <code>Button</code> 实例。</caption>
 	 * package
 	 *	{
 	 *		import laya.ui.Button;
@@ -46,8 +47,7 @@ package laya.ui {
 	 *			}
 	 *		}
 	 *	}
-	 * </listing>
-	 * <listing version="3.0">
+	 * @example
 	 * Laya.init(640, 800);//设置游戏画布宽高、渲染模式。
 	 * Laya.stage.bgColor = "#efefef";//设置画布的背景颜色。
 	 * Laya.loader.load("resource/ui/button.png",laya.utils.Handler.create(this,loadComplete));//加载资源
@@ -64,8 +64,7 @@ package laya.ui {
 	 * {
 	 *     console.log("按钮被点击了。",button);
 	 * }
-	 * </listing>
-	 * <listing version="3.0">
+	 * @example
 	 * import Button=laya.ui.Button;
 	 * import Handler=laya.utils.Handler;
 	 * class Button_Example{
@@ -88,7 +87,6 @@ package laya.ui {
 	 *         console.log("按钮button被点击了！")
 	 *     }
 	 * }
-	 * </listing>
 	 */
 	public class Button extends Component implements ISelect {
 		/**
@@ -100,7 +98,7 @@ package laya.ui {
 		 * 指定按钮按下时是否是切换按钮的显示状态。
 		 *
 		 * @example 以下示例代码，创建了一个 <code>Button</code> 实例，并设置为切换按钮。
-		 * <listing version="3.0">
+		 * @example
 		 * package
 		 *	{
 		 *		import laya.ui.Button;
@@ -129,8 +127,7 @@ package laya.ui {
 		 *			}
 		 *		}
 		 *	}
-		 * </listing>
-		 * <listing version="3.0">
+		 * @example
 		 * Laya.init(640, 800);//设置游戏画布宽高、渲染模式。
 		 * Laya.stage.bgColor = "#efefef";//设置画布的背景颜色。
 		 * Laya.loader.load("resource/ui/button.png",laya.utils.Handler.create(this,loadComplete));//加载资源
@@ -148,8 +145,7 @@ package laya.ui {
 		 * {
 		 *     console.log("button.selected = ",button.selected);
 		 * }
-		 * </listing>
-		 * <listing version="3.0">
+		 * @example
 		 * Laya.init(640, 800);//设置游戏画布宽高、渲染模式。
 		 * Laya.stage.bgColor = "#efefef";//设置画布的背景颜色。
 		 * Laya.loader.load("button.png", null,null, null, null, null);//加载资源
@@ -165,7 +161,6 @@ package laya.ui {
 		 * function onClickButton(button) {
 		 *     console.log("button.selected = ", button.selected);
 		 * }
-		 * </listing>
 		 */
 		public var toggle:Boolean;
 		/**
@@ -260,16 +255,23 @@ package laya.ui {
 				_text.overflow = Text.HIDDEN;
 				_text.align = "center";
 				_text.valign = "middle";
+				_text.width = _width;
+				_text.height = _height;
 			}
 		}
 		
 		/**@inheritDoc */
 		override protected function initialize():void {
-			on(Event.MOUSE_OVER, this, onMouse);
-			on(Event.MOUSE_OUT, this, onMouse);
-			on(Event.MOUSE_DOWN, this, onMouse);
-			on(Event.MOUSE_UP, this, onMouse);
-			on(Event.CLICK, this, onMouse);
+			if (_mouseEnableState !== 1)
+			{
+				this.mouseEnabled = true;
+				_setBit(Node.MOUSEENABLE, true);	
+			}
+			_createListener(Event.MOUSE_OVER, this, onMouse,null,false,false);
+			_createListener(Event.MOUSE_OUT, this, onMouse,null,false,false);
+			_createListener(Event.MOUSE_DOWN, this, onMouse,null,false,false);
+			_createListener(Event.MOUSE_UP, this, onMouse,null,false,false);
+			_createListener(Event.CLICK, this, onMouse,null,false,false);
 		}
 		
 		/**
@@ -312,7 +314,7 @@ package laya.ui {
 		 * <li>2：两态。图片将以竖直方向被等比切割为2部分，从上向下，依次为
 		 * 弹起状态皮肤、
 		 * 按下和经过及选中状态皮肤。</li>
-		 * <li>3：三态。图片将以竖直方向被等比切割为2部分，从上向下，依次为
+		 * <li>3：三态。图片将以竖直方向被等比切割为3部分，从上向下，依次为
 		 * 弹起状态皮肤、
 		 * 经过状态皮肤、
 		 * 按下和选中状态皮肤</li>
@@ -341,7 +343,8 @@ package laya.ui {
 			}
 			var width:Number = img.sourceWidth;
 			var height:Number = img.sourceHeight / _stateNum;
-			var key:String = _skin + _stateNum;
+			img.$_GID || (img.$_GID = Utils.getGID());
+			var key:String = img.$_GID +"-"+ _stateNum;
 			var clips:Array = AutoBitmap.getCache(key);
 			if (clips) _sources = clips;
 			else {
@@ -397,8 +400,8 @@ package laya.ui {
 			if (!_text && !value) return;
 			createText();
 			if (_text.text != value) {
-				value && !_text.displayedInStage && addChild(_text);
-				_text.text = (value+"").replace(/\\n/g, "\n");
+				value && !_text.parent && addChild(_text);
+				_text.text = (value + "").replace(/\\n/g, "\n");
 				_setStateChanged();
 			}
 		}
@@ -633,7 +636,7 @@ package laya.ui {
 		
 		/**图标x,y偏移，格式：100,100*/
 		public function get iconOffset():String {
-			return _bitmap._offset ? null : _bitmap._offset.join(",");
+			return _bitmap._offset ? _bitmap._offset.join(",") : null;
 		}
 		
 		public function set iconOffset(value:String):void {

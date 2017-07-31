@@ -1,7 +1,6 @@
 package laya.display {
 	import laya.events.Event;
 	import laya.maths.Matrix;
-	import laya.maths.Rectangle;
 	import laya.renders.Render;
 	import laya.renders.RenderContext;
 	import laya.utils.Browser;
@@ -30,6 +29,7 @@ package laya.display {
 	
 	/**
 	 * <p><code>Input</code> 类用于创建显示对象以显示和输入文本。</p>
+	 * <p>Input 类封装了原生的文本输入框，由于不同浏览器的差异，会导致此对象的默认文本的位置与用户点击输入时的文本的位置有少许的偏差。</p>
 	 */
 	public class Input extends Text {
 		/** 常规文本域。*/
@@ -43,9 +43,9 @@ package laya.display {
 		/** number 类型用于应该包含数值的输入域。*/
 		public static const TYPE_NUMBER:String = "number";
 		/**
-		 * range 类型用于应该包含一定范围内数字值的输入域。
-		 * range 类型显示为滑动条。
-		 * 您还能够设定对所接受的数字的限定：
+		 * <p>range 类型用于应该包含一定范围内数字值的输入域。</p>
+		 * <p>range 类型显示为滑动条。</p>
+		 * <p>您还能够设定对所接受的数字的限定。</p>
 		 */
 		public static const TYPE_RANGE:String = "range";
 		/**  选取日、月、年。*/
@@ -61,8 +61,8 @@ package laya.display {
 		/** datetime-local - 选取时间、日、月、年（本地时间）。*/
 		public static const TYPE_DATE_TIME_LOCAL:String = "datetime-local";
 		/**
-		 * search 类型用于搜索域，比如站点搜索或 Google 搜索。
-		 * search 域显示为常规的文本域。
+		 * <p>search 类型用于搜索域，比如站点搜索或 Google 搜索。</p>
+		 * <p>search 域显示为常规的文本域。</p>
 		 */
 		public static const TYPE_SEARCH:String = "search";
 		
@@ -138,7 +138,6 @@ package laya.display {
 			input.focus();
 		}
 		
-		/**@private */
 		private static function _createInputElement():void {
 			_initInput(area = Browser.createElement("textarea"));
 			_initInput(input = Browser.createElement("input"));
@@ -150,10 +149,6 @@ package laya.display {
 			//[IF-SCRIPT] inputContainer.setPos = function(x:int, y:int):void { inputContainer.style.left = x + 'px'; inputContainer.style.top = y + 'px'; };
 		}
 		
-		/**
-		 * @private
-		 * @param	input 输入框的引用实例。
-		 */
 		private static function _initInput(input:*):void {
 			var style:* = input.style;
 			style.cssText = "position:absolute;overflow:hidden;resize:none;transform-origin:0 0;-webkit-transform-origin:0 0;-moz-transform-origin:0 0;-o-transform-origin:0 0;";
@@ -170,13 +165,12 @@ package laya.display {
 			input.addEventListener('touchmove', _stopEvent);
 		
 		/*[IF-SCRIPT-BEGIN]
+		   input.setFontFace = function(fontFace:String):void { input.style.fontFamily = fontFace; };
 		   if(!Render.isConchApp)
 		   {
 		   input.setColor = function(color:String):void { input.style.color = color; };
 		   input.setFontSize = function(fontSize:int):void { input.style.fontSize = fontSize + 'px'; };
-		   input.setSize = function(w:int, h:int):void { input.style.width = w + 'px'; input.style.height = h + 'px'; };
 		   }
-		   input.setFontFace = function(fontFace:String):void { input.style.fontFamily = fontFace; };
 		   [IF-SCRIPT-END]*/
 		}
 		
@@ -201,7 +195,6 @@ package laya.display {
 			input.event(Event.INPUT);
 		}
 		
-		/**@private */
 		private static function _stopEvent(e:*):void {
 			if (e.type == 'touchmove')
 				e.preventDefault();
@@ -235,22 +228,12 @@ package laya.display {
 			return _multiline ? area : input;
 		}
 		
-		/**@private */
 		private function _onUnDisplay(e:Event = null):void {
 			focus = false;
 		}
 		
-		/**@private */
 		private function _onMouseDown(e:Event):void {
 			focus = true;
-			Laya.stage.on(Event.MOUSE_DOWN, this, _checkBlur);
-		}
-		
-		/**@private */
-		private function _checkBlur(e:*):void {
-			// 点击输入框之外的地方会终止输入。
-			if (e.nativeEvent.target != Input.input && e.nativeEvent.target != Input.area && e.target != this)
-				focus = false;
 		}
 		
 		/**@inheritDoc*/
@@ -258,96 +241,37 @@ package laya.display {
 			super.render(context, x, y);
 		}
 		
+		private static var stageMatrix:Matrix;
+		
 		/**
-		 * 在输入期间，如果 Input 实例的位置改变，调用该方法同步输入框的位置。
+		 * 在输入期间，如果 Input 实例的位置改变，调用_syncInputTransform同步输入框的位置。
 		 */
 		private function _syncInputTransform():void {
-			var style:* = nativeInput.style;
-			var stage:Stage = Laya.stage;
-			var rec:Rectangle;
-			rec = Utils.getGlobalPosAndScale(this);
-			
-			var m:Matrix = stage._canvasTransform.clone();
-			
-			var tm:Matrix = m.clone();
-			tm.rotate(-Math.PI / 180 * Laya.stage.canvasDegree);
-			tm.scale(Laya.stage.clientScaleX, Laya.stage.clientScaleY);
-			
-			var perpendicular:Boolean = (Laya.stage.canvasDegree % 180 != 0);
-			var sx:Number = perpendicular ? tm.d : tm.a;
-			var sy:Number = perpendicular ? tm.a : tm.d;
-			tm.destroy();
-			
-			var tx:Number = padding[3];
-			var ty:Number = padding[0];
-			if (Laya.stage.canvasDegree == 0) {
-				tx += rec.x;
-				ty += rec.y;
-				
-				tx *= sx;
-				ty *= sy;
-				
-				tx += m.tx;
-				ty += m.ty;
-			} else if (Laya.stage.canvasDegree == 90) 	// screenMode = horizontal
-			{
-				tx += rec.y;
-				ty += rec.x;
-				
-				tx *= sx;
-				ty *= sy;
-				
-				tx = m.tx - tx;
-				ty += m.ty;
-			} else // canvasDegree == -90 screenMode = vertical
-			{
-				tx += rec.y;
-				ty += rec.x;
-				
-				tx *= sx;
-				ty *= sy;
-				
-				tx += m.tx;
-				ty = m.ty - ty;
-			}
-			
-			// 当前渲染节点的全局旋转弧度。
-			const quarter:Number = 0.785;
-			var r:Number = Math.atan2(rec.height, rec.width) - quarter;
-			// 反向旋转。
-			var sin:Number = Math.sin(r), cos:Number = Math.cos(r);
-			// 计算节点缩放。
-			var tsx:Number = cos * rec.width + sin * rec.height;
-			var tsy:Number = cos * rec.height - sin * rec.width;
-			sx *= (perpendicular ? tsy : tsx);
-			sy *= (perpendicular ? tsx : tsy);
-			
-			m.tx = 0;
-			m.ty = 0;
-			
-			r *= 180 / 3.1415;
-			//[IF-SCRIPT]inputContainer.style.transform = "scale(" + sx + "," + sy + ") rotate(" + (Laya.stage.canvasDegree + r) + "deg)";
-			//[IF-SCRIPT]inputContainer.style.webkitTransform = "scale(" + sx + "," + sy + ") rotate(" + (Laya.stage.canvasDegree + r) + "deg)";
-			inputContainer.setPos(tx, ty);
-			m.destroy();
-			
+			var inputElement:Object = nativeInput;
+			var transform:Object = Utils.getTransformRelativeToWindow(this, padding[3], padding[0]);
 			var inputWid:int = _width - padding[1] - padding[3];
 			var inputHei:int = _height - padding[0] - padding[2];
-			nativeInput.setSize(inputWid, inputHei);
 			
 			if (Render.isConchApp) {
-				nativeInput.setPos(tx, ty);
-				nativeInput.setScale(sx, sy);
+				inputElement.setScale(transform.scaleX, transform.scaleY);
+				inputElement.setSize(inputWid, inputHei);
+				inputElement.setPos(transform.x, transform.y);
+			} else {
+				//[IF-SCRIPT]inputContainer.style.transform = inputContainer.style.webkitTransform = "scale(" + transform.scaleX + "," + transform.scaleY + ") rotate(" + (Laya.stage.canvasDegree) + "deg)";
+				//[IF-SCRIPT]inputElement.style.width = inputWid + 'px';
+				//[IF-SCRIPT]inputElement.style.height = inputHei + 'px';
+				//[IF-SCRIPT]inputContainer.style.left = transform.x + 'px';
+				//[IF-SCRIPT]inputContainer.style.top  = transform.y + 'px';
 			}
 		}
 		
-		/**选中所有文本。*/
+		/**选中当前实例的所有文本。*/
 		public function select():void {
 			nativeInput.select();
 		}
 		
 		/**
-		 * 表示焦点是否在显示对象上。
+		 * 表示焦点是否在此实例上。
 		 */
 		public function get focus():Boolean {
 			return _focus;
@@ -360,10 +284,12 @@ package laya.display {
 			
 			if (_focus !== value) {
 				if (value) {
-					input.target && (input.target.focus = false);
+					if (input.target) {
+						input.target._focusOut();
+					} else {
+						_setInputMethod();
+					}
 					input.target = this;
-					
-					_setInputMethod();
 					
 					_focusIn();
 				} else {
@@ -379,7 +305,6 @@ package laya.display {
 			}
 		}
 		
-		/**@private 设置输入法（textarea或input）*/
 		private function _setInputMethod():void {
 			input.parentElement && (inputContainer.removeChild(input));
 			area.parentElement && (inputContainer.removeChild(area));
@@ -388,7 +313,6 @@ package laya.display {
 			inputContainer.appendChild(inputElement);
 		}
 		
-		/**@private */
 		private function _focusIn():void {
 			Input.isInputting = true;
 			var input:* = nativeInput;
@@ -402,6 +326,9 @@ package laya.display {
 			_setPromptColor();
 			
 			input.readOnly = !this._editable;
+			if (Render.isConchApp) {
+				input.setForbidEdit(!this._editable);
+			}
 			input.maxLength = this._maxChars;
 			
 			var padding:Array = this.padding;
@@ -426,7 +353,7 @@ package laya.display {
 			// PC同步输入框外观。
 			input.setColor(_originColor);
 			input.setFontSize(fontSize);
-			input.setFontFace(font);
+			input.setFontFace(_fontActallyUsed);
 			if (Render.isConchApp) {
 				input.setMultiAble && input.setMultiAble(_multiline);
 			}
@@ -448,6 +375,7 @@ package laya.display {
 			promptStyleDOM = Browser.getElementById("promptStyle");
 			if (!promptStyleDOM) {
 				promptStyleDOM = Browser.createElement("style");
+				promptStyleDOM.setAttribute("id", "promptStyle");
 				Browser.document.head.appendChild(promptStyleDOM);
 			}
 			
@@ -476,7 +404,6 @@ package laya.display {
 			if (Render.isConchApp) this.nativeInput.blur();
 			// 只有PC会注册此事件。
 			Browser.onPC && Laya.timer.clear(this, _syncInputTransform);
-			Laya.stage.off(Event.MOUSE_DOWN, this, _checkBlur);
 		}
 		
 		/**@private */
@@ -576,6 +503,9 @@ package laya.display {
 		 */
 		public function set editable(value:Boolean):void {
 			_editable = value;
+			if (Render.isConchApp) {
+				input.setForbidEdit(!value);
+			}
 		}
 		
 		public function get editable():Boolean {
@@ -583,8 +513,8 @@ package laya.display {
 		}
 		
 		/**
-		 * 字符数量限制，默认为10000。
-		 * 设置字符数量限制时，小于等于0的值将会限制字符数量为10000。
+		 * <p>字符数量限制，默认为10000。</p>
+		 * <p>设置字符数量限制时，小于等于0的值将会限制字符数量为10000。</p>
 		 */
 		public function get maxChars():int {
 			return _maxChars;
@@ -614,7 +544,7 @@ package laya.display {
 			else
 				super.text = value;
 			
-			_prompt = value;
+			_prompt = langPacks && langPacks[value] ? langPacks[value] : value;
 		}
 		
 		/**
@@ -630,8 +560,22 @@ package laya.display {
 		}
 		
 		/**
-		 * 输入框类型为Input静态常量之一。
-		 * 平台兼容性参见http://www.w3school.com.cn/html5/html_5_form_input_types.asp。
+		 * <p>输入框类型为Input静态常量之一。</p>
+		 * <ul>
+		 * <li>TYPE_TEXT</li>
+		 * <li>TYPE_PASSWORD</li>
+		 * <li>TYPE_EMAIL</li>
+		 * <li>TYPE_URL</li>
+		 * <li>TYPE_NUMBER</li>
+		 * <li>TYPE_RANGE</li>
+		 * <li>TYPE_DATE</li>
+		 * <li>TYPE_MONTH</li>
+		 * <li>TYPE_WEEK</li>
+		 * <li>TYPE_TIME</li>
+		 * <li>TYPE_DATE_TIME</li>
+		 * <li>TYPE_DATE_TIME_LOCAL</li>
+		 * </ul>
+		 * <p>平台兼容性参见http://www.w3school.com.cn/html5/html_5_form_input_types.asp。</p>
 		 */
 		public function get type():String {
 			return _type;
@@ -645,9 +589,11 @@ package laya.display {
 			_type = value;
 		}
 		
-		/**原生输入框 X 轴调整值，用来调整输入框坐标。
-		 * 由于即使设置了该值，在各平台和浏览器之间也不一定一致，inputElementXAdjuster已弃用。*/
-		//[Deprecated]
+		/**
+		 * <p>原生输入框 X 轴调整值，用来调整输入框坐标。</p>
+		 * <p>由于即使设置了该值，在各平台和浏览器之间也不一定一致，inputElementXAdjuster已弃用。</p>
+		 * @deprecated
+		 */
 		public function get inputElementXAdjuster():int {
 			console.warn("deprecated: 由于即使设置了该值，在各平台和浏览器之间也不一定一致，inputElementXAdjuster已弃用。");
 			return 0;
@@ -657,8 +603,11 @@ package laya.display {
 			console.warn("deprecated: 由于即使设置了该值，在各平台和浏览器之间也不一定一致，inputElementXAdjuster已弃用。");
 		}
 		
-		/**原生输入框 Y 轴调整值，用来调整输入框坐标。
-		 * 由于即使设置了该值，在各平台和浏览器之间也不一定一致，inputElementYAdjuster已弃用。*/
+		/**
+		 * <p>原生输入框 Y 轴调整值，用来调整输入框坐标。</p>
+		 * <p>由于即使设置了该值，在各平台和浏览器之间也不一定一致，inputElementYAdjuster已弃用。</p>
+		 * @deprecated
+		 */
 		//[Deprecated]
 		public function get inputElementYAdjuster():int {
 			console.warn("deprecated: 由于即使设置了该值，在各平台和浏览器之间也不一定一致，inputElementYAdjuster已弃用。");

@@ -5,7 +5,7 @@ package laya.events {
 	import laya.maths.Point;
 	
 	/**
-	 * <code>Event</code> 是事件类型的集合。
+	 * <code>Event</code> 是事件类型的集合。一般当发生事件时，<code>Event</code> 对象将作为参数传递给事件侦听器。
 	 */
 	public dynamic class Event {
 		/*[DISABLE-ADD-VARIABLE-DEFAULT-VALUE]*/
@@ -91,6 +91,10 @@ package laya.events {
 		public static const BLUR:String = "blur";
 		/** 定义 focus 事件对象的 type 属性值。*/
 		public static const FOCUS:String = "focus";
+		/** 定义 visibilitychange 事件对象的 type 属性值。*/
+		public static const VISIBILITY_CHANGE:String = "visibilitychange";
+		/** 定义 focuschange 事件对象的 type 属性值。*/
+		public static const FOCUS_CHANGE:String = "focuschange";
 		/** 定义 played 事件对象的 type 属性值。*/
 		public static const PLAYED:String = "played";
 		/** 定义 paused 事件对象的 type 属性值。*/
@@ -101,14 +105,14 @@ package laya.events {
 		public static const START:String = "start";
 		/** 定义 end 事件对象的 type 属性值。*/
 		public static const END:String = "end";
-		/** 定义 enabledchanged 事件对象的 type 属性值。*/
-		public static const ENABLED_CHANGED:String = "enabledchanged";
+		/** 定义 enablechanged 事件对象的 type 属性值。*/
+		public static const ENABLE_CHANGED:String = "enablechanged";
+		/** 定义 activeinhierarchychanged 事件对象的 type 属性值。*/
+		public static const ACTIVE_IN_HIERARCHY_CHANGED:String = "activeinhierarchychanged";
 		/** 定义 componentadded 事件对象的 type 属性值。*/
 		public static const COMPONENT_ADDED:String = "componentadded";
 		/** 定义 componentremoved 事件对象的 type 属性值。*/
 		public static const COMPONENT_REMOVED:String = "componentremoved";
-		/** 定义 activechanged 事件对象的 type 属性值。*/
-		public static const ACTIVE_CHANGED:String = "activechanged";
 		/** 定义 layerchanged 事件对象的 type 属性值。*/
 		public static const LAYER_CHANGED:String = "layerchanged";
 		/** 定义 hierarchyloaded 事件对象的 type 属性值。*/
@@ -139,8 +143,6 @@ package laya.events {
 		public static const WORLDMATRIX_NEEDCHANGE:String = "worldmatrixneedchanged";
 		/**更换动作时触发。*/
 		public static const ANIMATION_CHANGED:String = "animationchanged";
-		///**需重新缓存动画时触发，引擎内部使用。*/
-		//public static const CACHEFRAMEINDEX_CHANGED:String = "cacheframeindexchanged";
 		
 		/** 事件类型。*/
 		public var type:String;
@@ -156,6 +158,8 @@ package laya.events {
 		public var touchId:int;
 		/**键盘值*/
 		public var keyCode:int;
+		/**滚轮滑动增量*/
+		public var delta:int;
 		
 		/**
 		 * 设置事件数据。
@@ -172,7 +176,7 @@ package laya.events {
 		}
 		
 		/**
-		 * 防止对事件流中当前节点的后续节点中的所有事件侦听器进行处理。
+		 * 阻止对事件流中当前节点的后续节点中的所有事件侦听器进行处理。此方法不会影响当前节点 (currentTarget) 中的任何事件侦听器。
 		 */
 		public function stopPropagation():void {
 			this._stoped = true;

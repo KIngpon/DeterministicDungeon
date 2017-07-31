@@ -1,5 +1,7 @@
 package laya.utils {
 	import laya.display.Sprite;
+	import laya.display.Stage;
+	import laya.maths.Matrix;
 	import laya.maths.Point;
 	import laya.maths.Rectangle;
 	import laya.runtime.IConchNode;
@@ -187,21 +189,15 @@ package laya.utils {
 				array[j + 1] = c;
 				i++;
 			}
-		    var model:IConchNode = c.parent.conchModel;
-			if (model)
-			{
-				if (model.updateZOrder != null)
-				{
+			var model:IConchNode = c.parent.conchModel;
+			if (model) {
+				if (model.updateZOrder != null) {
 					model.updateZOrder();
-				}
-				else
-				{
-					for (i=0; i < len;i++)
-					{
+				} else {
+					for (i = 0; i < len; i++) {
 						model.removeChild(array[i].conchModel);
 					}
-					for (i=0; i < len;i++)
-					{
+					for (i = 0; i < len; i++) {
 						model.addChildAt(array[i].conchModel, i);
 					}
 				}
@@ -225,10 +221,10 @@ package laya.utils {
 		}
 		
 		/**
-		 * 解析一个字符串，并返回一个整数。和JS原生的parseInt不同：如果str为空或者非数字，原生返回NaN，这里返回0
-		 * @param	str 要被解析的字符串
-		 * @param	radix 表示要解析的数字的基数。该值介于 2 ~ 36 之间。如果它以 “0x” 或 “0X” 开头，将以 16 为基数。如果该参数小于 2 或者大于 36，则 parseInt() 将返回 NaN。
-		 * @return	返回解析后的数字
+		 * 解析一个字符串，并返回一个整数。和JS原生的parseInt不同：如果str为空或者非数字，原生返回NaN，这里返回0。
+		 * @param	str		要被解析的字符串。
+		 * @param	radix	表示要解析的数字的基数。默认值为0，表示10进制，其他值介于 2 ~ 36 之间。如果它以 “0x” 或 “0X” 开头，将以 16 为基数。如果该参数不在上述范围内，则此方法返回 0。
+		 * @return	返回解析后的数字。
 		 */
 		public static function parseInt(str:String, radix:int = 0):int {
 			var result:* = Browser.window.parseInt(str, radix);
@@ -237,13 +233,120 @@ package laya.utils {
 		}
 		
 		/**@private */
-		public static function getFileExtension(path:String):String{
+		public static function getFileExtension(path:String):String {
 			_extReg.lastIndex = path.lastIndexOf(".");
 			var result:Array = _extReg.exec(path);
 			if (result && result.length > 1) {
 				return result[1].toLowerCase();
 			}
 			return null;
+		}
+		
+		/**
+		 * 获取指定区域内相对于窗口左上角的transform。
+		 * @param	coordinateSpace	坐标空间，不能是Stage引用
+		 * @param	x				相对于coordinateSpace的x坐标
+		 * @param	y				相对于coordinateSpace的y坐标
+		 * @return
+		 */
+		public static function getTransformRelativeToWindow(coordinateSpace:Sprite, x:Number, y:Number):Object {
+			var stage:Stage = Laya.stage;
+			
+			// coordinateSpace的全局缩放、坐标
+			var globalTransform:Rectangle = Utils.getGlobalPosAndScale(coordinateSpace);
+			// canvas的transform矩阵
+			var canvasMatrix:Matrix = stage._canvasTransform.clone();
+			// 在矩阵变化前前记录的canvas的坐标
+			var canvasLeft:Number = canvasMatrix.tx;
+			var canvasTop:Number = canvasMatrix.ty;
+			
+			// 把矩阵转回0度，得到正确的画布缩放比
+			canvasMatrix.rotate(-Math.PI / 180 * Laya.stage.canvasDegree);
+			// 组合画布缩放和舞台适配缩放
+			canvasMatrix.scale(Laya.stage.clientScaleX, Laya.stage.clientScaleY);
+			// 画布是否处于正常角度的垂直角度，-90或90度
+			var perpendicular:Boolean = (Laya.stage.canvasDegree % 180 != 0);
+			var tx:Number, ty:Number;
+			
+			if (perpendicular) {
+				// 在舞台上的坐标
+				tx = y + globalTransform.y;
+				ty = x + globalTransform.x;
+				
+				// 在画布上的坐标
+				tx *= canvasMatrix.d;
+				ty *= canvasMatrix.a;
+				
+				// 设置了screenMode = horizontal
+				if (Laya.stage.canvasDegree == 90) {
+					// 在浏览器窗口上的坐标
+					// 此时画布的left是视觉上的right，画布的left是视觉上的top
+					tx = canvasLeft - tx;
+					ty += canvasTop;
+				} 
+				// screenMode = vertical并且设备在横屏状态，画布旋转-90度
+				else {
+					// 在浏览器窗口上的坐标
+					// 此时画布的left是视觉上的left，画布的top是视觉上的bottom
+					tx += canvasLeft;
+					ty = canvasTop - ty;
+				}
+			} 
+			// 没有canvas旋转
+			else {
+				// 在舞台上的坐标
+				tx = x + globalTransform.x;
+				ty = y + globalTransform.y;
+				
+				// 在画布上的坐标
+				tx *= canvasMatrix.a;
+				ty *= canvasMatrix.d;
+				
+				// 在浏览器窗口上的坐标
+				tx += canvasLeft;
+				ty += canvasTop;
+			}
+			
+			// Safari兼容
+			ty += Laya.stage['_safariOffsetY'];
+			
+			// 组合画布缩放和舞台适配缩放以及显示对象缩放，得到DOM原因的缩放因子
+			var domScaleX:Number, domScaleY:Number;
+			if (perpendicular) {
+				domScaleX = canvasMatrix.d * globalTransform.height;
+				domScaleY = canvasMatrix.a * globalTransform.width;
+			} else {
+				domScaleX = canvasMatrix.a * globalTransform.width;
+				domScaleY = canvasMatrix.d * globalTransform.height;
+			}
+			
+			return {x: tx, y: ty, scaleX: domScaleX, scaleY: domScaleY};
+		}
+		
+		/**
+		 * 使DOM元素使用舞台内的某块区域内。
+		 * @param	dom				DOM元素引用
+		 * @param	coordinateSpace	坐标空间，不能是Stage引用
+		 * @param	x				相对于coordinateSpace的x坐标
+		 * @param	y				相对于coordinateSpace的y坐标
+		 * @param	width			宽度
+		 * @param	height			高度
+		 */
+		public static function fitDOMElementInArea(dom:Object, coordinateSpace:Sprite, x:Number, y:Number, width:Number, height:Number):void {
+			if (!dom._fitLayaAirInitialized) {
+				dom._fitLayaAirInitialized = true;
+				dom.style.transformOrigin = dom.style.webKittransformOrigin = "left top";
+				dom.style.position = "absolute"
+			}
+			
+			var transform:Object = getTransformRelativeToWindow(coordinateSpace, x, y);
+			
+			// 设置dom样式
+			dom.style.transform = dom.style.webkitTransform = "scale(" + transform.scaleX + "," + transform.scaleY + ") rotate(" + (Laya.stage.canvasDegree) + "deg)";
+			dom.style.width = width + 'px';
+			dom.style.height = height + 'px';
+			dom.style.left = transform.x + 'px';
+			dom.style.top = transform.y + 'px';
 		}
 	}
 }

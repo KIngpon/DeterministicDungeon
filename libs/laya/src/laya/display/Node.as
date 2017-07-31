@@ -2,7 +2,6 @@ package laya.display {
 	import laya.events.Event;
 	import laya.events.EventDispatcher;
 	import laya.renders.Render;
-	import laya.runtime.IConchNode;
 	import laya.utils.Timer;
 	
 	/**
@@ -27,43 +26,128 @@ package laya.display {
 	[Event(name = "undisplay", type = "laya.events.Event")]
 	
 	/**
-	 * <code>Node</code> 类用于创建节点对象，节点是最基本的元素。
+	 *  <code>Node</code> 类是可放在显示列表中的所有对象的基类。该显示列表管理 Laya 运行时中显示的所有对象。使用 Node 类排列显示列表中的显示对象。Node 对象可以有子显示对象。
 	 */
 	public class Node extends EventDispatcher {
 		/**@private */
-		private static const ARRAY_EMPTY:Array = [];
+		protected static const ARRAY_EMPTY:Array = [];
+		/**@private */
+		private static const PROP_EMPTY:Object = {};
+		/**@private */
+		public static const NOTICE_DISPLAY:int = 0x1;
+		/**@private */
+		public static const MOUSEENABLE:int = 0x2;
+		/**@private */
+		private var _bits:int = 0;
 		/**@private 子对象集合，请不要直接修改此对象。*/
 		public var _childs:Array = ARRAY_EMPTY;
-		/**节点名称。*/
-		public var name:String = "";
-		/**是否已经销毁。*/
-		public var destroyed:Boolean;
-		/**时间控制器，默认为Laya.timer。*/
-		public var timer:Timer = Laya.timer;
 		/**@private 是否在显示列表中显示*/
 		protected var _displayedInStage:Boolean;
 		/**@private 父节点对象*/
-		protected var _parent:Node;
-		/** @private */
-		private static const PROP_EMPTY:Object = {};
+		public var _parent:Node;
 		/**@private 系统保留的私有变量集合*/
 		public var _$P:Object = PROP_EMPTY;
 		/**@private */
 		public var conchModel:*;
 		
-		/**@private */
+		/**节点名称。*/
+		public var name:String = "";
+		/**[只读]是否已经销毁。对象销毁后不能再使用。*/
+		public var destroyed:Boolean;
+		/**时间控制器，默认为Laya.timer。*/
+		public var timer:Timer = Laya.timer;
+		
+		/**
+		 * <code>Node</code> 类用于创建节点对象，节点是最基本的元素。
+		 */
 		public function Node() {
-			this.conchModel =Render.isConchNode? this.createConchModel():null;
+			this.conchModel = Render.isConchNode ? this.createConchModel() : null;
 		}
 		
-		public function createConchModel():*
-		{
+		/**@private */
+		public function _setBit(type:int, value:Boolean):void {
+			if (type == NOTICE_DISPLAY) {
+				var preValue:Boolean = _getBit(type);
+				if (preValue != value) {
+					_updateDisplayedInstage();
+				}
+			}
+			if (value) {
+				_bits |= type;
+			} else {
+				_bits &= ~type;
+			}
+		}
+		
+		/**@private */
+		public function _getBit(type:int):Boolean {
+			return (_bits & type) != 0;
+		}
+		
+		/**@private */
+		public function _setUpNoticeChain():void {
+			if (_getBit(NOTICE_DISPLAY)) {
+				_setUpNoticeType(NOTICE_DISPLAY);
+			}
+		}
+		
+		/**@private */
+		public function _setUpNoticeType(type:int):void {
+			var ele:Node = this;
+			ele._setBit(type, true);
+			ele = ele.parent;
+			while (ele) {
+				if (ele._getBit(type)) return;
+				ele._setBit(type, true);
+				ele = ele.parent;
+			}
+		}
+		
+		/**
+		 * <p>增加事件侦听器，以使侦听器能够接收事件通知。</p>
+		 * <p>如果侦听鼠标事件，则会自动设置自己和父亲节点的属性 mouseEnabled 的值为 true(如果父节点mouseEnabled=false，则停止设置父节点mouseEnabled属性)。</p>
+		 * @param	type		事件的类型。
+		 * @param	caller		事件侦听函数的执行域。
+		 * @param	listener	事件侦听函数。
+		 * @param	args		（可选）事件侦听函数的回调参数。
+		 * @return 此 EventDispatcher 对象。
+		 */
+		override public function on(type:String, caller:*, listener:Function, args:Array = null):EventDispatcher {
+			if (type === Event.DISPLAY || type === Event.UNDISPLAY) {
+				if (!_getBit(NOTICE_DISPLAY)) {
+					_setUpNoticeType(NOTICE_DISPLAY);
+				}
+			}
+			return _createListener(type, caller, listener, args, false);
+		}
+		
+		/**
+		 * <p>增加事件侦听器，以使侦听器能够接收事件通知，此侦听事件响应一次后则自动移除侦听。</p>
+		 * <p>如果侦听鼠标事件，则会自动设置自己和父亲节点的属性 mouseEnabled 的值为 true(如果父节点mouseEnabled=false，则停止设置父节点mouseEnabled属性)。</p>
+		 * @param	type		事件的类型。
+		 * @param	caller		事件侦听函数的执行域。
+		 * @param	listener	事件侦听函数。
+		 * @param	args		（可选）事件侦听函数的回调参数。
+		 * @return 此 EventDispatcher 对象。
+		 */
+		override public function once(type:String, caller:*, listener:Function, args:Array = null):EventDispatcher {
+			if (type === Event.DISPLAY || type === Event.UNDISPLAY) {
+				if (!_getBit(NOTICE_DISPLAY)) {
+					_setUpNoticeType(NOTICE_DISPLAY);
+				}
+			}
+			return _createListener(type, caller, listener, args, true);
+		}
+		
+		/**@private */
+		public function createConchModel():* {
 			return null;
 		}
 		
 		/**
-		 * <p>销毁此对象。</p>
-		 * @param	destroyChild 是否同时销毁子节点，若值为true,则销毁子节点，否则不销毁子节点。
+		 * <p>销毁此对象。destroy对象默认会把自己从父节点移除，并且清理自身引用关系，等待js自动垃圾回收机制回收。destroy后不能再使用。</p>
+		 * <p>destroy时会移除自身的事情监听，自身的timer监听，移除子对象及从父节点移除自己。</p>
+		 * @param destroyChild	（可选）是否同时销毁子节点，若值为true,则销毁子节点，否则不销毁子节点。
 		 */
 		public function destroy(destroyChild:Boolean = true):void {
 			destroyed = true;
@@ -77,10 +161,13 @@ package laya.display {
 			
 			this._childs = null;
 			
-			_$P = null;
+			this._$P = null;
 			
 			//移除所有事件监听
 			this.offAll();
+			
+			//移除所有timer
+			this.timer.clearAll(this);
 		}
 		
 		/**
@@ -101,15 +188,19 @@ package laya.display {
 		 * @return	返回添加的节点
 		 */
 		public function addChild(node:Node):Node {
-			if (destroyed || node === this) return node;
+			if (!node || destroyed || node === this) return node;
+			if (Sprite(node).zOrder) _set$P("hasZorder", true);
 			if (node._parent === this) {
-				this._childs.splice(getChildIndex(node), 1);
-				this._childs.push(node);
-				if (conchModel) {
-					conchModel.removeChild(node.conchModel);
-					conchModel.addChildAt(node.conchModel, this._childs.length - 1);
+				var index:int = getChildIndex(node);
+				if (index !== _childs.length - 1) {
+					this._childs.splice(index, 1);
+					this._childs.push(node);
+					if (conchModel) {
+						conchModel.removeChild(node.conchModel);
+						conchModel.addChildAt(node.conchModel, this._childs.length - 1);
+					}
+					_childChanged();
 				}
-				_childChanged();
 			} else {
 				node.parent && node.parent.removeChild(node);
 				this._childs === ARRAY_EMPTY && (this._childs = []);
@@ -118,6 +209,7 @@ package laya.display {
 				node.parent = this;
 				_childChanged();
 			}
+			
 			return node;
 		}
 		
@@ -139,8 +231,8 @@ package laya.display {
 		 * @return	返回添加的节点。
 		 */
 		public function addChildAt(node:Node, index:int):Node {
-			if (destroyed || node === this) return node;
-			
+			if (!node || destroyed || node === this) return node;
+			if (Sprite(node).zOrder) _set$P("hasZorder", true);
 			if (index >= 0 && index <= this._childs.length) {
 				if (node._parent === this) {
 					var oldIndex:int = getChildIndex(node);
@@ -180,9 +272,11 @@ package laya.display {
 		 */
 		public function getChildByName(name:String):Node {
 			var nodes:Array = this._childs;
-			for (var i:int = 0, n:int = nodes.length; i < n; i++) {
-				var node:Node = nodes[i];
-				if (node.name === name) return node;
+			if (nodes) {
+				for (var i:int = 0, n:int = nodes.length; i < n; i++) {
+					var node:Node = nodes[i];
+					if (node.name === name) return node;
+				}
 			}
 			return null;
 		}
@@ -352,24 +446,49 @@ package laya.display {
 					this._parent = value;
 					//如果父对象可见，则设置子对象可见					
 					event(Event.ADDED);
-					value.displayedInStage && _displayChild(this, true);
+					if (_getBit(NOTICE_DISPLAY)) {
+						_setUpNoticeChain();
+						value.displayedInStage && _displayChild(this, true);
+					}
 					value._childChanged(this);
 				} else {
 					//设置子对象不可见
 					event(Event.REMOVED);
 					this._parent._childChanged();
-					_displayChild(this, false);
+					if (_getBit(NOTICE_DISPLAY)) _displayChild(this, false);
 					this._parent = value;
 				}
 			}
 		}
 		
-		/**表示是否在显示列表中显示。是否在显示渲染列表中。*/
+		/**表示是否在显示列表中显示。*/
 		public function get displayedInStage():Boolean {
+			if (_getBit(NOTICE_DISPLAY)) return _displayedInStage;
+			_setUpNoticeType(NOTICE_DISPLAY);
 			return _displayedInStage;
 		}
 		
-		/** @private */
+		/**@private */
+		private function _updateDisplayedInstage():void {
+			var ele:Node;
+			ele = this;
+			var stage:Stage = Laya.stage;
+			_displayedInStage = false;
+			while (ele) {
+				if (ele._getBit(NOTICE_DISPLAY)) {
+					_displayedInStage = ele._displayedInStage;
+					break;
+				}
+				if (ele == stage || ele._displayedInStage) {
+					_displayedInStage = true;
+					break;
+				}
+				
+				ele = ele.parent;
+			}
+		}
+		
+		/**@private */
 		public function _setDisplay(value:Boolean):void {
 			if (_displayedInStage !== value) {
 				_displayedInStage = value;
@@ -387,19 +506,23 @@ package laya.display {
 		private function _displayChild(node:Node, display:Boolean):void {
 			var childs:Array = node._childs;
 			if (childs) {
-				for (var i:int = childs.length - 1; i > -1; i--) {
+				for (var i:int = 0, n:int = childs.length; i < n; i++) {
 					var child:Node = childs[i];
-					child._setDisplay(display);
-					child._childs.length && _displayChild(child, display);
+					if (!child._getBit(NOTICE_DISPLAY)) continue;
+					if (child._childs.length > 0) {
+						_displayChild(child, display);
+					} else {
+						child._setDisplay(display);
+					}
 				}
 			}
 			node._setDisplay(display);
 		}
 		
 		/**
-		 * 当前容器是否包含 <code>node</code> 节点。
-		 * @param	node  某一个节点 <code>Node</code>。
-		 * @return	一个布尔值表示是否包含<code>node</code>节点。
+		 * 当前容器是否包含指定的 <code>Node</code> 节点对象 。
+		 * @param	node  指定的 <code>Node</code> 节点对象 。
+		 * @return	一个布尔值表示是否包含指定的 <code>Node</code> 节点对象 。
 		 */
 		public function contains(node:Node):Boolean {
 			if (node === this) return true;
@@ -411,55 +534,56 @@ package laya.display {
 		}
 		
 		/**
-		 * 定时重复执行某函数。
-		 * @param	delay	间隔时间(单位毫秒)。
-		 * @param	caller	执行域(this)。
-		 * @param	method	结束时的回调方法。
-		 * @param	args	回调参数。
-		 * @param	coverBefore	是否覆盖之前的延迟执行，默认为true。
+		 * 定时重复执行某函数。功能同Laya.timer.timerLoop()。
+		 * @param	delay		间隔时间(单位毫秒)。
+		 * @param	caller		执行域(this)。
+		 * @param	method		结束时的回调方法。
+		 * @param	args		（可选）回调参数。
+		 * @param	coverBefore	（可选）是否覆盖之前的延迟执行，默认为true。
+		 * @param	jumpFrame 时钟是否跳帧。基于时间的循环回调，单位时间间隔内，如能执行多次回调，出于性能考虑，引擎默认只执行一次，设置jumpFrame=true后，则回调会连续执行多次
 		 */
-		public function timerLoop(delay:int, caller:*, method:Function, args:Array = null, coverBefore:Boolean = true):void {
-			timer._create(false, true, delay, caller, method, args, coverBefore);
+		public function timerLoop(delay:int, caller:*, method:Function, args:Array = null, coverBefore:Boolean = true, jumpFrame:Boolean = false):void {
+			timer.loop(delay, caller, method, args, coverBefore, jumpFrame);
 		}
 		
 		/**
-		 * 定时执行某函数一次。
-		 * @param	delay	延迟时间(单位毫秒)。
-		 * @param	caller	执行域(this)。
-		 * @param	method	结束时的回调方法。
-		 * @param	args	回调参数。
-		 * @param	coverBefore	是否覆盖之前的延迟执行，默认为true。
+		 * 定时执行某函数一次。功能同Laya.timer.timerOnce()。
+		 * @param	delay		延迟时间(单位毫秒)。
+		 * @param	caller		执行域(this)。
+		 * @param	method		结束时的回调方法。
+		 * @param	args		（可选）回调参数。
+		 * @param	coverBefore	（可选）是否覆盖之前的延迟执行，默认为true。
 		 */
 		public function timerOnce(delay:int, caller:*, method:Function, args:Array = null, coverBefore:Boolean = true):void {
 			timer._create(false, false, delay, caller, method, args, coverBefore);
 		}
 		
 		/**
-		 * 定时重复执行某函数(基于帧率)。
-		 * @param	delay	间隔几帧(单位为帧)。
-		 * @param	caller	执行域(this)。
-		 * @param	method	结束时的回调方法。
-		 * @param	args	回调参数。
-		 * @param	coverBefore	是否覆盖之前的延迟执行，默认为true。
+		 * 定时重复执行某函数(基于帧率)。功能同Laya.timer.frameLoop()。
+		 * @param	delay		间隔几帧(单位为帧)。
+		 * @param	caller		执行域(this)。
+		 * @param	method		结束时的回调方法。
+		 * @param	args		（可选）回调参数。
+		 * @param	coverBefore	（可选）是否覆盖之前的延迟执行，默认为true。
 		 */
 		public function frameLoop(delay:int, caller:*, method:Function, args:Array = null, coverBefore:Boolean = true):void {
 			timer._create(true, true, delay, caller, method, args, coverBefore);
 		}
 		
 		/**
-		 * 定时执行一次某函数(基于帧率)。
-		 * @param	delay	延迟几帧(单位为帧)。
-		 * @param	caller	执行域(this)
-		 * @param	method	结束时的回调方法
-		 * @param	args	回调参数
-		 * @param	coverBefore	是否覆盖之前的延迟执行，默认为true
+		 * 定时执行一次某函数(基于帧率)。功能同Laya.timer.frameOnce()。
+		 * @param	delay		延迟几帧(单位为帧)。
+		 * @param	caller		执行域(this)
+		 * @param	method		结束时的回调方法
+		 * @param	args		（可选）回调参数
+		 * @param	coverBefore	（可选）是否覆盖之前的延迟执行，默认为true
 		 */
 		public function frameOnce(delay:int, caller:*, method:Function, args:Array = null, coverBefore:Boolean = true):void {
 			timer._create(true, false, delay, caller, method, args, coverBefore);
 		}
 		
 		/**
-		 * 清理定时器。
+		 * 清理定时器。功能同Laya.timer.clearTimer()。
 		 * @param	caller 执行域(this)。
 		 * @param	method 结束时的回调方法。
 		 */

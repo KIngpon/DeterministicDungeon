@@ -1,6 +1,5 @@
 package model.proxy 
 {
-import config.MsgConstant;
 import laya.utils.Handler;
 import model.vo.PlayerPo;
 import model.vo.PlayerVo;
@@ -61,7 +60,6 @@ public class PlayerProxy extends Proxy
 			this.pVo.curStageNum = 1;
 			this.pVo.isFirstStep = true;
 			trace(this.pVo.curHp, this.pVo.level, this.pVo.maxExp);
-			this.sendNotification(MsgConstant.INIT_FIGHT_STAGE);
 		}));
 	}
 	

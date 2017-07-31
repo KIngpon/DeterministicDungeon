@@ -151,6 +151,10 @@ package laya.debug.tools
 			var key:String;
 			for(key in obj)
 			{
+				if(obj[key]===null||obj[key]===undefined)
+				{
+					rst[key]=obj[key];
+				}else
 				if(obj[key] is Array)
 				{
 					rst[key]=copyArr(obj[key]);
@@ -187,7 +191,27 @@ package laya.debug.tools
 			}
 			return src;
 		}
-		
+		public static function insertArrToArr(src:Array, insertArr:Array, pos:int = 0):Array
+		{
+			if (pos < 0) pos = 0;
+			if (pos > src.length) pos = src.length;
+			var preLen:int = src.length;
+			var i:int, len:int;
+			src.length += insertArr.length;
+			var moveLen:int;
+			moveLen = insertArr.length;
+			for (i = src.length - 1; i >= pos; i--)
+			{
+				src[i] = src[i - moveLen];
+			}
+			len = insertArr.length;
+			for (i = 0; i < len; i++)
+			{
+				src[pos + i] = insertArr[i];
+			}
+			
+			return src;
+		}
 		public static function clearArr(arr:Array):Array {
 			if (!arr) return arr;
 			arr.length = 0;
@@ -289,6 +313,23 @@ package laya.debug.tools
 				if(!(src[keys[i]]===null))
 					tar[keys[i]]=src[keys[i]];
 			}
+		}
+		public static function getNoSameArr(arr:Array):Array
+		{
+			var i:int, len:int;
+			var rst:Array;
+			rst = [];
+			var tItem:Object;
+			len = arr.length;
+			for (i = 0; i < len; i++)
+			{
+				tItem = arr[i];
+				if (rst.indexOf(tItem) < 0)
+				{
+					rst.push(tItem);
+				}
+			}
+			return rst;
 		}
 		public static function insertValue(tar:Object, src:Object):void
 		{

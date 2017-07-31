@@ -13,6 +13,11 @@ package laya.resource {
 		/*** @private */
 		private static var _default:Context =/*[STATIC SAFE]*/ new Context();
 		/*** @private */
+		private static var replaceKeys:Array = ["font", "fillStyle", "textBaseline"];
+		/*** @private */
+		private static var newKeys:Array = [];
+		
+		/*** @private */
 		public var _canvas:HTMLCanvas;
 		public var _repaint:Boolean = false;
 		
@@ -25,11 +30,103 @@ package laya.resource {
 			to.__fillText = to.fillText;
 			to.__fillRect = to.fillRect;
 			to.__strokeText = to.strokeText;
-			var funs:Array = ['drawTextures','fillWords','setIsMainContext','fillRect', 'strokeText','fillTexture', 'fillText', 'transformByMatrix', 'setTransformByMatrix', 'clipRect', 'drawTexture', 'drawTexture2', 'drawTextureWithTransform', 'flush', 'clear', 'destroy', 'drawCanvas', 'fillBorderText'];
+			var funs:Array = ['drawTextures','fillWords','fillBorderWords','setIsMainContext','fillRect', 'strokeText','fillTexture', 'fillText', 'transformByMatrix', 'setTransformByMatrix', 'clipRect', 'drawTexture', 'drawTexture2', 'drawTextureWithTransform', 'flush', 'clear', 'destroy', 'drawCanvas', 'fillBorderText','drawCurves'];
 			funs.forEach(function(i:String):void {
-				to[i] = from[i] || to[i];
+				to[i] = from[i];
 			});
+			//return;
+			
+			var canvasO:*= __JS__("HTMLCanvasElement.prototype");
+			if (!replaceCanvasGetSet(canvasO, "width")) return;
+			if (!replaceCanvasGetSet(canvasO, "height")) return;
+			
+			var i:int, len:int;
+			len = replaceKeys.length;
+			for (i = 0; i < len; i++)
+			{
+				if(!replaceGetSet(to,replaceKeys[i])) return;
+			}
+				
+			to.__reset = from.replaceReset;
+			to.__restore = to.restore;
+			to.restore = from.replaceResotre;
 		}
+		
+		private static function replaceCanvasGetSet(tar:Object, key:String):Boolean
+		{
+			var oldO:Object = __JS__("Object.getOwnPropertyDescriptor(tar, key);")
+			if (!oldO||!oldO.configurable) return false;
+			var newO:Object= { };
+			var tkey:String;
+			for (tkey in oldO)
+			{
+				if (tkey != "set")
+				{
+					newO[tkey] = oldO[tkey];
+				}
+			}
+			var preFun:Function = oldO["set"];
+			newO["set"] = function(v:*):void
+			{
+				var _self:*= __JS__("this");
+				preFun.call(_self, v);
+				var _ct:*= _self.getContext("2d");
+				if (_ct && "__reset" in _ct)
+				{
+					_ct.__reset();
+				}
+			}
+			__JS__("Object.defineProperty(tar, key, newO);")
+			return true;
+		}
+		
+		private function replaceReset():void
+		{
+			var i:int, len:int;
+			len = replaceKeys.length;
+			var key:String;
+			for (i = 0; i < len; i++)
+			{
+				key = replaceKeys[i];
+				this[newKeys[i]]=this[key];
+			}
+		}
+		
+		private function replaceResotre():void
+		{
+			__JS__("this.__restore();")
+			__JS__("this.__reset();")
+		}
+		
+		private static function replaceGetSet(tar:Object, key:String):Boolean
+		{
+			var oldO:Object = __JS__("Object.getOwnPropertyDescriptor(tar, key);")
+			if (!oldO||!oldO.configurable) return false;
+			var newO:Object= { };
+			var tkey:String;
+			for (tkey in oldO)
+			{
+				if (tkey != "set")
+				{
+					newO[tkey] = oldO[tkey];
+				}
+			}
+			var preFun:Function = oldO["set"];
+			var dataKey:String = "___" + key + "__";
+			newKeys.push(dataKey);
+			newO["set"] = function(v:*):void
+			{
+				var _self:*= __JS__("this");
+				if (v != _self[dataKey])
+				{
+					_self[dataKey] = v;
+					preFun.call(_self, v);
+				}
+			}
+			__JS__("Object.defineProperty(tar, key, newO);")
+			return true;
+		}
+
 		
 		public function setIsMainContext():void
 		{
@@ -166,8 +263,8 @@ package laya.resource {
 		public function drawTextures(tex:Texture, pos:Array, tx:Number, ty:Number):void
 		{
 			Stat.drawCall += pos.length / 2;
-			var w:Number = tex.bitmap.width;
-			var h:Number = tex.bitmap.height;		
+			var w:Number = tex.width;
+			var h:Number = tex.height;
 			for (var i:int = 0, sz:int = pos.length; i < sz; i += 2)
 			{
 				drawTexture(tex, pos[i], pos[i + 1], w, h, tx, ty);
@@ -345,6 +442,22 @@ package laya.resource {
 		}
 		
 		/*** @private */
+		public function fillBorderWords(words:Vector.<HTMLChar>, x:Number, y:Number, font:String, color:String, borderColor:String, lineWidth:int):void {	
+			font && (this.font = font);
+			color && (this.fillStyle = color);
+			this.textBaseline = "top";
+			__JS__("this.lineWidth = lineWidth");
+			__JS__("this.textAlign = 'left'");
+			__JS__("this.strokeStyle = borderColor");
+			for (var i:int = 0, n:int = words.length; i < n; i++) {
+				var a:* = words[i];			
+				__JS__("this.__strokeText(a.char, a.x + x, a.y + y)");
+				__JS__("this.__fillText(a.char, a.x + x, a.y + y)");
+			}
+			
+		
+		}
+		/*** @private */
 		public function destroy():void {
 			__JS__("this.canvas.width = this.canvas.height = 0");
 		}
@@ -353,6 +466,21 @@ package laya.resource {
 		public function clear():void {
 			this.clearRect(0, 0, _canvas.width, _canvas.height);
 			_repaint = false;
+		}
+		
+		public function drawCurves(x:Number, y:Number, args:Array):void
+		{
+			this.beginPath();
+			this.strokeStyle = args[3];
+			this.lineWidth = args[4];
+			var points:Array = args[2];
+			x += args[0], y += args[1];
+			this.moveTo(x + points[0], y + points[1]);
+			var i:int = 2, n:int = points.length;
+			while (i < n) {
+				this.quadraticCurveTo(x + points[i++], y + points[i++], x + points[i++], y + points[i++]);
+			}
+			this.stroke();
 		}
 	}
 }

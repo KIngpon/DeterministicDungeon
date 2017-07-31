@@ -1,11 +1,9 @@
 package laya.d3.resource {
+	import laya.d3.math.Vector4;
 	import laya.d3.utils.Size;
 	import laya.events.Event;
 	import laya.maths.Arith;
-	import laya.net.Loader;
-	import laya.resource.Bitmap;
 	import laya.utils.Browser;
-	import laya.utils.Handler;
 	import laya.webgl.WebGL;
 	import laya.webgl.WebGLContext;
 	
@@ -38,6 +36,13 @@ package laya.d3.resource {
 		 */
 		public function get srcs():String {
 			return _srcs;
+		}
+		
+		/**
+		 * @inheritDoc
+		 */
+		override public function get defaulteTexture():BaseTexture {
+			return SolidColorTextureCube.grayTexture;
 		}
 		
 		public function TextureCube() {
@@ -178,15 +183,14 @@ package laya.d3.resource {
 		/**
 		 * @private
 		 */
-		override public function onAsynLoaded(url:String, data:*):void {
+		override public function onAsynLoaded(url:String, data:*, params:Array):void {
 			_srcs = url;
 			_onTextureLoaded(data as Array); 
 			if (_conchTexture) //NATIVE
 				_conchTexture.setTextureCubeImages(_images);
 			else
 				activeResource();
-			_loaded = true;
-			event(Event.LOADED, this);
+			_endLoaded();
 		}
 		
 		override protected function detoryResource():void {

@@ -1,17 +1,23 @@
 package laya.d3.math {
+	import laya.d3.core.IClone;
 	
 	/**
 	 * <code>Matrix4x4</code> 类用于创建4x4矩阵。
 	 */
-	public class Matrix4x4 {
-		/**@private */
-		private static var _tempMatrix4x4:Matrix4x4 = /*[STATIC SAFE]*/ new Matrix4x4();
-		/**@private */
-		private static var _tempQuaternion:Quaternion =new Quaternion();
-		/**默认矩阵,禁止修改*/
-		public static const DEFAULT:Matrix4x4 =/*[STATIC SAFE]*/ new Matrix4x4();
+	public class Matrix4x4 implements IClone {
 		
-		private static var _translationVector:Vector3 = new Vector3();
+		/**@private */
+		private static var _tempMatrix4x4:Matrix4x4 = new Matrix4x4();
+		/**@private */
+		private static var _tempVector0:Vector3 = new Vector3();
+		/**@private */
+		private static var _tempVector1:Vector3 = new Vector3();
+		/**@private */
+		private static var _tempVector2:Vector3 = new Vector3();
+		/**@private */
+		private static var _tempQuaternion:Quaternion = new Quaternion();
+		/**默认矩阵,禁止修改*/
+		public static const DEFAULT:Matrix4x4 = new Matrix4x4();
 		
 		/**
 		 * 绕X轴旋转
@@ -31,7 +37,7 @@ package laya.d3.math {
 		}
 		
 		/**
-		 * 
+		 *
 		 * 绕Y轴旋转
 		 * @param	rad  旋转角度
 		 * @param	out 输出矩阵
@@ -75,6 +81,40 @@ package laya.d3.math {
 		public static function createRotationYawPitchRoll(yaw:Number, pitch:Number, roll:Number, result:Matrix4x4):void {
 			Quaternion.createFromYawPitchRoll(yaw, pitch, roll, _tempQuaternion);
 			createRotationQuaternion(_tempQuaternion, result);
+		}
+		
+		/**
+		 * 通过旋转轴axis和旋转角度angle计算旋转矩阵。
+		 * @param	axis 旋转轴,假定已经归一化。
+		 * @param	angle 旋转角度。
+		 * @param	result 结果矩阵。
+		 */
+		public static function createRotationAxis(axis:Vector3, angle:Number, result:Matrix4x4):void {
+			var axisE:Float32Array = axis.elements;
+			var x:Number = axisE[0];
+			var y:Number = axisE[1];
+			var z:Number = axisE[2];
+			var cos:Number = Math.cos(angle);
+			var sin:Number = Math.sin(angle);
+			var xx:Number = x * x;
+			var yy:Number = y * y;
+			var zz:Number = z * z;
+			var xy:Number = x * y;
+			var xz:Number = x * z;
+			var yz:Number = y * z;
+			
+			var resultE:Float32Array = result.elements;
+			resultE[3] = resultE[7] = resultE[11] = resultE[12] = resultE[13] = resultE[14] = 0;
+			resultE[15] = 1.0;
+			resultE[0] = xx + (cos * (1.0 - xx));
+			resultE[1] = (xy - (cos * xy)) + (sin * z);
+			resultE[2] = (xz - (cos * xz)) - (sin * y);
+			resultE[4] = (xy - (cos * xy)) - (sin * z);
+			resultE[5] = yy + (cos * (1.0 - yy));
+			resultE[6] = (yz - (cos * yz)) + (sin * x);
+			resultE[8] = (xz - (cos * xz)) + (sin * y);
+			resultE[9] = (yz - (cos * yz)) - (sin * x);
+			resultE[10] = zz + (cos * (1.0 - zz));
 		}
 		
 		/**
@@ -265,72 +305,33 @@ package laya.d3.math {
 		 * @param	up 向上向量
 		 * @param	out 输出矩阵
 		 */
-		public static function createLookAt(eye:Vector3, center:Vector3, up:Vector3, out:Matrix4x4):void {
+		public static function createLookAt(eye:Vector3, target:Vector3, up:Vector3, out:Matrix4x4):void {
 			/*[DISABLE-ADD-VARIABLE-DEFAULT-VALUE]*/
-			var ee:Float32Array = eye.elements;
-			var ce:Float32Array = center.elements;
-			var ue:Float32Array = up.elements;
-			var oe:Float32Array = out.elements;
+			//注:WebGL为右手坐标系统
+			var oE:Float32Array = out.elements;
+			var xaxis:Vector3 = _tempVector0;
+			var yaxis:Vector3 = _tempVector1;
+			var zaxis:Vector3 = _tempVector2;
+			Vector3.subtract(eye, target, zaxis);
+			Vector3.normalize(zaxis, zaxis);
+			Vector3.cross(up, zaxis, xaxis);
+			Vector3.normalize(xaxis, xaxis);
+			Vector3.cross(zaxis, xaxis, yaxis);
 			
-			var x0:Number, x1:Number, x2:Number, y0:Number, y1:Number, y2:Number, z0:Number, z1:Number, z2:Number, len:Number, eyex:Number = ee[0], eyey:Number = ee[1], eyez:Number = ee[2], upx:Number = ue[0], upy:Number = ue[1], upz:Number = ue[2], centerx:Number = ce[0], centery:Number = ce[1], centerz:Number = ce[2];
+			out.identity();
+			oE[0] = xaxis.x;
+			oE[4] = xaxis.y;
+			oE[8] = xaxis.z;
+			oE[1] = yaxis.x;
+			oE[5] = yaxis.y;
+			oE[9] = yaxis.z;
+			oE[2] = zaxis.x;
+			oE[6] = zaxis.y;
+			oE[10] = zaxis.z;
 			
-			if (Math.abs(eyex - centerx) < MathUtils3D.zeroTolerance && Math.abs(eyey - centery) < MathUtils3D.zeroTolerance && Math.abs(eyez - centerz) < MathUtils3D.zeroTolerance) {
-				out.identity();
-				return;
-			}
-			
-			z0 = eyex - centerx;
-			z1 = eyey - centery;
-			z2 = eyez - centerz;
-			
-			len = 1 / Math.sqrt(z0 * z0 + z1 * z1 + z2 * z2);
-			z0 *= len;
-			z1 *= len;
-			z2 *= len;
-			
-			x0 = upy * z2 - upz * z1;
-			x1 = upz * z0 - upx * z2;
-			x2 = upx * z1 - upy * z0;
-			len = Math.sqrt(x0 * x0 + x1 * x1 + x2 * x2);
-			if (!len) {
-				x0 = x1 = x2 = 0;
-			} else {
-				len = 1 / len;
-				x0 *= len;
-				x1 *= len;
-				x2 *= len;
-			}
-			
-			y0 = z1 * x2 - z2 * x1;
-			y1 = z2 * x0 - z0 * x2;
-			y2 = z0 * x1 - z1 * x0;
-			
-			len = Math.sqrt(y0 * y0 + y1 * y1 + y2 * y2);
-			if (!len) {
-				y0 = y1 = y2 = 0;
-			} else {
-				len = 1 / len;
-				y0 *= len;
-				y1 *= len;
-				y2 *= len;
-			}
-			
-			oe[0] = x0;
-			oe[1] = y0;
-			oe[2] = z0;
-			oe[3] = 0;
-			oe[4] = x1;
-			oe[5] = y1;
-			oe[6] = z1;
-			oe[7] = 0;
-			oe[8] = x2;
-			oe[9] = y2;
-			oe[10] = z2;
-			oe[11] = 0;
-			oe[12] = -(x0 * eyex + x1 * eyey + x2 * eyez);
-			oe[13] = -(y0 * eyex + y1 * eyey + y2 * eyez);
-			oe[14] = -(z0 * eyex + z1 * eyey + z2 * eyez);
-			oe[15] = 1;
+			oE[12] = -Vector3.dot(xaxis, eye);
+			oE[13] = -Vector3.dot(yaxis, eye);
+			oE[14] = -Vector3.dot(zaxis, eye);
 		}
 		
 		/**
@@ -420,12 +421,31 @@ package laya.d3.math {
 			e[15] = m44;
 		}
 		
+		public function getElementByRowColumn(row:Number, column:Number):Number {
+			
+			if (row < 0 || row > 3)
+				throw new Error("row", "Rows and columns for matrices run from 0 to 3, inclusive.");
+			if (column < 0 || column > 3)
+				throw new Error("column", "Rows and columns for matrices run from 0 to 3, inclusive.");
+			
+			return elements[(row * 4) + column];
+		}
+		
+		public function setElementByRowColumn(row:Number, column:Number, value:Number):void {
+			
+			if (row < 0 || row > 3)
+				throw new Error("row", "Rows and columns for matrices run from 0 to 3, inclusive.");
+			if (column < 0 || column > 3)
+				throw new Error("column", "Rows and columns for matrices run from 0 to 3, inclusive.");
+			
+			elements[(row * 4) + column] = value;
+		}
+		
 		/**
 		 * 判断两个4x4矩阵的值是否相等。
 		 * @param	other 4x4矩阵
 		 */
 		public function equalsOtherMatrix(other:Matrix4x4):Boolean {
-			
 			var e:Float32Array = this.elements;
 			var oe:Float32Array = other.elements;
 			
@@ -433,54 +453,93 @@ package laya.d3.math {
 		}
 		
 		/**
-		 * 分解矩阵
-		 * @param	translation 平移
-		 * @param	rotation 旋转
-		 * @param	scale 缩放
-		 * @return   是否成功
+		 * 分解矩阵为平移向量、旋转四元数、缩放向量。
+		 * @param	translation 平移向量。
+		 * @param	rotation 旋转四元数。
+		 * @param	scale 缩放向量。
+		 * @return 是否分解成功。
 		 */
-		public function decompose(translation:Vector3, rotation:Quaternion, scale:Vector3):Boolean {
+		public function decomposeTransRotScale(translation:Vector3, rotation:Quaternion, scale:Vector3):Boolean {
+			var rotationMatrix:Matrix4x4 = _tempMatrix4x4;
+			if (decomposeTransRotMatScale(translation, rotationMatrix, scale)) {
+				Quaternion.createFromMatrix4x4(rotationMatrix, rotation);
+				return true;
+			} else {
+				rotation.identity();
+				return false;
+			}
+		}
+		
+		/**
+		 * 分解矩阵为平移向量、旋转矩阵、缩放向量。
+		 * @param	translation 平移向量。
+		 * @param	rotationMatrix 旋转矩阵。
+		 * @param	scale 缩放向量。
+		 * @return 是否分解成功。
+		 */
+		public function decomposeTransRotMatScale(translation:Vector3, rotationMatrix:Matrix4x4, scale:Vector3):Boolean {
 			/*[DISABLE-ADD-VARIABLE-DEFAULT-VALUE]*/
-			var me:Float32Array = this.elements;
+			var e:Float32Array = this.elements;
 			var te:Float32Array = translation.elements;
-			var re:Float32Array = rotation.elements;
+			var re:Float32Array = rotationMatrix.elements;
 			var se:Float32Array = scale.elements;
 			
 			//Get the translation. 
-			te[0] = me[12];
-			te[1] = me[13];
-			te[2] = me[14];
+			te[0] = e[12];
+			te[1] = e[13];
+			te[2] = e[14];
 			
 			//Scaling is the length of the rows. 
-			se[0] = Math.sqrt((me[0] * me[0]) + (me[1] * me[1]) + (me[2] * me[2]));
-			se[1] = Math.sqrt((me[4] * me[4]) + (me[5] * me[5]) + (me[6] * me[6]));
-			se[2] = Math.sqrt((me[8] * me[8]) + (me[9] * me[9]) + (me[10] * me[10]));
+			var m11:Number = e[0], m12:Number = e[1], m13:Number = e[2];
+			var m21:Number = e[4], m22:Number = e[5], m23:Number = e[6];
+			var m31:Number = e[8], m32:Number = e[9], m33:Number = e[10];
+			
+			var sX:Number = se[0] = Math.sqrt((m11 * m11) + (m12 * m12) + (m13 * m13));
+			var sY:Number = se[1] = Math.sqrt((m21 * m21) + (m22 * m22) + (m23 * m23));
+			var sZ:Number = se[2] = Math.sqrt((m31 * m31) + (m32 * m32) + (m33 * m33));
 			
 			//If any of the scaling factors are zero, than the rotation matrix can not exist. 
-			if (MathUtils3D.isZero(se[0]) || MathUtils3D.isZero(se[1]) || MathUtils3D.isZero(se[2])) {
-				re[0] = re[1] = re[2] = 0;
-				re[3] = 1;
+			if (MathUtils3D.isZero(sX) || MathUtils3D.isZero(sY) || MathUtils3D.isZero(sZ)) {
+				re[1] = re[2] = re[3] = re[4] = re[6] = re[7] = re[8] = re[9] = re[11] = re[12] = re[13] = re[14] = 0;
+				re[0] = re[5] = re[10] = re[15] = 1;
 				return false;
 			}
 			
-			//The rotation is the left over matrix after dividing out the scaling. 
-			var rotationmatrix:Matrix4x4 = new Matrix4x4();
-			var rme:Float32Array = rotationmatrix.elements;
-			rme[0] = me[0] / se[0];
-			rme[1] = me[1] / se[0];
-			rme[2] = me[2] / se[0];
+			// Calculate an perfect orthonormal matrix (no reflections)
+			var at:Vector3 = _tempVector0;
+			var atE:Float32Array = at.elements;
+			atE[0] = m31 / sZ;
+			atE[1] = m32 / sZ;
+			atE[2] = m33 / sZ;
+			var tempRight:Vector3 = _tempVector1;
+			var tempRightE:Float32Array = tempRight.elements;
+			tempRightE[0] = m11 / sX;
+			tempRightE[1] = m12 / sX;
+			tempRightE[2] = m13 / sX;
+			var up:Vector3 = _tempVector2;
+			Vector3.cross(at, tempRight, up);
+			var right:Vector3 = _tempVector1;
+			Vector3.cross(up, at, right);
 			
-			rme[4] = me[4] / se[1];
-			rme[5] = me[5] / se[1];
-			rme[6] = me[6] / se[1];
+			re[3] = re[7] = re[11] = re[12] = re[13] = re[14] = 0;
+			re[15] = 1;
+			re[0] = right.x;
+			re[1] = right.y;
+			re[2] = right.z;
 			
-			rme[8] = me[8] / se[2];
-			rme[9] = me[9] / se[2];
-			rme[10] = me[10] / se[2];
+			re[4] = up.x;
+			re[5] = up.y;
+			re[6] = up.z;
 			
-			rotationmatrix[15] = 1;
+			re[8] = at.x;
+			re[9] = at.y;
+			re[10] = at.z;
 			
-			Quaternion.createFromMatrix4x4(rotationmatrix, rotation);
+			// In case of reflexions//TODO:是否不用计算dot后的值即为结果
+			((re[0] * m11 + re[1] * m12 + re[2] * m13)/*Vector3.dot(right,Right)*/ < 0.0) && (se[0] = -sX);
+			((re[4] * m21 + re[5] * m22 + re[6] * m23)/* Vector3.dot(up, Up)*/ < 0.0) && (se[1] = -sY);
+			((re[8] * m31 + re[9] * m32 + re[10] * m33)/*Vector3.dot(at, Backward)*/ < 0.0) && (se[2] = -sZ);
+			
 			return true;
 		}
 		
@@ -578,14 +637,14 @@ package laya.d3.math {
 		}
 		
 		/**
-		 *  克隆一个4x4矩阵
-		 * @param	out 输出的4x4矩阵
+		 * 克隆。
+		 * @param	destObject 克隆源。
 		 */
-		public function cloneTo(out:Matrix4x4):void {
+		public function cloneTo(destObject:*):void {
 			/*[DISABLE-ADD-VARIABLE-DEFAULT-VALUE]*/
 			var i:int, s:Float32Array, d:Float32Array;
 			s = this.elements;
-			d = out.elements;
+			d = destObject.elements;
 			if (s === d) {
 				return;
 			}
@@ -595,40 +654,16 @@ package laya.d3.math {
 		}
 		
 		/**
-		 * 从一个4x4矩阵复制
-		 * @param	sou 源4x4矩阵
+		 * 克隆。
+		 * @return	 克隆副本。
 		 */
-		public function copyFrom(sou:Matrix4x4):void {
-			/*[DISABLE-ADD-VARIABLE-DEFAULT-VALUE]*/
-			var i:int, s:Float32Array, d:Float32Array;
-			s = sou.elements;
-			d = this.elements;
-			if (s === d) {
-				return;
-			}
-			for (i = 0; i < 16; ++i) {
-				d[i] = s[i];
-			}
-		}
-		
-		/**
-		 * 从一个数组复制
-		 * @param	sou 源Float32Array数组
-		 */
-		public function copyFromArray(sou:Float32Array):void {
-			/*[DISABLE-ADD-VARIABLE-DEFAULT-VALUE]*/
-			var i:int, d:Float32Array;
-			d = this.elements;
-			if (sou === d) {
-				return;
-			}
-			for (i = 0; i < 16; ++i) {
-				d[i] = sou[i];
-			}
+		public function clone():* {
+			var dest:Matrix4x4 = __JS__("new this.constructor()");
+			cloneTo(dest);
+			return dest;
 		}
 		
 		public static function translation(v3:Vector3, out:Matrix4x4):void {
-			
 			var ve:Float32Array = v3.elements;
 			var oe:Float32Array = out.elements;
 			oe[0] = oe[5] = oe[10] = oe[15] = 1;
@@ -637,26 +672,52 @@ package laya.d3.math {
 			oe[14] = ve[2];
 		}
 		
-		public function get translationVector():Vector3 {
-			
+		/**
+		 * 获取平移向量。
+		 * @param	out 平移向量。
+		 */
+		public function getTranslationVector(out:Vector3):void {
 			var me:Float32Array = this.elements;
-			var oe:Float32Array = _translationVector.elements;
-			
-			oe[0] = me[12];
-			oe[1] = me[13];
-			oe[2] = me[14];
-			
-			return _translationVector;
+			var te:Float32Array = out.elements;
+			te[0] = me[12];
+			te[1] = me[13];
+			te[2] = me[14];
 		}
 		
-		public function set translationVector(v3:Vector3):void {
-			
+		/**
+		 * 设置平移向量。
+		 * @param	translate 平移向量。
+		 */
+		public function setTranslationVector(translate:Vector3):void {
 			var me:Float32Array = this.elements;
-			var ve:Float32Array = v3.elements;
-			
+			var ve:Float32Array = translate.elements;
 			me[12] = ve[0];
 			me[13] = ve[1];
 			me[14] = ve[2];
+		}
+		
+		/**
+		 * 获取前向量。
+		 * @param	out 前向量。
+		 */
+		public function getForward(out:Vector3):void {
+			var me:Float32Array = this.elements;
+			var te:Float32Array = out.elements;
+			te[0] = -me[8];
+			te[1] = -me[9];
+			te[2] = -me[10];
+		}
+		
+		/**
+		 * 设置前向量。
+		 * @param	forward 前向量。
+		 */
+		public function setForward(forward:Vector3):void {
+			var me:Float32Array = this.elements;
+			var ve:Float32Array = forward.elements;
+			me[8] = -ve[0];
+			me[9] = -ve[1];
+			me[10] = -ve[2];
 		}
 	
 	}

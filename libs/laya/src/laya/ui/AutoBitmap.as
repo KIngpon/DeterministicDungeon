@@ -8,7 +8,7 @@ package laya.ui {
 	 * <code>AutoBitmap</code> 类是用于表示位图图像或绘制图形的显示对象。
 	 * <p>封装了位置，宽高及九宫格的处理，供UI组件使用。</p>
 	 */
-	public final class AutoBitmap extends Graphics {
+	public class AutoBitmap extends Graphics {
 		
 		/**
 		 * @private
@@ -46,7 +46,7 @@ package laya.ui {
 		 */
 		private var _sizeGrid:Array;
 		/**@private */
-		private var _isChanged:Boolean;
+		protected var _isChanged:Boolean;
 		/**@private */
 		public var _offset:Array;
 		
@@ -156,7 +156,7 @@ package laya.ui {
 		 * @private
 		 * 修改纹理资源。
 		 */
-		private function changeSource():void {
+		protected function changeSource():void {
 			if (cacheCount++ > 50) clearCache();
 			_isChanged = false;
 			var source:Texture = this._source;
@@ -167,7 +167,7 @@ package laya.ui {
 			var sizeGrid:Array = this._sizeGrid;
 			var sw:Number = source.sourceWidth;
 			var sh:Number = source.sourceHeight;
-			
+
 			//如果没有设置9宫格，或大小未改变，则直接用原图绘制
 			if (!sizeGrid || (sw === width && sh === height)) {
 				cleanByTexture(source, _offset ? _offset[0] : 0, _offset ? _offset[1] : 0, width, height);
@@ -186,8 +186,16 @@ package laya.ui {
 				var bottom:Number = sizeGrid[2];
 				var left:Number = sizeGrid[3];
 				var repeat:Boolean = sizeGrid[4];
+				var needClip:Boolean = false;
 				if (left + right > width) {
-					right = 0;
+					var clipWidth:Number = width;
+					needClip = true;
+					width = left + right;
+				}
+				
+				if (needClip) {
+					save();
+					clipRect(0, 0, clipWidth, height);
 				}
 				
 				//绘制四个角
@@ -204,6 +212,8 @@ package laya.ui {
 				//绘制中间
 				drawBitmap(repeat, getTexture(source, left, top, sw - left - right, sh - top - bottom), left, top, width - left - right, height - top - bottom);
 				
+				if (needClip) restore();
+				
 				//缓存命令
 				if (autoCacheCmd && !Render.isConchApp) cmdCaches[key] = this.cmds;
 			}
@@ -211,7 +221,8 @@ package laya.ui {
 		}
 		
 		private function drawBitmap(repeat:Boolean, tex:Texture, x:Number, y:Number, width:Number = 0, height:Number = 0):void {
-			if (repeat) fillTexture(tex, x, y, width, height);
+			if (width < 0.1 || height < 0.1) return;
+			if (repeat && (tex.width!= width || tex.height !=height)) fillTexture(tex, x, y, width, height);
 			else drawTexture(tex, x, y, width, height);
 		}
 		
@@ -245,6 +256,10 @@ package laya.ui {
 		/**@private 获取资源*/
 		public static function getCache(key:String):* {
 			return textureCache[key];
+		}
+		
+		override public function clear(recoverCmds:Boolean = true):void {
+			super.clear(false);
 		}
 	}
 }

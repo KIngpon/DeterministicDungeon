@@ -1,9 +1,10 @@
 package laya.d3.math {
+	import laya.d3.core.IClone;
 	
 	/**
 	 * <code>BoundSphere</code> 类用于创建包围球。
 	 */
-	public class BoundSphere {
+	public class BoundSphere implements IClone {
 		private static var _tempVector3:Vector3 = new Vector3();
 		
 		/**包围球的中心。*/
@@ -33,7 +34,7 @@ package laya.d3.math {
 		 * @param	count 顶点子队列的顶点数。
 		 * @param	result 生成的包围球。
 		 */
-		public static function createFromSubPoints(points:Vector.<Vector3>, start:int, count:int, out:BoundSphere):void {
+		public static function createFromSubPoints(points:Array, start:int, count:int, out:BoundSphere):void {
 			if (points == null) {
 				throw new Error("points");
 			}
@@ -83,12 +84,51 @@ package laya.d3.math {
 		 * @param	points 顶点的队列。
 		 * @param	result 生成的包围球。
 		 */
-		public static function createfromPoints(points:Vector.<Vector3>, out:BoundSphere):void {
+		public static function createfromPoints(points:Array, out:BoundSphere):void {
 			if (points == null) {
 				throw new Error("points");
 			}
 			
 			createFromSubPoints(points, 0, points.length, out);
+		}
+		
+		/**
+		 * 判断射线是否与碰撞球交叉，并返回交叉距离。
+		 * @param	ray 射线。
+		 * @return 距离交叉点的距离，-1表示不交叉。
+		 */
+		public function intersectsRayDistance(ray:Ray):Number {
+			return Collision.intersectsRayAndSphereRD(ray, this);
+		}
+		
+		/**
+		 * 判断射线是否与碰撞球交叉，并返回交叉点。
+		 * @param	ray  射线。
+		 * @param	outPoint 交叉点。
+		 * @return  距离交叉点的距离，-1表示不交叉。
+		 */
+		public function intersectsRayPoint(ray:Ray, outPoint:Vector3):Number {
+			return Collision.intersectsRayAndSphereRP(ray, this, outPoint);
+		}
+		
+		/**
+		 * 克隆。
+		 * @param	destObject 克隆源。
+		 */
+		public function cloneTo(destObject:*):void {
+			var dest:BoundSphere = destObject as BoundSphere;
+			center.cloneTo(dest.center);
+			dest.radius = radius;
+		}
+		
+		/**
+		 * 克隆。
+		 * @return	 克隆副本。
+		 */
+		public function clone():* {
+			var dest:BoundSphere = __JS__("new this.constructor(new Vector3(),new Vector3())");
+			cloneTo(dest);
+			return dest;
 		}
 	
 	}

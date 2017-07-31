@@ -48,6 +48,8 @@ package laya.ani.bone {
 		 * @param	graphics
 		 */
 		public function apply(boneList:Vector.<Bone>, graphics:Graphics):void {
+			if (!target)
+				return;
 			var tTranslateMix:Number = this.translateMix;
 			var tRotateMix:Number = this.translateMix;
 			var tTranslate:Boolean = tTranslateMix > 0;
@@ -73,12 +75,14 @@ package laya.ani.bone {
 					//var x:Number = length * bone.transform.getMatrix().a;
 					//var y:Number = length * bone.transform.getMatrix().c;
 					var x:Number = length * bone.resultMatrix.a;
-					var y:Number = length * bone.resultMatrix.c;
+					var y:Number = length * bone.resultMatrix.b;
 					length = Math.sqrt(x * x + y * y);
-					if (tScale) lengths[i] = length;
+					if (tScale)
+						lengths[i] = length;
 					spaces[++i] = tLengthSpacing ? Math.max(0, length + spacing) : spacing;
 				}
-			} else {
+			}
+			else {
 				for (i = 1; i < spacesCount; i++) {
 					spaces[i] = spacing;
 				}
@@ -121,17 +125,21 @@ package laya.ani.bone {
 				boneY = y;
 				if (tRotate) {
 					var a:Number = bone.resultMatrix.a;
-					var b:Number = bone.resultMatrix.b;
-					var c:Number = bone.resultMatrix.c;
+					//var b:Number = bone.resultMatrix.b;
+					//var c:Number = bone.resultMatrix.c;
+					var b:Number = bone.resultMatrix.c;
+					var c:Number = bone.resultMatrix.b;
 					var d:Number = bone.resultMatrix.d;
 					var r:Number;
 					var cos:Number;
 					var sin:Number;
 					if (tTangents) {
 						r = positions[p - 1];
-					} else if (spaces[i + 1] == 0) {
+					}
+					else if (spaces[i + 1] == 0) {
 						r = positions[p + 2];
-					} else {
+					}
+					else {
 						r = Math.atan2(dy, dx);
 					}
 					r -= Math.atan2(c, a) - offsetRotation / 180 * Math.PI;
@@ -144,7 +152,8 @@ package laya.ani.bone {
 					}
 					if (r > Math.PI) {
 						r -= (Math.PI * 2);
-					} else if (r < -Math.PI) {
+					}
+					else if (r < -Math.PI) {
 						r += (Math.PI * 2);
 					}
 					r *= tRotateMix;
@@ -157,7 +166,7 @@ package laya.ani.bone {
 				}
 			}
 		}
-		
+		private static var _tempMt:Matrix = new Matrix();
 		/**
 		 * 计算顶点的世界坐标
 		 * @param	boneSlot
@@ -183,6 +192,48 @@ package laya.ani.bone {
 			var wy:Number = 0;
 			var vx:Number = 0;
 			var vy:Number = 0;
+			var bone:Bone;
+			var len:int;
+			//if (!tTriangles) tTriangles = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+			
+			if (tBones == null) {
+				if (!tTriangles) tTriangles = tWeights;
+				if (boneSlot.deformData)
+					tTriangles = boneSlot.deformData;
+				var parentName:String;
+				parentName = boneSlot.parent;
+				if (boneList)
+				{
+					len = boneList.length;
+					for (i = 0; i < len; i++)
+					{
+						if (boneList[i].name == parentName)
+						{
+							bone = boneList[i];
+							break;
+						}
+					}
+				}
+				var tBoneMt:Matrix;
+				if (bone)
+				{
+					tBoneMt = bone.resultMatrix;
+				}
+				//bone = boneSlot.parent;
+				
+				
+				if (!tBoneMt) tBoneMt = _tempMt;
+				var x:Number = tBoneMt.tx;
+				var y:Number = tBoneMt.ty;
+				var a:Number = tBoneMt.a, bb:Number = tBoneMt.b, c:Number = tBoneMt.c, d:Number = tBoneMt.d;
+				if(bone) d*=bone.d;
+				for (v = start, w = offset; w < count; v += 2, w += 2) {
+					vx = tTriangles[v], vy = tTriangles[v + 1];
+					worldVertices[w] = vx * a + vy * bb + x;
+					worldVertices[w + 1] =-( vx * c + vy * d + y);
+				}
+				return;
+			}
 			for (i = 0; i < start; i += 2) {
 				n = tBones[v];
 				v += n + 1;
@@ -247,11 +298,12 @@ package laya.ani.bone {
 			var space:Number;
 			var prev:Number;
 			var length:Number;
-			if (!true) {//path.constantSpeed) {
+			if (!true) { //path.constantSpeed) {
 				var lengths:Vector.<Number> = boneSlot.currDisplayData.lengths as Vector.<Number>;
 				curveCount -= closed ? 1 : 2;
 				pathLength = lengths[curveCount];
-				if (percentPosition) position *= pathLength;
+				if (percentPosition)
+					position *= pathLength;
 				if (percentSpacing) {
 					for (i = 0; i < spacesCount; i++)
 						spaces[i] *= pathLength;
@@ -266,16 +318,19 @@ package laya.ani.bone {
 					
 					if (closed) {
 						p %= pathLength;
-						if (p < 0) p += pathLength;
+						if (p < 0)
+							p += pathLength;
 						curve = 0;
-					} else if (p < 0) {
+					}
+					else if (p < 0) {
 						if (prevCurve != BEFORE) {
 							prevCurve = BEFORE;
 							computeWorldVertices2(target, boneList, 2, 4, world, 0);
 						}
 						addBeforePosition(p, world, 0, out, o);
 						continue;
-					} else if (p > pathLength) {
+					}
+					else if (p > pathLength) {
 						if (prevCurve != AFTER) {
 							prevCurve = AFTER;
 							computeWorldVertices2(target, boneList, verticesLength - 6, 4, world, 0);
@@ -287,7 +342,8 @@ package laya.ani.bone {
 					// Determine curve containing position.
 					for (; ; curve++) {
 						length = lengths[curve];
-						if (p > length) continue;
+						if (p > length)
+							continue;
 						if (curve == 0)
 							p /= length;
 						else {
@@ -301,7 +357,8 @@ package laya.ani.bone {
 						if (closed && curve == curveCount) {
 							computeWorldVertices2(target, boneList, verticesLength - 4, 4, world, 0);
 							computeWorldVertices2(target, boneList, 0, 4, world, 4);
-						} else
+						}
+						else
 							computeWorldVertices2(target, boneList, curve * 6 + 2, 8, world, 0);
 					}
 					addCurvePosition(p, world[0], world[1], world[2], world[3], world[4], world[5], world[6], world[7], out, o, tangents || (i > 0 && space == 0));
@@ -314,7 +371,8 @@ package laya.ani.bone {
 				verticesLength += 2;
 				world[verticesLength - 2] = world[0];
 				world[verticesLength - 1] = world[1];
-			} else {
+			}
+			else {
 				curveCount--;
 				verticesLength -= 4;
 				computeWorldVertices2(boneSlot, boneList, 2, verticesLength, tVertices, 0);
@@ -364,7 +422,8 @@ package laya.ani.bone {
 				x1 = x2;
 				y1 = y2;
 			}
-			if (percentPosition) position *= pathLength;
+			if (percentPosition)
+				position *= pathLength;
 			if (percentSpacing) {
 				for (i = 0; i < spacesCount; i++)
 					spaces[i] *= pathLength;
@@ -380,12 +439,15 @@ package laya.ani.bone {
 				
 				if (closed) {
 					p %= pathLength;
-					if (p < 0) p += pathLength;
+					if (p < 0)
+						p += pathLength;
 					curve = 0;
-				} else if (p < 0) {
+				}
+				else if (p < 0) {
 					addBeforePosition(p, world, 0, out, o);
 					continue;
-				} else if (p > pathLength) {
+				}
+				else if (p > pathLength) {
 					addAfterPosition(p - pathLength, world, verticesLength - 4, out, o);
 					continue;
 				}
@@ -393,7 +455,8 @@ package laya.ani.bone {
 				// Determine curve containing position.
 				for (; ; curve++) {
 					length = curves[curve];
-					if (p > length) continue;
+					if (p > length)
+						continue;
 					if (curve == 0)
 						p /= length;
 					else {
@@ -448,7 +511,8 @@ package laya.ani.bone {
 				p *= curveLength;
 				for (; ; segment++) {
 					length = segments[segment];
-					if (p > length) continue;
+					if (p > length)
+						continue;
 					if (segment == 0)
 						p /= length;
 					else {
@@ -477,7 +541,8 @@ package laya.ani.bone {
 		}
 		
 		private function addCurvePosition(p:Number, x1:Number, y1:Number, cx1:Number, cy1:Number, cx2:Number, cy2:Number, x2:Number, y2:Number, out:Vector.<Number>, o:int, tangents:Boolean):void {
-			if (p == 0) p = 0.0001;
+			if (p == 0)
+				p = 0.0001;
 			var tt:Number = p * p, ttt:Number = tt * p, u:Number = 1 - p, uu:Number = u * u, uuu:Number = uu * u;
 			var ut:Number = u * p, ut3:Number = ut * 3, uut3:Number = u * ut3, utt3:Number = ut3 * p;
 			var x:Number = x1 * uuu + cx1 * uut3 + cx2 * utt3 + x2 * ttt, y:Number = y1 * uuu + cy1 * uut3 + cy2 * utt3 + y2 * ttt;
@@ -485,7 +550,8 @@ package laya.ani.bone {
 			out[o + 1] = y;
 			if (tangents) {
 				out[o + 2] = Math.atan2(y - (y1 * uu + cy1 * ut * 2 + cy2 * tt), x - (x1 * uu + cx1 * ut * 2 + cx2 * tt));
-			} else {
+			}
+			else {
 				out[o + 2] = 0;
 			}
 		}

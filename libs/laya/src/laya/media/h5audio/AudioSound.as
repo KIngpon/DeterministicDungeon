@@ -3,9 +3,11 @@ package laya.media.h5audio {
 	import laya.events.EventDispatcher;
 	import laya.media.SoundChannel;
 	import laya.media.SoundManager;
+	import laya.net.URL;
+	import laya.renders.Render;
 	import laya.utils.Browser;
 	import laya.utils.Pool;
-
+	
 	/**
 	 * @private
 	 * 使用Audio标签播放声音
@@ -38,13 +40,13 @@ package laya.media.h5audio {
 			}
 		}
 		
-		
 		/**
 		 * 加载声音
 		 * @param url
 		 *
 		 */
 		public function load(url:String):void {
+			url = URL.formatURL(url);
 			this.url = url;
 			var ad:Audio = _audioCache[url];
 			if (ad && ad.readyState >= 2) {
@@ -67,6 +69,7 @@ package laya.media.h5audio {
 			}
 			
 			function onErr():void {
+				ad.load = null;
 				offs();
 				me.event(Event.ERROR);
 			}
@@ -79,10 +82,10 @@ package laya.media.h5audio {
 			this.audio = ad;
 			if (ad.load) {
 				ad.load();
-			}else {
+			} else {
 				onErr();
 			}
-			
+		
 		}
 		
 		/**
@@ -99,8 +102,16 @@ package laya.media.h5audio {
 			ad = _audioCache[url];
 			if (!ad) return null;
 			var tAd:Audio;
-			tAd=Pool.getItem("audio:"+url);
-			tAd=tAd?tAd:ad.cloneNode(true);
+			tAd = Pool.getItem("audio:" + url);
+			if ( Render.isConchApp ){
+				if ( !tAd ){
+					tAd = Browser.createElement("audio") as Audio;
+					tAd.src = ad.src;
+				}
+			}
+			else{
+				tAd = tAd ? tAd : ad.cloneNode(true);
+			}
 			var channel:AudioSoundChannel = new AudioSoundChannel(tAd);
 			channel.url = this.url;
 			channel.loops = loops;
@@ -113,8 +124,7 @@ package laya.media.h5audio {
 		/**
 		 * 获取总时间。
 		 */
-		public function get duration():Number 
-		{
+		public function get duration():Number {
 			var ad:Audio;
 			ad = _audioCache[url];
 			if (!ad)

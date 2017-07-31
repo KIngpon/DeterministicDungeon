@@ -91,10 +91,16 @@ package laya.debug
 				LoaderHook.init();
 			}
 			CacheAnalyser.showCacheSprite = showCacheRec;
-			DisplayHook.initMe();
+			
 			NodeInfoPanel.init();
+			initBasicFunctions();
+		}
+		public static function initBasicFunctions():void
+		{
+			DisplayHook.initMe();
 			if (!debugLayer)
 			{
+				DebugInfoLayer.init();
 				debugLayer = DebugInfoLayer.I.graphicLayer;
 				debugLayer.mouseEnabled = false;
 				debugLayer.mouseThrough = true;
@@ -497,8 +503,7 @@ package laya.debug
 				return;
 			if (!selectedNodes || selectedNodes.length < 1)
 				return;
-			trace("selected:");
-			trace(selectedNodes);
+			trace("selected:",selectedNodes);
 			var i:int;
 			var len:int;
 			len = selectedNodes.length;
@@ -568,9 +573,9 @@ package laya.debug
 			}
 		}
 		
-		public static function traceDisMouseEnable(tar:Sprite = null):*
+		public static function traceDisMouseEnable(tar:Object = null):*
 		{
-			trace("traceDisMouseEnable:");
+			trace("----------------traceDisMouseEnable--------------------");
 			if (!tar)
 				tar = target;
 			if (!tar)
@@ -579,22 +584,23 @@ package laya.debug
 				return null;
 			}
 			var strArr:Array;
-			strArr = ["TraceDisMouseEnable"];
+			strArr = [];
 			selectedNodes = [];
 			while (tar)
 			{
-				strArr.push(ClassTool.getNodeClassAndName(tar) + ":" + tar.mouseEnabled+" hitFirst:"+tar.hitTestPrior);
+				strArr.push(ClassTool.getNodeClassAndName(tar) + ": mouseEnabled:" + tar.mouseEnabled+" hitFirst:"+tar.hitTestPrior);
 				//dTrace(TraceTool.getClassName(tar)+":"+tar.mouseEnabled);
 				selectedNodes.push(tar);
 				tar = tar.parent as Sprite;
 			}
+			trace(strArr.join("\n"));
 			showSelected();
 			return strArr.join("\n");
 		}
 		
-		public static function traceDisSizeChain(tar:Sprite = null):*
+		public static function traceDisSizeChain(tar:Object = null):*
 		{
-			trace("traceDisSizeChain:");
+			trace("---------------------traceDisSizeChain-------------------");
 			if (!tar)
 				tar = target;
 			if (!tar)
@@ -604,16 +610,16 @@ package laya.debug
 			}
 			selectedNodes = [];
 			var strArr:Array;
-			strArr = ["traceDisSizeChain"];
+			strArr = [];
 			while (tar)
 			{
-				dTrace(TraceTool.getClassName(tar) + ":");
-				strArr.push(ClassTool.getNodeClassAndName(tar) + ":");
-				strArr.push("Size: x:" + tar.x + " y:" + tar.y + " w:" + tar.width + " h:" + tar.height + " scaleX:" + tar.scaleX + " scaleY:" + tar.scaleY);
-				TraceTool.traceSize(tar);
+				//dTrace(TraceTool.getClassName(tar) + ":");
+				strArr.push(ClassTool.getNodeClassAndName(tar) + ": x:" + tar.x + " y:" + tar.y + " w:" + tar.width + " h:" + tar.height + " scaleX:" + tar.scaleX + " scaleY:" + tar.scaleY);
+				//TraceTool.traceSize(tar);
 				selectedNodes.push(tar);
 				tar = tar.parent as Sprite;
 			}
+			trace(strArr.join("\n"));
 			showSelected();
 			return strArr.join("\n");
 		}
