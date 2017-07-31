@@ -18,16 +18,17 @@ package laya.ani.bone {
 	/**数据解析完成后的调度。
 	 * @eventType Event.COMPLETE
 	 * */
-	[Event(name = "complete", type = "laya.events.Event")]
+	[Event(name = "complete", type = "laya.events.Event.COMPLETE", desc = "数据解析完成后的调度")]
 	/**数据解析错误后的调度。
 	 * @eventType Event.ERROR
 	 * */
-	[Event(name = "error", type = "laya.events.Event")]
+	[Event(name = "error", type = "laya.events.Event.ERROR", desc = "数据解析错误后的调度")]
 	/**
 	 * 动画模板类
 	 */
 	public class Templet extends AnimationTemplet {
-		
+		/**@private */
+		public static var LAYA_ANIMATION_VISION:String = "LAYAANIMATION:1.6.0";
 		public static var TEMPLET_DICTIONARY:Object;
 		
 		private var _mainTexture:Texture;
@@ -56,8 +57,6 @@ package laya.ani.bone {
 		public var subTextureDic:Object = {};
 		/** 是否解析失败 */
 		public var isParseFail:Boolean = false;
-		/** 数据对应的URL，用来释放资源用 */
-		public var url:String;
 		/** 反转矩阵，有些骨骼动画要反转才能显示 */
 		public var yReverseMatrix:Matrix;
 		/** 渲染顺序动画数据 */
@@ -71,8 +70,9 @@ package laya.ani.bone {
 		/** 实际显示对象列表，用于销毁用 */
 		public var skinSlotDisplayDataArr:Vector.<SkinSlotDisplayData> = new Vector.<SkinSlotDisplayData>();
 		
+		private var _isDestroyed:Boolean = false;
 		private var _rate:int = 30;
-		
+		public var isParserComplete:Boolean = false;
 		public var aniSectionDic:Object = {};
 		private var _skBufferUrl:String;
 		private var _textureDic:Object = {};
@@ -90,7 +90,18 @@ package laya.ani.bone {
 		}
 		
 		private function onComplete(content:* = null):void {
+			if (_isDestroyed)
+			{
+				destroy();
+				return;
+			}
+			
 			var tSkBuffer:ArrayBuffer = Loader.getRes(_skBufferUrl);
+			if (!tSkBuffer)
+			{
+				event(Event.ERROR, "load failed:"+_skBufferUrl);
+				return;
+			}
 			_path = _skBufferUrl.slice(0, _skBufferUrl.lastIndexOf("/")) + "/";
 			parseData(null, tSkBuffer);
 		}
@@ -102,6 +113,7 @@ package laya.ani.bone {
 		 * @param	playbackRate	缓冲的帧率数据（会根据帧率去分帧）
 		 */
 		public function parseData(texture:Texture, skeletonData:ArrayBuffer, playbackRate:int = 30):void {
+			if(!_path&&url)_path = url.slice(0, url.lastIndexOf("/")) + "/";
 			_mainTexture = texture;
 			if (_mainTexture) {
 				if (Render.isWebGL && texture.bitmap) {
@@ -133,13 +145,13 @@ package laya.ani.bone {
 		override public function parse(data:ArrayBuffer):void {
 			super.parse(data);
 			_endLoaded();
-			if (this._aniVersion != AnimationTemplet.LAYA_ANIMATION_VISION) {
+			if (this._aniVersion != LAYA_ANIMATION_VISION) {
 				//trace("[Error] Version " + _aniVersion + " The engine is inconsistent, update to the version " + KeyframesAniTemplet.LAYA_ANIMATION_VISION + " please.");
-				trace("[Error] 版本不一致，请使用IDE版本（1.6.0）重新导出");
+				trace("[Error] 版本不一致，请使用IDE版本配套的重新导出"+this._aniVersion+"->"+LAYA_ANIMATION_VISION);
 				_loaded = false;
 			}
 			//解析公共数据
-			if (_loaded) {
+			if (loaded) {
 				//这里后面要改成一个状态，直接确认是不是要不要加载外部图片
 				if (_mainTexture) {
 					_parsePublicExtData();
@@ -153,6 +165,11 @@ package laya.ani.bone {
 		}
 		
 		private function _parseTexturePath():void {
+			if (_isDestroyed)
+			{
+				destroy();
+				return;
+			}
 			var i:int = 0;
 			_loadList = [];
 			var tByte:Byte = new Byte(getPublicExtData());
@@ -213,7 +230,7 @@ package laya.ani.bone {
 				_graphicsCache.push([]);
 			}
 			var isSpine:Boolean;
-			isSpine = aniClassName != "Dragon";
+			isSpine = _aniClassName != "Dragon";
 			var tByte:Byte = new Byte(getPublicExtData());
 			var tX:Number = 0, tY:Number = 0, tWidth:Number = 0, tHeight:Number = 0;
 			var tFrameX:Number = 0, tFrameY:Number = 0, tFrameWidth:Number = 0, tFrameHeight:Number = 0;
@@ -230,6 +247,12 @@ package laya.ani.bone {
 				tTextureName = tTextureNameArr[i * 2 + 1];
 				if (_mainTexture == null) {
 					tTexture = _textureDic[tSrcTexturePath];
+				}
+				if (!tTexture)
+				{
+					this.event(Event.ERROR, this);
+					this.isParseFail = true;
+					return;
 				}
 				tX = tByte.getFloat32();
 				tY = tByte.getFloat32();
@@ -603,6 +626,7 @@ package laya.ani.bone {
 				}
 			}
 			showSkinByIndex(boneSlotDic, 0);
+			this.isParserComplete = true;
 			this.event(Event.COMPLETE, this);
 		}
 		
@@ -624,8 +648,9 @@ package laya.ani.bone {
 		 * 显示指定的皮肤
 		 * @param	boneSlotDic	插糟字典的引用
 		 * @param	skinIndex	皮肤的索引
+		 * @param	freshDisplayIndex	是否重置插槽纹理
 		 */
-		public function showSkinByIndex(boneSlotDic:Object, skinIndex:int):Boolean {
+		public function showSkinByIndex(boneSlotDic:Object, skinIndex:int,freshDisplayIndex:Boolean=true):Boolean {
 			if (skinIndex < 0 && skinIndex >= skinDataArray.length) return false;
 			var i:int, n:int;
 			var tBoneSlot:BoneSlot;
@@ -637,8 +662,8 @@ package laya.ani.bone {
 					if (tSlotData) {
 						tBoneSlot = boneSlotDic[tSlotData.name];
 						if (tBoneSlot) {
-							tBoneSlot.showSlotData(tSlotData);
-							if (tBoneSlot.attachmentName != "undefined" && tBoneSlot.attachmentName != "null") {
+							tBoneSlot.showSlotData(tSlotData,freshDisplayIndex);
+							if (freshDisplayIndex&&tBoneSlot.attachmentName != "undefined" && tBoneSlot.attachmentName != "null") {
 								tBoneSlot.showDisplayByName(tBoneSlot.attachmentName);
 							} else {
 								tBoneSlot.showDisplayByIndex(tBoneSlot.displayIndex);
@@ -693,10 +718,13 @@ package laya.ani.bone {
 		 * 释放纹理
 		 */
 		public function destroy():void {
+			_isDestroyed = true;
 			for each (var tTexture:Texture in subTextureDic) {
+				if(tTexture)
 				tTexture.destroy();
 			}
 			for each (tTexture in _textureDic) {
+				if(tTexture)
 				tTexture.destroy();
 			}
 			var tSkinSlotDisplayData:SkinSlotDisplayData;
@@ -708,6 +736,7 @@ package laya.ani.bone {
 			if (url) {
 				delete TEMPLET_DICTIONARY[url];
 			}
+			dispose();
 		}
 		
 		/***********************************下面为一些儿访问接口*****************************************/
@@ -724,6 +753,10 @@ package laya.ani.bone {
 		
 		public function get rate():Number {
 			return _rate;
+		}
+		
+		public function set rate(v:Number):void {
+			_rate = v;
 		}
 	}
 }

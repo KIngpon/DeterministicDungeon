@@ -2,8 +2,6 @@ package laya.webgl.atlas {
 	import laya.renders.Render;
 	import laya.resource.Bitmap;
 	import laya.resource.HTMLImage;
-	import laya.system.System;
-	import laya.utils.Stat;
 	import laya.webgl.resource.WebGLImage;
 	import laya.webgl.WebGL;
 	import laya.webgl.WebGLContext;
@@ -77,7 +75,7 @@ package laya.webgl.atlas {
 				(preTarget && preTexture) && (WebGLContext.bindTexture(gl, preTarget, preTexture));
 			} else {
 				if (!_flashCacheImage) {
-					_flashCacheImage = HTMLImage.create(null);
+					_flashCacheImage = HTMLImage.create("");
 					_flashCacheImage.image.createCanvas(_w, _h);
 				}
 				

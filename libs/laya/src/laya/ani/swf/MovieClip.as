@@ -1,4 +1,5 @@
 package laya.ani.swf {
+	import laya.display.Node;
 	import laya.display.Sprite;
 	import laya.events.Event;
 	import laya.maths.Matrix;
@@ -75,6 +76,10 @@ package laya.ani.swf {
 		private var _url:String;
 		/**@private */
 		private var _isRoot:Boolean;
+		/**@private */
+		private var _completeHandler:Handler;
+		/**@private */
+		private var _endFrame:int=-1;
 		
 		/** 播放间隔(单位：毫秒)。*/
 		public var interval:int = 30;
@@ -94,11 +99,12 @@ package laya.ani.swf {
 			if (!parentMovieClip) {
 				_movieClipList = [this];
 				_isRoot = true;
+				_setUpNoticeType(Node.NOTICE_DISPLAY);
 			} else {
 				_isRoot = false;
 				_movieClipList = parentMovieClip._movieClipList;
 				_movieClipList.push(this);
-			}
+			}	
 		}
 		
 		/**
@@ -116,12 +122,12 @@ package laya.ani.swf {
 			super._setDisplay(value);
 			if (_isRoot)
 			{
-				_onDisplay();
+				_onDisplay(value);
 			}
 		}
 		/**@private */
-		private function _onDisplay():void {			
-			if (_displayedInStage) Laya.timer.loop(this.interval, this, updates, null, true);
+		private function _onDisplay(value:Boolean):void {			
+			if (value) Laya.timer.loop(this.interval, this, updates, null, true);
 			else Laya.timer.clear(this, updates);		
 		}
 		
@@ -205,6 +211,18 @@ package laya.ani.swf {
 			}
 			_parse(_playIndex);
 			if (_labels && _labels[_playIndex]) event(Event.LABEL, _labels[_playIndex]);
+			if (_endFrame!=-1&&_endFrame == _playIndex )
+			{
+				_endFrame = -1;
+				if (_completeHandler != null)
+				{
+					var handler:Handler = _completeHandler;
+					_completeHandler = null;	
+					handler.run();
+				}
+				stop();
+				
+			}
 		}
 		
 		/**
@@ -240,6 +258,10 @@ package laya.ani.swf {
 				}
 				_movieClipList.length = 0;
 			}	
+			if (_atlasPath)
+			{
+				Loader.clearRes(_atlasPath);
+			}
 			var key:String;
 			for (key in _loadedImage)
 			{
@@ -332,11 +354,16 @@ package laya.ani.swf {
 					_data.pos = _Pos;
 					break;
 				case 3: //addChild
-					(addChild(_idOfSprite[ /*key*/_data.getUint16()]) as Sprite).zOrder = _data.getUint16();
-					ifAdd = true;
+					var node:Sprite = _idOfSprite[ /*key*/_data.getUint16()];
+					if (node) {
+						addChild(node);
+						node.zOrder = _data.getUint16();
+						ifAdd = true;
+					}
 					break;
 				case 4: //remove
-					_idOfSprite[ /*key*/_data.getUint16()].removeSelf();
+					node = _idOfSprite[ /*key*/_data.getUint16()];
+					node && node.removeSelf();
 					break;
 				case 5: //setValue
 					_idOfSprite[_data.getUint16()][_ValueList[_data.getUint16()]] = (_data.getFloat32());
@@ -424,10 +451,14 @@ package laya.ani.swf {
 		
 		/**@private */
 		private function _onLoaded():void {
-			this.basePath =_atlasPath?Loader.getAtlas(_atlasPath).dir:_url.split(".swf")[0] + "/image/";
 			var data:*;
 			data=Loader.getRes(_url);
-			if (!data) return;
+			if (!data)
+			{
+				event(Event.ERROR,"file not find");
+				return;
+			} 
+			this.basePath =_atlasPath?Loader.getAtlas(_atlasPath).dir:_url.split(".swf")[0] + "/image/";		
 			_initData(data);
 		}
 		
@@ -452,8 +483,20 @@ package laya.ani.swf {
 			_initState();	
 			play(0);
 			event(Event.LOADED);
-			if (!_parentMovieClip) Laya.timer.loop(this.interval, this, updates, null, true);
-			
+			if (!_parentMovieClip) Laya.timer.loop(this.interval, this, updates, null, true);			
+		}
+		
+		
+		/**
+		 * 从开始索引播放到结束索引，结束之后出发complete回调
+		 * @param	start	开始索引
+		 * @param	end		结束索引
+		 * @param	complete	结束回调
+		 */
+		public function playTo(start:int, end:int, complete:Handler=null):void {
+			_completeHandler = complete;
+			this._endFrame = end;
+			play(start, false);
 		}
 	}
 }

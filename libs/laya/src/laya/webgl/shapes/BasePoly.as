@@ -1,7 +1,7 @@
 package laya.webgl.shapes
 {
 	
-	import laya.maths.Point;
+	import laya.maths.Matrix;
 	import laya.webgl.utils.Buffer2D;
 	//此类可以减少代码
 	public class BasePoly implements IShape
@@ -11,6 +11,9 @@ package laya.webgl.shapes
 		public var x:Number, y:Number, r:Number, width:Number, height:Number, edges:Number, r0:Number = 0, r1:Number = Math.PI / 2;
 		public var color:uint, borderColor:Number, borderWidth:Number, round:uint;
 		public var fill:Boolean = true;
+		
+		protected var mUint16Array:Uint16Array;
+		protected var mFloat32Array:Float32Array;
 		
 		public function BasePoly(x:Number, y:Number, width:Number, height:Number, edges:Number, color:uint, borderWidth:int, borderColor:uint, round:uint = 0)
 		{
@@ -27,6 +30,21 @@ package laya.webgl.shapes
 		public function getData(ib:Buffer2D, vb:Buffer2D, start:int):void
 		{
 			
+		}
+		
+		public function rebuild(points:Array):void
+		{
+			
+		}
+		
+		public function  setMatrix(mat:Matrix):void
+		{
+			
+		}
+		
+		public function needUpdate(mat:Matrix):Boolean
+		{
+			return true;
 		}
 		
 		protected function sector(outVert:Array, outIndex:Array, start:int):void
@@ -138,7 +156,8 @@ package laya.webgl.shapes
 		}
 		
 		//用于比如 扇形 不带两直线
-		protected function createLine(p:Array, indices:Array, lineWidth:Number, len:Number /*,outVertex:Array,outIndex:Array*/):Array
+		// /*,outVertex:Array,outIndex:Array*/
+		protected function createLine(p:Array, indices:Array, lineWidth:Number, len:Number):Array
 		{
 			/*[DISABLE-ADD-VARIABLE-DEFAULT-VALUE]*/
 			var points:Array = p.concat();

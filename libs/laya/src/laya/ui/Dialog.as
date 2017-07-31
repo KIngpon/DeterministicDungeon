@@ -6,10 +6,12 @@ package laya.ui {
 	import laya.utils.Handler;
 	
 	/**
-	 * <code>Dialog</code> 组件是一个弹出对话框。
+	 * <code>Dialog</code> 组件是一个弹出对话框，实现对话框弹出，拖动，模式窗口功能。
+	 * 可以通过UIConfig设置弹出框背景透明度，模式窗口点击边缘是否关闭等
+	 * 通过设置zOrder属性，可以更改弹出的层次
+	 * 通过设置popupEffect和closeEffect可以设置弹出效果和关闭效果，如果不想有任何弹出关闭效果，可以设置前述属性为空
 	 *
-	 * @example 以下示例代码，创建了一个 <code>Dialog</code> 实例。
-	 * <listing version="3.0">
+	 * @example <caption>以下示例代码，创建了一个 <code>Dialog</code> 实例。</caption>
 	 * package
 	 *	{
 	 *		import laya.ui.Dialog;
@@ -60,8 +62,7 @@ package laya.ui {
 	 *			addChild(button);
 	 *		}
 	 *	}
-	 * </listing>
-	 * <listing version="3.0">
+	 * @example
 	 * Laya.init(640, 800);//设置游戏画布宽高、渲染模式
 	 * Laya.stage.bgColor = "#efefef";//设置画布的背景颜色
 	 * var dialog;
@@ -96,8 +97,7 @@ package laya.ui {
 	 *         console.log("通过点击 name 为" + name + "的组件，关闭了dialog。");
 	 *     }
 	 * }
-	 * </listing>
-	 * <listing version="3.0">
+	 * @example
 	 * import Dialog = laya.ui.Dialog;
 	 * import Handler = laya.utils.Handler;
 	 * class Dialog_Example {
@@ -136,52 +136,76 @@ package laya.ui {
 	 *         this.addChild(button);
 	 *     }
 	 * }
-	 * </listing>
 	 */
 	public class Dialog extends View {
+		/**对话框内的某个按钮命名为close，点击此按钮则会关闭*/
 		public static const CLOSE:String = "close";
+		/**对话框内的某个按钮命名为cancel，点击此按钮则会关闭*/
 		public static const CANCEL:String = "cancel";
+		/**对话框内的某个按钮命名为sure，点击此按钮则会关闭*/
 		public static const SURE:String = "sure";
+		/**对话框内的某个按钮命名为no，点击此按钮则会关闭*/
 		public static const NO:String = "no";
+		/**对话框内的某个按钮命名为ok，点击此按钮则会关闭*/
 		public static const OK:String = "ok";
+		/**对话框内的某个按钮命名为yes，点击此按钮则会关闭*/
 		public static const YES:String = "yes";
 		
 		/**@private 表示对话框管理器。*/
 		private static var _manager:DialogManager;
 		
-		/**@private 获取对话框管理器。*/
+		/**对话框管理容器，所有的对话框都在该容器内，并且受管理器管，可以自定义自己的管理器，来更改窗口管理的流程。
+		 * 任意对话框打开和关闭，都会触发管理类的open和close事件*/
 		public static function get manager():DialogManager {
-			return _manager || (_manager = new DialogManager());
+			return _manager ||= new DialogManager();
+		}
+		
+		public static function set manager(value:DialogManager):void {
+			_manager = value;
 		}
 		
 		/**
-		 * 一个布尔值，指定对话框是否居中弹出。
-		 *
-		 * <p>如果值为true，则居中弹出。</p>
+		 * 一个布尔值，指定对话框是否居中弹。
+		 * <p>如果值为true，则居中弹出，否则，则根据对象坐标显示，默认为true。</p>
 		 */
 		public var popupCenter:Boolean = true;
-		
 		/**
 		 * 对话框被关闭时会触发的回调函数处理器。
-		 *
 		 * <p>回调函数参数为用户点击的按钮名字name:String。</p>
 		 */
 		public var closeHandler:Handler;
-		
 		/**
-		 * @private (protected)
-		 * 一个 <code>Rectangle</code> 矩形对象，用来指定对话框的拖拽区域。
+		 * 弹出对话框效果，可以设置一个效果代替默认的弹出效果，如果不想有任何效果，可以赋值为null
+		 * 全局默认弹出效果可以通过manager.popupEffect修改
 		 */
+		public var popupEffect:Handler;
+		/**
+		 * 关闭对话框效果，可以设置一个效果代替默认的关闭效果，如果不想有任何效果，可以赋值为null
+		 * 全局默认关闭效果可以通过manager.closeEffect修改
+		 */
+		public var closeEffect:Handler;
+		/**组名称*/
+		public var group:String;
+		/**是否是模式窗口*/
+		public var isModal:Boolean;
+		/**@private */
 		protected var _dragArea:Rectangle;
 		
 		/**@inheritDoc */
 		override protected function initialize():void {
+			popupEffect = manager.popupEffectHandler;
+			closeEffect = manager.closeEffectHandler;
+			_dealDragArea();
+			on(Event.CLICK, this, _onClick);
+		}
+		
+		/**@private */
+		protected function _dealDragArea():void {
 			var dragTarget:Sprite = getChildByName("drag") as Sprite;
 			if (dragTarget) {
 				dragArea = dragTarget.x + "," + dragTarget.y + "," + dragTarget.width + "," + dragTarget.height;
 				dragTarget.removeSelf();
 			}
-			on(Event.CLICK, this, _onClick);
 		}
 		
 		/**
@@ -209,7 +233,7 @@ package laya.ui {
 		 * @param closeOther 是否关闭其它的对话框。若值为true则关闭其它对话框。
 		 */
 		public function show(closeOther:Boolean = false):void {
-			manager.show(this, closeOther);
+			_open(false, closeOther);
 		}
 		
 		/**
@@ -217,7 +241,18 @@ package laya.ui {
 		 * @param closeOther 是否关闭其它的对话框。若值为true则关闭其它对话框。
 		 */
 		public function popup(closeOther:Boolean = false):void {
-			manager.popup(this, closeOther);
+			_open(true, closeOther);
+		}
+		
+		/**@private */
+		protected function _open(modal:Boolean, closeOther:Boolean):void {
+			manager.lock(false);
+			isModal = modal;
+			manager.open(this, closeOther);
+		}
+		
+		/**打开完成后，调用此方法（如果有弹出动画，则在动画完成后执行）*/
+		public function onOpened():void {
 		}
 		
 		/**
@@ -225,13 +260,13 @@ package laya.ui {
 		 * @param type 如果是点击默认关闭按钮触发，则传入关闭按钮的名字(name)，否则为null。
 		 */
 		public function close(type:String = null):void {
-			manager.close(this);
-			closeHandler && closeHandler.runWith(type);
+			manager.close(this, type);
 		}
 		
-		/**关闭所有对话框。*/
-		public static function closeAll():void {
-			manager.closeAll();
+		/**关闭完成后，调用此方法（如果有关闭动画，则在动画完成后执行）
+		 * @param type 如果是点击默认关闭按钮触发，则传入关闭按钮的名字(name)，否则为null。
+		 */
+		public function onClosed(type:String = null):void {
 		}
 		
 		/**
@@ -241,7 +276,6 @@ package laya.ui {
 		 * </p>
 		 *
 		 * @see #includeExamplesSummary 请参考示例
-		 * @return
 		 */
 		public function get dragArea():String {
 			if (_dragArea) return _dragArea.toString();
@@ -259,9 +293,7 @@ package laya.ui {
 			}
 		}
 		
-		/**
-		 * @private
-		 */
+		/**@private */
 		private function _onMouseDown(e:Event):void {
 			var point:Point = this.getMousePoint();
 			if (_dragArea.contains(point.x, point.y)) this.startDrag();
@@ -270,118 +302,52 @@ package laya.ui {
 		
 		/**
 		 * 弹出框的显示状态；如果弹框处于显示中，则为true，否则为false;
-		 * @return
 		 */
 		public function get isPopup():Boolean {
 			return parent != null;
 		}
+		
+		override public function set zOrder(value:Number):void {
+			super.zOrder = value;
+			manager._checkMask();
+		}
+		
+		/**
+		 * 设置锁定界面，在界面未准备好前显示锁定界面，准备完毕后则移除锁定层，如果为空则什么都不显示
+		 * @param	view 锁定界面内容
+		 */
+		public static function setLockView(view:Component):void {
+			manager.setLockView(view);
+		}
+		
+		/**
+		 * 锁定所有层，显示加载条信息，防止下面内容被点击
+		 */
+		public static function lock(value:Boolean):void {
+			manager.lock(value);
+		}
+		
+		/**关闭所有对话框。*/
+		public static function closeAll():void {
+			manager.closeAll();
+		}
+		
+		/**
+		 * 根据组获取对话框集合
+		 * @param	group 组名称
+		 * @return	对话框数组
+		 */
+		public static function getDialogsByGroup(group:String):Array {
+			return manager.getDialogsByGroup(group);
+		}
+		
+		/**
+		 * 根据组关闭所有弹出框
+		 * @param	group 需要关闭的组名称
+		 */
+		public static function closeByGroup(group:String):Array {
+			return manager.closeByGroup(group);
+		}
 	}
 }
 
-import laya.display.Sprite;
-import laya.display.Stage;
-import laya.events.Event;
-import laya.ui.Dialog;
-
-/**
- * <code>DialogManager</code> 类用来管理对话框。
- */
-class DialogManager extends Sprite {
-	public var dialogLayer:Sprite = new Sprite();
-	public var modalLayer:Sprite = new Sprite();
-	public var maskLayer:Sprite = new Sprite();
-	private var _stage:Stage;
-	
-	/**
-	 * 创建一个新的 <code>DialogManager</code> 类实例。
-	 */
-	public function DialogManager() {
-		this.mouseEnabled = dialogLayer.mouseEnabled = modalLayer.mouseEnabled = maskLayer.mouseEnabled = true;
-		addChild(dialogLayer);
-		addChild(modalLayer);
-		
-		_stage = Laya.stage;
-		_stage.addChild(this);
-		_stage.on(Event.RESIZE, this, onResize);
-		onResize(null);
-	}
-	
-	/**
-	 * @private
-	 * 舞台的 <code>Event.RESIZE</code> 事件侦听处理函数。
-	 * @param e
-	 */
-	private function onResize(e:Event = null):void {
-		var width:Number = maskLayer.width = _stage.width;
-		var height:Number = maskLayer.height = _stage.height;
-		
-		maskLayer.graphics.clear();
-		maskLayer.graphics.drawRect(0, 0, width, height, UIConfig.popupBgColor);
-		maskLayer.alpha = UIConfig.popupBgAlpha;
-		
-		for (var i:int = dialogLayer.numChildren - 1; i > -1; i--) {
-			var item:Dialog = dialogLayer.getChildAt(i) as Dialog;
-			if (item.popupCenter) _centerDialog(item);
-		}
-		for (i = modalLayer.numChildren - 1; i > -1; i--) {
-			item = modalLayer.getChildAt(i) as Dialog;
-			if (item.isPopup) {
-				if (item.popupCenter) _centerDialog(item);
-			}
-		}
-	}
-	
-	private function _centerDialog(dialog:Dialog):void {
-		dialog.x = Math.round(((_stage.width - dialog.width) >> 1) + dialog.pivotX);
-		dialog.y = Math.round(((_stage.height - dialog.height) >> 1) + dialog.pivotY);
-	}
-	
-	/**
-	 * 显示对话框(非模式窗口类型)。
-	 * @param dialog 需要显示的对象框 <code>Dialog</code> 实例。
-	 * @param closeOther 是否关闭其它对话框，若值为ture，则关闭其它的对话框。
-	 */
-	public function show(dialog:Dialog, closeOther:Boolean = false):void {
-		if (closeOther) dialogLayer.removeChildren();
-		if (dialog.popupCenter) _centerDialog(dialog);
-		dialogLayer.addChild(dialog);
-		event(Event.OPEN);
-	}
-	
-	/**
-	 * 显示对话框(模式窗口类型)。
-	 * @param dialog 需要显示的对象框 <code>Dialog</code> 实例。
-	 * @param closeOther 是否关闭其它对话框，若值为ture，则关闭其它的对话框。
-	 */
-	public function popup(dialog:Dialog, closeOther:Boolean = false):void {
-		if (closeOther) modalLayer.removeChildren();
-		if (dialog.popupCenter) _centerDialog(dialog);
-		modalLayer.addChild(maskLayer);
-		modalLayer.addChild(dialog);
-		event(Event.OPEN);
-	}
-	
-	/**
-	 * 关闭对话框。
-	 * @param dialog 需要关闭的对象框 <code>Dialog</code> 实例。
-	 */
-	public function close(dialog:Dialog):void {
-		dialog.removeSelf();
-		if (modalLayer.numChildren < 2) {
-			maskLayer.removeSelf();
-		} else {
-			modalLayer.setChildIndex(maskLayer, modalLayer.numChildren - 2);
-		}
-		event(Event.CLOSE);
-	}
-	
-	/**
-	 * 关闭所有的对话框。
-	 */
-	public function closeAll():void {
-		dialogLayer.removeChildren();
-		modalLayer.removeChildren();
-		maskLayer.removeSelf();
-		event(Event.CLOSE);
-	}
-}

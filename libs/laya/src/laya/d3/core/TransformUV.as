@@ -1,5 +1,6 @@
 package laya.d3.core {
 	import laya.d3.math.Matrix4x4;
+	import laya.d3.math.Quaternion;
 	import laya.d3.math.Vector2;
 	import laya.d3.math.Vector3;
 	import laya.events.EventDispatcher;
@@ -7,13 +8,13 @@ package laya.d3.core {
 	/**
 	 * <code>TransformUV</code> 类用于实现UV变换。
 	 */
-	public class TransformUV extends EventDispatcher {
+	public class TransformUV extends EventDispatcher implements IClone {
 		/** @private */
-		protected var _tempTitlingV3:Vector3 = new Vector3();
+		protected static var _tempOffsetV3:Vector3 = new Vector3(0, 0, 0);
 		/** @private */
-		protected var _tempRotationMatrix:Matrix4x4 = new Matrix4x4();
+		protected static var _tempRotationQua:Quaternion = new Quaternion();
 		/** @private */
-		protected var _tempTitlingMatrix:Matrix4x4 = new Matrix4x4();
+		protected static var _tempTitlingV3:Vector3 = new Vector3(1, 1, 1);
 		
 		/** @private */
 		protected var _matrix:Matrix4x4 = new Matrix4x4();
@@ -22,7 +23,7 @@ package laya.d3.core {
 		/** @private */
 		protected var _rotation:Number = 0;
 		/** @private */
-		protected var _tiling:Vector2 = new Vector2();
+		protected var _tiling:Vector2;
 		
 		/** @private */
 		protected var _matNeedUpdte:Boolean = false;
@@ -94,24 +95,42 @@ package laya.d3.core {
 		 * 创建一个 <code>TransformUV</code> 实例。
 		 */
 		public function TransformUV() {
-		
+			_tiling = new Vector2(1.0, 1.0);
 		}
 		
 		/**
 		 * @private
 		 */
 		protected function _updateMatrix():void {
+			_tempOffsetV3.elements[0] = _offset.x;
+			_tempOffsetV3.elements[1] = _offset.y;
+			Quaternion.createFromYawPitchRoll(0, 0, _rotation, _tempRotationQua);
 			_tempTitlingV3.elements[0] = _tiling.x;
 			_tempTitlingV3.elements[1] = _tiling.y;
-			_tempTitlingV3.elements[2] = 1;
 			
-			Matrix4x4.createScaling(_tempTitlingV3, _tempTitlingMatrix);
-			Matrix4x4.createRotationZ(_rotation, _tempRotationMatrix);
-			Matrix4x4.multiply(_tempRotationMatrix, _tempTitlingMatrix, _matrix);
-			var mate:Float32Array = _matrix.elements;
-			mate[12] = _offset.x;
-			mate[13] = _offset.y;
-			mate[14] = 0;
+			Matrix4x4.createAffineTransformation(_tempOffsetV3, _tempRotationQua, _tempTitlingV3, _matrix);
+		}
+		
+		/**
+		 * 克隆。
+		 * @param	destObject 克隆源。
+		 */
+		public function cloneTo(destObject:*):void {
+			/*[DISABLE-ADD-VARIABLE-DEFAULT-VALUE]*/
+			destObject._matrix = _matrix.clone();
+			destObject._offset = _offset.clone();
+			destObject._rotation = _rotation;
+			destObject._tiling = _tiling.clone();
+		}
+		
+		/**
+		 * 克隆。
+		 * @return	 克隆副本。
+		 */
+		public function clone():* {
+			var dest:TransformUV = __JS__("new this.constructor()");
+			cloneTo(dest);
+			return dest;
 		}
 	
 	}

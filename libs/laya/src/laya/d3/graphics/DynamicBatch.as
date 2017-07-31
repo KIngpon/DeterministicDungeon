@@ -1,15 +1,18 @@
 package laya.d3.graphics {
+	import laya.d3.core.MeshRender;
+	import laya.d3.core.MeshSprite3D;
+	import laya.d3.core.RenderableSprite3D;
 	import laya.d3.core.Sprite3D;
 	import laya.d3.core.material.BaseMaterial;
 	import laya.d3.core.render.IRenderable;
 	import laya.d3.core.render.RenderElement;
 	import laya.d3.core.render.RenderState;
-	import laya.d3.core.scene.BaseScene;
+	import laya.d3.core.scene.Scene;
 	import laya.d3.math.Matrix4x4;
-	import laya.d3.shader.ShaderDefines3D;
 	import laya.d3.shader.ValusArray;
 	import laya.d3.utils.Utils3D;
 	import laya.utils.Stat;
+	import laya.webgl.WebGL;
 	import laya.webgl.WebGLContext;
 	import laya.webgl.shader.Shader;
 	import laya.webgl.utils.Buffer2D;
@@ -21,7 +24,7 @@ package laya.d3.graphics {
 	public class DynamicBatch implements IRenderable {//TODO:可不继承自IRender
 		public static var maxVertexCount:int = 20000;//TODO:应该以浮点个数或者尺寸计算
 		public static var maxIndexCount:int = 40000;
-		public static const maxCombineTriangleCount:int = 50;
+		public static const maxCombineTriangleCount:int = 20;
 		
 		public var _vertexDeclaration:VertexDeclaration;
 		private var _vertexDatas:Float32Array;
@@ -38,10 +41,6 @@ package laya.d3.graphics {
 		
 		private var _combineRenderElementPool:Vector.<RenderElement>;
 		private var _combineRenderElementPoolIndex:int;
-		
-		public function get indexOfHost():int {
-			return 0;
-		}
 		
 		public function get _vertexBufferCount():int {
 			return 1;
@@ -85,9 +84,9 @@ package laya.d3.graphics {
 			var renderElement:RenderElement = _combineRenderElementPool[_combineRenderElementPoolIndex++];
 			if (!renderElement) {
 				_combineRenderElementPool[_combineRenderElementPoolIndex - 1] = renderElement = new RenderElement();
-				renderElement._sprite3D = new Sprite3D();//TODO:创建虚拟动态精灵	
+				renderElement._sprite3D = new MeshSprite3D();//TODO:创建虚拟动态精灵,临时瞎new	
 			}
-			renderElement._sprite3D._prepareShaderValuetoRender(view,projection,projectionView);//TODO:待调整,是否合理
+			renderElement._sprite3D._render._renderUpdate(projectionView);//TODO:待调整,是否合理
 			return renderElement;
 		}
 		
@@ -106,17 +105,34 @@ package laya.d3.graphics {
 				var renderElement:RenderElement = _combineRenderElements[i];
 				var subVertexDatas:Float32Array = renderElement.getDynamicBatchBakedVertexs(0);
 				var subIndexDatas:Uint16Array = renderElement.getBakedIndices();
+				var isInvert:Boolean = renderElement._sprite3D.transform._isFrontFaceInvert;
 				
 				var indexOffset:int = curMerVerCount / (_vertexDeclaration.vertexStride / 4);
 				var indexStart:int = curIndexCount;
 				var indexEnd:int = indexStart + subIndexDatas.length;
 				
-				renderElement._batchIndexStart = indexStart;
-				renderElement._batchIndexEnd = indexEnd;
+				renderElement._tempBatchIndexStart = indexStart;
+				renderElement._tempBatchIndexEnd = indexEnd;
 				
 				_indexDatas.set(subIndexDatas, curIndexCount);
-				for (var k:int = indexStart; k < indexEnd; k++)
-					_indexDatas[k] = indexOffset + _indexDatas[k];
+				
+				var k:int;					
+					if (isInvert) {
+						for (k = indexStart; k < indexEnd; k += 3) {
+							_indexDatas[k] = indexOffset + _indexDatas[k];
+							var index1:int = _indexDatas[k + 1];
+							var index2:int = _indexDatas[k + 2];
+							_indexDatas[k + 1] = indexOffset + index2;
+							_indexDatas[k + 2] = indexOffset + index1;
+						}
+					} else {
+						for (k = indexStart; k < indexEnd; k += 3) {
+							_indexDatas[k] = indexOffset + _indexDatas[k];
+							_indexDatas[k + 1] = indexOffset + _indexDatas[k + 1];
+							_indexDatas[k + 2] = indexOffset + _indexDatas[k + 2];
+						}
+					}
+				
 				curIndexCount += subIndexDatas.length;
 				
 				_vertexDatas.set(subVertexDatas, curMerVerCount);
@@ -132,11 +148,11 @@ package laya.d3.graphics {
 				merageElement._staticBatch = null;
 				merageElement.renderObj = this;
 				
-				var renderElementStartIndex:int = _combineRenderElements[_materialToRenderElementsOffsets[i]]._batchIndexStart;
-				var renderElementEndIndex:int = (i + 1 === _materialToRenderElementsOffsets.length) ? curIndexCount : _combineRenderElements[_materialToRenderElementsOffsets[i + 1]]._batchIndexStart;
+				var renderElementStartIndex:int = _combineRenderElements[_materialToRenderElementsOffsets[i]]._tempBatchIndexStart;
+				var renderElementEndIndex:int = (i + 1 === _materialToRenderElementsOffsets.length) ? curIndexCount : _combineRenderElements[_materialToRenderElementsOffsets[i + 1]]._tempBatchIndexStart;
 				
-				merageElement._batchIndexStart = renderElementStartIndex;
-				merageElement._batchIndexEnd = renderElementEndIndex;
+				merageElement._tempBatchIndexStart = renderElementStartIndex;
+				merageElement._tempBatchIndexEnd = renderElementEndIndex;
 				merageElement._material = _materials[i];
 				_merageElements.push(merageElement);
 			}
@@ -175,7 +191,7 @@ package laya.d3.graphics {
 			_currentCombineIndexCount = 0;
 		}
 		
-		public function _addToRenderQueue(scene:BaseScene,view:Matrix4x4, projection:Matrix4x4,projectionView:Matrix4x4):void {
+		public function _addToRenderQueue(scene:Scene,view:Matrix4x4, projection:Matrix4x4,projectionView:Matrix4x4):void {
 			_getRenderElement(view,projection,projectionView);
 			
 			for (var i:int = 0, n:int = _materials.length; i < n; i++)
@@ -190,7 +206,7 @@ package laya.d3.graphics {
 		
 		public function _render(state:RenderState):void {
 			var indexCount:int = state._batchIndexEnd - state._batchIndexStart;
-			state.context.drawElements(WebGLContext.TRIANGLES, indexCount, WebGLContext.UNSIGNED_SHORT, state._batchIndexStart * 2);
+			WebGL.mainContext.drawElements(WebGLContext.TRIANGLES, indexCount, WebGLContext.UNSIGNED_SHORT, state._batchIndexStart * 2);
 			Stat.drawCall++;
 			Stat.trianglesFaces += indexCount / 3;
 		}

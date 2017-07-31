@@ -1,9 +1,7 @@
 package laya.d3.core {
-	import laya.d3.core.Layer;
-	import laya.d3.core.Sprite3D;
 	import laya.d3.core.render.RenderState;
+	import laya.d3.core.scene.Scene;
 	import laya.d3.math.Matrix4x4;
-	import laya.d3.math.Vector2;
 	import laya.d3.math.Vector3;
 	import laya.d3.math.Vector4;
 	import laya.d3.resource.RenderTexture;
@@ -11,8 +9,7 @@ package laya.d3.core {
 	import laya.d3.shader.ValusArray;
 	import laya.d3.utils.Size;
 	import laya.events.Event;
-	import laya.maths.Rectangle;
-	import laya.renders.Render;
+	import laya.webgl.WebGLContext;
 	
 	/**
 	 * <code>BaseCamera</code> 类用于创建摄像机的父类。
@@ -23,8 +20,15 @@ package laya.d3.core {
 		public static const PROJECTMATRIX:int = 2;
 		public static const VPMATRIX:int = 3;//TODO:xx
 		public static const VPMATRIX_NO_TRANSLATE:int = 4;//TODO:xx
-		
-
+		public static const CAMERADIRECTION:int = 5;
+		public static const CAMERAUP:int = 6;
+		public static const ENVIRONMENTDIFFUSE:int = 7;
+		public static const ENVIRONMENTSPECULAR:int = 8;
+		public static const SIMLODINFO:int = 9;
+		public static const DIFFUSEIRRADMATR:int = 10;
+		public static const DIFFUSEIRRADMATG:int = 11;
+		public static const DIFFUSEIRRADMATB:int = 12;
+		public static const HDREXPOSURE:int = 13;
 		
 		/**渲染模式,延迟光照渲染，暂未开放。*/
 		public static const RENDERINGTYPE_DEFERREDLIGHTING:String = "DEFERREDLIGHTING";
@@ -39,6 +43,13 @@ package laya.d3.core {
 		public static const CLEARFLAG_DEPTHONLY:int = 2;
 		/**清除标记，不清除。*/
 		public static const CLEARFLAG_NONE:int = 3;
+		
+		/** @private */
+		protected static const _invertYScaleMatrix:Matrix4x4 = new Matrix4x4(1, 0, 0, 0, 0, -1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1);//Matrix4x4.createScaling(new Vector3(1, -1, 1), _invertYScaleMatrix);
+		/** @private */
+		protected static const _invertYProjectionMatrix:Matrix4x4 = new Matrix4x4();
+		/** @private */
+		protected static const _invertYProjectionViewMatrix:Matrix4x4 = new Matrix4x4();
 		
 		//private static const Vector3[] cornersWorldSpace:Vector.<Vector3> = new Vector.<Vector3>(8);
 		//private static const  boundingFrustum:BoundingFrustum = new BoundingFrustum(Matrix4x4.Identity);
@@ -55,9 +66,6 @@ package laya.d3.core {
 		private var _forward:Vector3;
 		/** @private 右向量。*/
 		private var _right:Vector3;
-		
-		/** @private 渲染目标。*/
-		private var _renderTarget:RenderTexture;
 		/** @private 渲染顺序。*/
 		private var _renderingOrder:int;
 		/**@private 渲染目标尺寸。*/
@@ -76,13 +84,12 @@ package laya.d3.core {
 		/**@private 天空。*/
 		private var _sky:Sky;
 		
+		/** @private 渲染目标。*/
+		protected var _renderTarget:RenderTexture;
 		/**@private 是否使用用户自定义投影矩阵，如果使用了用户投影矩阵，摄像机投影矩阵相关的参数改变则不改变投影矩阵的值，需调用ResetProjectionMatrix方法。*/
 		protected var _useUserProjectionMatrix:Boolean;
 		/** @private 表明视口是否使用裁剪空间表达。*/
 		protected var _viewportExpressedInClipSpace:Boolean;
-		
-		/** @private */
-		public var _projectionMatrixModifyID:Number = 0;
 		
 		/**清楚标记。*/
 		public var clearFlag:int;
@@ -90,6 +97,8 @@ package laya.d3.core {
 		public var clearColor:Vector4;
 		/** 可视遮罩图层。 */
 		public var cullingMask:int;
+		/** 渲染时是否用遮挡剔除。 */
+		public var useOcclusionCulling:Boolean;
 		
 		/**获取天空。*/
 		public function get sky():Sky {
@@ -99,6 +108,7 @@ package laya.d3.core {
 		/**设置天空。*/
 		public function set sky(value:Sky):void {
 			_sky = value;
+			value._ownerCamera = this;
 			if (conchModel) {//NATIVE
 				conchModel.setSkyMesh(_sky._conchSky);
 			}
@@ -184,7 +194,6 @@ package laya.d3.core {
 		 * @param value 渲染目标的尺寸。
 		 */
 		public function set renderTargetSize(value:Size):void {
-			
 			if (renderTarget != null && _renderTargetSize != value) {
 				// Recreate render target with new size
 				//AssetContentManager userContentManager = AssetContentManager.CurrentContentManager;
@@ -320,7 +329,7 @@ package laya.d3.core {
 		 * @param	nearPlane 近裁面。
 		 * @param	farPlane 远裁面。
 		 */
-		public function BaseCamera(nearPlane:Number = 0.1, farPlane:Number = 1000) {
+		public function BaseCamera(nearPlane:Number = 0.3, farPlane:Number = 1000) {
 			_tempVector3 = new Vector3();
 			
 			_position = new Vector3();
@@ -341,8 +350,8 @@ package laya.d3.core {
 			_farPlane = farPlane;
 			
 			cullingMask = 2147483647/*int.MAX_VALUE*/;
-			clearColor = new Vector4(0.26, 0.26, 0.26, 1.0);
 			clearFlag = BaseCamera.CLEARFLAG_SOLIDCOLOR;
+			useOcclusionCulling = true;
 			_calculateProjectionMatrix();
 			Laya.stage.on(Event.RESIZE, this, _onScreenSizeChanged);
 		}
@@ -368,24 +377,44 @@ package laya.d3.core {
 			}
 		}
 		
+		/**
+		 * @private
+		 */
 		protected function _calculateProjectionMatrix():void {
 		
 		}
 		
+		/**
+		 * @private
+		 */
 		private function _onScreenSizeChanged():void {
 			_calculateProjectionMatrix();
 		}
 		
 		/**
 		 * @private
-		 * 场景相关渲染准备设置。
-		 * @param gl WebGL上下文。
-		 * @return state 渲染状态。
 		 */
 		public function _prepareCameraToRender():void {
 			Layer._currentCameraCullingMask = cullingMask;
 			var cameraSV:ValusArray = _shaderValues;
 			cameraSV.setValue(BaseCamera.CAMERAPOS, transform.position.elements);
+			cameraSV.setValue(BaseCamera.CAMERADIRECTION, forward.elements);
+			cameraSV.setValue(BaseCamera.CAMERAUP, up.elements);
+		}
+		
+		/**
+		 * @private
+		 */
+		public function _prepareCameraViewProject(viewMatrix:Matrix4x4, projectMatrix:Matrix4x4):void {
+			var cameraSV:ValusArray = _shaderValues;
+			cameraSV.setValue(BaseCamera.VIEWMATRIX, viewMatrix.elements);
+			cameraSV.setValue(BaseCamera.PROJECTMATRIX, projectMatrix.elements);
+		}
+		
+		/**
+		 * @private
+		 */
+		public function _renderCamera(gl:WebGLContext, state:RenderState, scene:Scene):void {
 		}
 		
 		/**
@@ -393,7 +422,6 @@ package laya.d3.core {
 		 * @param layer 图层。
 		 */
 		public function addLayer(layer:Layer):void {
-			
 			if (layer.number === 29 || layer.number == 30)//29和30为预留蒙版层,已默认存在
 				return;
 			
@@ -433,7 +461,10 @@ package laya.d3.core {
 		override public function destroy(destroyChild:Boolean = true):void {
 			//postProcess = null;
 			//AmbientLight = null;
-			sky = null;
+			if (_sky) {
+				_sky._ownerCamera = null;
+				_sky = null;
+			}
 			renderTarget = null;
 			
 			Laya.stage.off(Event.RESIZE, this, _onScreenSizeChanged);

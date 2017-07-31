@@ -29,10 +29,16 @@ package laya.d3.core.particleShuriKen.module {
 		 */
 		public function add(key:Number, value:Number):void {
 			if (_currentLength < 8) {
+				
+				if ((_currentLength === 6) && ((key !== 1))) {
+					key = 1;
+					console.log("GradientDataNumber warning:the forth key is  be force set to 1.");
+				}
+				
 				_elements[_currentLength++] = key;
 				_elements[_currentLength++] = value;
 			} else {
-				throw new Error("GradientDataNumber: Count must less than 4.");
+				console.log("GradientDataNumber warning:data count must lessEqual than 4");
 			}
 		}
 		
@@ -55,6 +61,19 @@ package laya.d3.core.particleShuriKen.module {
 		}
 		
 		/**
+		 * 获取平均值。
+		 */
+		public function getAverageValue():Number {
+			var total:Number = 0;
+			for (var i:int = 0, n:int = _currentLength - 2; i < n; i += 2) {
+				var subValue:Number = _elements[i + 1];
+				subValue += _elements[i + 3];
+				subValue = subValue * (_elements[i + 2] - _elements[i]);
+			}
+			return total / 2;
+		}
+		
+		/**
 		 * 克隆。
 		 * @param	destObject 克隆源。
 		 */
@@ -63,7 +82,7 @@ package laya.d3.core.particleShuriKen.module {
 			destGradientDataNumber._currentLength = _currentLength;
 			var destElements:Float32Array = destGradientDataNumber._elements;
 			destElements.length = _elements.length;
-			for (var i:int = 0, n:int = _elements.length; i < n; i++) 
+			for (var i:int = 0, n:int = _elements.length; i < n; i++)
 				destElements[i] = _elements[i];
 		}
 		

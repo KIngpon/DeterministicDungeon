@@ -126,7 +126,7 @@ package laya.html.dom
 			for (var i:int = 0, n:int = txt.length; i < n; i++)
 			{
 				size = Utils.measureText(txt.charAt(i), fontStr);
-				var tHTMLChar:HTMLChar = words[i] = new HTMLChar(txt.charAt(i), size.width, size.height, style);
+				var tHTMLChar:HTMLChar = words[i] = new HTMLChar(txt.charAt(i), size.width, size.height||style.fontSize, style);
 				if (href)
 				{
 					var tSprite:Sprite = new Sprite();
@@ -222,7 +222,9 @@ package laya.html.dom
 						{
 							//tSprite.graphics.drawRect(0, 0, tHTMLChar.width, tHTMLChar.height, null, '#ff0000');
 							var tHeight:Number = tHTMLChar.height - 1;
-							tSprite.graphics.drawLine(0, tHeight, tHTMLChar.width, tHeight, tHTMLChar._getCSSStyle().color);
+							var dX:Number = tHTMLChar.style.letterSpacing*0.5;
+							if (!dX) dX = 0;
+							tSprite.graphics.drawLine(0-dX, tHeight, tHTMLChar.width+dX, tHeight, tHTMLChar._getCSSStyle().color);
 							tSprite.size(tHTMLChar.width, tHTMLChar.height);
 							tSprite.on(Event.CLICK, this, onLinkHandler);
 						}
@@ -252,6 +254,7 @@ package laya.html.dom
 		
 		public function formatURL(url:String):String
 		{
+			if (!URI) return url;
 			return URL.formatURL(url, URI ? URI.path : null);
 		}
 		

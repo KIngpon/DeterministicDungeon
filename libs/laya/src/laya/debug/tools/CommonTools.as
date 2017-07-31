@@ -57,5 +57,22 @@ package laya.debug.tools
 			nSp.name = "child:" + tar.numChildren;
 			return nSp;
 		}
+		public static function createSprite(width:Number, height:Number, color:String = "#ff0000"):Sprite
+		{
+			var sp:Sprite;
+			sp = new Sprite();
+			sp.graphics.drawRect(0, 0, width, height, color);
+			sp.size(width, height);
+			return sp;
+		}
+		public static function createBtn(txt:String,width:Number=100,height:Number=40):Sprite
+		{
+			var sp:Sprite;
+			sp = new Sprite();
+			sp.size(width, height);
+			sp.graphics.drawRect(0, 0, sp.width, sp.height, "#ff0000");
+			sp.graphics.fillText(txt, sp.width * 0.5, sp.height * 0.5, null, "#ffff00", "center");
+			return sp;
+		}
 	}
 }

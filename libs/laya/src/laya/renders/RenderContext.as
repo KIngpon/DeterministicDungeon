@@ -267,21 +267,7 @@ package laya.renders {
 		
 		//x:Number, y:Number, points:Array, lineColor:String, lineWidth:Number = 1
 		public var _drawCurves:Function = function(x:Number, y:Number, args:Array):void {
-			var ctx:* = this.ctx;
-			Render.isWebGL && ctx.setPathId(-1);
-			ctx.beginPath();
-			ctx.strokeStyle = args[3];
-			ctx.lineWidth = args[4];
-			
-			var points:Array = args[2];
-			x += args[0], y += args[1];
-			ctx.moveTo(x + points[0], y + points[1]);
-			
-			var i:int = 2, n:int = points.length;
-			while (i < n) {
-				ctx.quadraticCurveTo(x + points[i++], y + points[i++], x + points[i++], y + points[i++]);
-			}
-			ctx.stroke();
+			this.ctx.drawCurves(x, y, args);
 		}
 		
 		public var _draw:Function = function(x:Number, y:Number, args:Array):void {
@@ -381,7 +367,10 @@ package laya.renders {
 		public function fillWords(words:Vector.<HTMLChar>, x:Number, y:Number, font:String, color:String):void {
 			this.ctx.fillWords(words, x, y, font, color);
 		}
-		
+		/*** @private */
+		public function fillBorderWords(words:Vector.<HTMLChar>, x:Number, y:Number, font:String, fillColor:String, borderColor:String, lineWidth:int):void {	
+			this.ctx.fillBorderWords(words, x, y, font, fillColor,borderColor,lineWidth);
+		}
 		public function fillText(text:String, x:Number, y:Number, font:String, color:String, textAlign:String):void {
 			this.ctx.fillText(text, x + this.x, y + this.y, font, color, textAlign);
 		}

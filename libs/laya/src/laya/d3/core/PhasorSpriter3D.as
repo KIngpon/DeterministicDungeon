@@ -1,22 +1,18 @@
 package laya.d3.core {
-	import laya.d3.core.material.StandardMaterial;
-	import laya.d3.core.render.RenderState;
+	import laya.d3.graphics.IndexBuffer3D;
+	import laya.d3.graphics.VertexBuffer3D;
 	import laya.d3.graphics.VertexDeclaration;
 	import laya.d3.graphics.VertexElement;
 	import laya.d3.graphics.VertexElementFormat;
 	import laya.d3.graphics.VertexElementUsage;
-	import laya.d3.math.Matrix4x4;
+	import laya.d3.math.Vector3;
 	import laya.d3.math.Vector4;
 	import laya.d3.shader.Shader3D;
 	import laya.d3.shader.ShaderCompile3D;
-	import laya.d3.shader.ShaderDefines3D;
 	import laya.d3.shader.ValusArray;
 	import laya.utils.Stat;
 	import laya.webgl.WebGL;
 	import laya.webgl.WebGLContext;
-	import laya.webgl.utils.Buffer2D;
-	import laya.webgl.utils.IndexBuffer2D;
-	import laya.webgl.utils.VertexBuffer2D;
 	
 	/**
 	 * @private
@@ -40,24 +36,22 @@ package laya.d3.core {
 		private var _tempNumver2:Number;
 		private var _tempNumver3:Number;
 		
-		private var _albedo:Vector4 = new Vector4(1.0, 1.0, 1.0, 1.0);
-		
 		private const _floatSizePerVer:int = 7;//顶点结构为Position(3个float)+Color(4个float)
 		private const _defaultBufferSize:int = 600 * _floatSizePerVer;
 		
 		private var _vbData:Float32Array = new Float32Array(_defaultBufferSize);
-		private var _vb:VertexBuffer2D;
+		private var _vb:VertexBuffer3D;
 		private var _posInVBData:uint;
 		
 		private var _ibData:Uint16Array = new Uint16Array(_defaultBufferSize);
-		private var _ib:IndexBuffer2D;
+		private var _ib:IndexBuffer3D;
 		private var _posInIBData:uint;
 		
 		private var _primitiveType:Number;
 		private var _hasBegun:Boolean;
 		private var _numVertsPerPrimitive:uint;
 		
-		private var _renderState:RenderState;
+		private var _camera:BaseCamera;
 		
 		private var _sharderNameID:int;
 		private var _shader:Shader3D;
@@ -65,20 +59,16 @@ package laya.d3.core {
 		protected var _shaderCompile:ShaderCompile3D;
 		/** @private */
 		private var _spriteShaderValue:ValusArray = new ValusArray();
-		/** @private */
-		private var _materialShaderValue:ValusArray = new ValusArray();
-		
-		private var _wvpMatrix:Matrix4x4 = new Matrix4x4();
 		
 		public function PhasorSpriter3D() {
 			super();
-			_vb = new VertexBuffer2D(-1, WebGLContext.DYNAMIC_DRAW);
-			_ib = new IndexBuffer2D();
-			_sharderNameID = Shader3D.nameKey.get("SIMPLE");
-			_shaderCompile = Shader3D._preCompileShader[Shader3D.SHADERNAME2ID * _sharderNameID];
+			_vb = VertexBuffer3D.create(_vertexDeclaration, _defaultBufferSize / _floatSizePerVer, WebGLContext.DYNAMIC_DRAW);
+			_ib = IndexBuffer3D.create(IndexBuffer3D.INDEXTYPE_USHORT, _defaultBufferSize, WebGLContext.DYNAMIC_DRAW);
+			_sharderNameID = Shader3D.nameKey.getID("LINE");
+			_shaderCompile = ShaderCompile3D._preCompileShader[_sharderNameID];
 		}
 		
-		public function line(startX:Number, startY:Number, startZ:Number, startR:Number, startG:Number, startB:Number, startA:Number, endX:Number, endY:Number, endZ:Number, endR:Number, endG:Number, endB:Number, endA:Number):PhasorSpriter3D {
+		public function line(startPosition:Vector3, startColor:Vector4, endPosition:Vector3, endColor:Vector4):PhasorSpriter3D {
 			if (!_hasBegun || _primitiveType !== WebGLContext.LINES)
 				drawLinesException();
 			
@@ -86,8 +76,8 @@ package laya.d3.core {
 				flush();
 			
 			_tempUint0 = _posInVBData / _floatSizePerVer;//_tempUint0为curVBPosVertex
-			addVertex(startX, startY, startZ, startR, startG, startB, startA); // start
-			addVertex(endX, endY, endZ, endR, endG, endB, endA); // end
+			addVertex(startPosition.x, startPosition.y, startPosition.z, startColor.x, startColor.y, startColor.z, startColor.w); // start
+			addVertex(endPosition.x, endPosition.y, endPosition.z, endColor.x, endColor.y, endColor.z, endColor.w); // end
 			addIndexes(_tempUint0, _tempUint0 + 1);
 			
 			return this;
@@ -333,7 +323,7 @@ package laya.d3.core {
 			return this;
 		}
 		
-		public function begin(primitive:Number, wvpMatrix:Matrix4x4, renState:RenderState):PhasorSpriter3D {
+		public function begin(primitive:Number, camera:BaseCamera):PhasorSpriter3D {
 			if (_hasBegun)
 				beginException0();
 			
@@ -341,8 +331,7 @@ package laya.d3.core {
 				beginException1();
 			
 			_primitiveType = primitive;
-			_wvpMatrix = wvpMatrix;
-			_renderState = renState;
+			_camera = camera;
 			
 			_hasBegun = true;
 			
@@ -362,42 +351,23 @@ package laya.d3.core {
 			if (_posInVBData === 0)
 				return;
 			
-			_ib.clear();
-			_ib.append(_ibData);//TODO:待调整
-			_vb.clear();
-			_vb.append(_vbData);//TODO:待调整
-			_vb.bind_upload(_ib);
+			_ib.setData(_ibData);
+			_vb.setData(_vbData);
+			_vb._bind();
+			_ib._bind();
 			
-			var predef:int = _renderState.shaderDefines.getValue();
-			
-			_shader = getShader(_renderState);
+			_shader = _shaderCompile.withCompile(0, 0, 0);
 			_shader.bind();
 			
 			_shader.uploadAttributes(_vertexDeclaration.shaderValues.data, null);
-			
-			_spriteShaderValue.setValue(Sprite3D.MVPMATRIX, _wvpMatrix.elements);
-			_materialShaderValue.setValue(StandardMaterial.ALBEDO, _albedo.elements);
-			
+			_spriteShaderValue.setValue(Sprite3D.MVPMATRIX, (_camera as Camera).projectionViewMatrix.elements);
 			_shader.uploadSpriteUniforms(_spriteShaderValue.data);
-			_shader.uploadMaterialUniforms(_materialShaderValue.data);
-			
-			_renderState.shaderDefines.setValue(predef);
 			
 			Stat.drawCall++;
 			WebGL.mainContext.drawElements(_primitiveType, _posInIBData, WebGLContext.UNSIGNED_SHORT, 0);
 			
 			_posInIBData = 0;
 			_posInVBData = 0;
-		}
-		
-		protected function getShader(state:RenderState):Shader3D {
-			var preDef:int = state.shaderDefines._value;
-			state.shaderDefines._value = preDef & (~(ShaderDefines3D.POINTLIGHT | ShaderDefines3D.SPOTLIGHT | ShaderDefines3D.DIRECTIONLIGHT));//无法线，去掉Shader光照宏定义
-			state.shaderDefines.add(ShaderDefines3D.COLOR);
-			
-			var nameID:Number = state.shaderDefines.getValue() + _sharderNameID * Shader3D.SHADERNAME2ID;
-			var shader:Shader3D = _shader ? _shader : Shader3D.getShader(nameID);
-			return shader || (shader = Shader3D.withCompile(_sharderNameID, state.shaderDefines, nameID));
 		}
 		
 		private function addVertexIndexException():void {

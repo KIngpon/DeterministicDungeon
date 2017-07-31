@@ -1,10 +1,11 @@
 package laya.d3.loaders {
 	import laya.d3.core.material.BaseMaterial;
-	import laya.d3.core.material.StandardMaterial;
 	import laya.d3.graphics.IndexBuffer3D;
 	import laya.d3.graphics.VertexBuffer3D;
 	import laya.d3.graphics.VertexDeclaration;
 	import laya.d3.graphics.VertexElement;
+	import laya.d3.graphics.VertexPositionNTBTexture;
+	import laya.d3.graphics.VertexPositionNTBTextureSkin;
 	import laya.d3.graphics.VertexPositionNormalColor;
 	import laya.d3.graphics.VertexPositionNormalColorSkin;
 	import laya.d3.graphics.VertexPositionNormalColorSkinTangent;
@@ -29,7 +30,6 @@ package laya.d3.loaders {
 	import laya.d3.resource.models.Mesh;
 	import laya.d3.resource.models.SubMesh;
 	import laya.net.Loader;
-	import laya.net.URL;
 	import laya.utils.Byte;
 	import laya.webgl.WebGLContext;
 	
@@ -47,6 +47,8 @@ package laya.d3.loaders {
 		private var _strings:Array = ['BLOCK', 'DATA', "STRINGS"];//字符串数组
 		/**@private */
 		private var _materials:Vector.<BaseMaterial>;
+		/**@private */
+		private var _subMeshes:Vector.<SubMesh>;
 		/**@private */
 		private var _materialMap:Object;
 		/**@private */
@@ -69,9 +71,10 @@ package laya.d3.loaders {
 		/**
 		 * 创建一个 <code>LoadModel</code> 实例。
 		 */
-		public function LoadModelV01(readData:Byte, version:String, mesh:Mesh, materials:Vector.<BaseMaterial>, materialMap:Object) {
+		public function LoadModelV01(readData:Byte, version:String, mesh:Mesh, materials:Vector.<BaseMaterial>,subMeshes:Vector.<SubMesh>, materialMap:Object) {
 			_mesh = mesh;
 			_materials = materials;
+			_subMeshes = subMeshes;
 			_materialMap = materialMap;
 			_version = version;
 			_onLoaded(readData);
@@ -153,6 +156,7 @@ package laya.d3.loaders {
 				trace("Warning: The (.lm) file is converted by old fbxTools,please reConverted it use  lastest fbxTools version,later we will remove the  support of old version (.lm) support.");
 				break;
 			case "LAYASKINANI:01": 
+			case "LAYAMODEL:02":
 				var arrayBuffer:ArrayBuffer = _readData.__getBuffer();
 				var i:int, n:int;
 				var bindPoseStart:uint = _readData.getUint32();
@@ -219,9 +223,9 @@ package laya.d3.loaders {
 			submesh._indexBuffer = ib;
 			
 			var boneDicArrayBuffer:ArrayBuffer = arrayBuffer.slice(boneDicofs + _DATA.offset, boneDicofs + _DATA.offset + boneDicsize);
-			submesh._boneIndices = new Uint8Array(boneDicArrayBuffer);
+			submesh._boneIndicesList[0] = new Uint8Array(boneDicArrayBuffer);//兼容性代码
 			
-			_mesh._add(submesh);
+			_subMeshes.push(submesh);
 			
 			return true;
 		}
@@ -232,6 +236,7 @@ package laya.d3.loaders {
 		
 		private function _getVertexDeclaration():VertexDeclaration {
 			var position:Boolean, normal:Boolean, color:Boolean, texcoord0:Boolean, texcoord1:Boolean, tangent:Boolean, blendWeight:Boolean, blendIndex:Boolean;
+			var binormal:Boolean = false;
 			for (var i:int = 0; i < _shaderAttributes.length; i += 8) {
 				switch (_shaderAttributes[i]) {
 				case "POSITION": 
@@ -258,6 +263,9 @@ package laya.d3.loaders {
 				case "TANGENT": 
 					tangent = true;
 					break;
+				case "BINORMAL":
+					binormal = true;
+					break;
 				}
 			}
 			var vertexDeclaration:VertexDeclaration;
@@ -274,6 +282,8 @@ package laya.d3.loaders {
 				vertexDeclaration = VertexPositionNormalColorTextureSkinTangent.vertexDeclaration;
 			else if (position && normal && color && texcoord0 && blendWeight && blendIndex)
 				vertexDeclaration = VertexPositionNormalColorTextureSkin.vertexDeclaration;
+			else if (position && normal && tangent && binormal && texcoord0 && blendWeight && blendIndex)
+				vertexDeclaration = VertexPositionNTBTextureSkin.vertexDeclaration;
 			else if (position && normal && texcoord0 && blendWeight && blendIndex && tangent)
 				vertexDeclaration = VertexPositionNormalTextureSkinTangent.vertexDeclaration;
 			else if (position && normal && texcoord0 && blendWeight && blendIndex)
@@ -292,6 +302,8 @@ package laya.d3.loaders {
 				vertexDeclaration = VertexPositionNormalTexture0Texture1.vertexDeclaration;
 			else if (position && normal && color && texcoord0 && tangent)
 				vertexDeclaration = VertexPositionNormalColorTextureTangent.vertexDeclaration;
+			else if (position && normal && texcoord0 && tangent && binormal)
+				vertexDeclaration = VertexPositionNTBTexture.vertexDeclaration;
 			else if (position && normal && color && texcoord0)
 				vertexDeclaration = VertexPositionNormalColorTexture.vertexDeclaration;
 			else if (position && normal && texcoord0 && tangent)
