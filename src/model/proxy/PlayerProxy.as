@@ -18,9 +18,12 @@ public class PlayerProxy extends Proxy
 	private var levelAry:Array;
 	//角色动态数据
 	public var pVo:PlayerVo;
+	//武器数据代理
+	private var equipProxy:EquipProxy;
 	public function PlayerProxy() 
 	{
 		this.proxyName = NAME;
+		this.equipProxy = this.retrieveProxy(EquipProxy.NAME) as EquipProxy;
 	}
 	
 	/**
@@ -59,6 +62,8 @@ public class PlayerProxy extends Proxy
 			this.pVo.curLevelNum = 1;
 			this.pVo.curStageNum = 1;
 			this.pVo.isFirstStep = true;
+			this.pVo.slotsDelay = 70;
+			this.pVo.weaponPo = this.equipProxy.getEquipPoById(1);
 			trace(this.pVo.curHp, this.pVo.level, this.pVo.maxExp);
 		}));
 	}
@@ -79,6 +84,16 @@ public class PlayerProxy extends Proxy
 				return playerPo;
 		}
 		return null;
+	}
+	
+	/**
+	 * 获取武器攻击力
+	 * @return	攻击力数组
+	 */
+	public function getPlayerAtk():Array
+	{
+		if (!this.pVo || ! this.pVo.weaponPo) return null;
+		return this.pVo.weaponPo.atk;
 	}
 }
 }

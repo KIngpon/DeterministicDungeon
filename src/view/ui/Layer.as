@@ -18,6 +18,8 @@ public class Layer
 	public static var GAME_UI:Sprite;
 	//游戏弹框
 	public static var GAME_ALERT:Sprite;
+	//飘字层
+	public static var GAME_DAMAGE:Sprite;
 	//调试用文本
 	public static var debugTxt:Label;
 	/**
@@ -29,15 +31,17 @@ public class Layer
 		STAGE = new Sprite();
 		root.addChild(STAGE);
 		
-		STAGE.graphics.drawRect(0, 0, GameConstant.GAME_WIDTH, GameConstant.GAME_HEIGHT, "#0F1312");
+		//STAGE.graphics.drawRect(0, 0, GameConstant.GAME_WIDTH, GameConstant.GAME_HEIGHT, "#0F1312");
 		
 		GAME_STAGE = new Sprite();
 		GAME_UI = new Sprite();
 		GAME_ALERT = new Sprite();
+		GAME_DAMAGE = new Sprite();
 		
 		STAGE.addChild(GAME_STAGE);
 		STAGE.addChild(GAME_UI);
 		STAGE.addChild(GAME_ALERT);
+		STAGE.addChild(GAME_DAMAGE);
 		
 		if (GameConstant.DEBUG)
 		{

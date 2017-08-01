@@ -17,6 +17,7 @@ public class Main
 		Laya.init(GameConstant.GAME_WIDTH, GameConstant.GAME_HEIGHT);
 		Laya.stage.scaleMode = Stage.SCALE_FIXED_HEIGHT;
 		Laya.stage.screenMode = Stage.SCREEN_HORIZONTAL;
+		Laya.stage.bgColor = "#0F1312";
 		Layer.init(Laya.stage);
 		this.startMvc();
 	}

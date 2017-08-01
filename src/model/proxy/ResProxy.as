@@ -1,6 +1,9 @@
 package model.proxy 
 {
+import config.GameConstant;
 import config.MsgConstant;
+import laya.display.BitmapFont;
+import laya.display.Text;
 import laya.net.Loader;
 import laya.utils.Handler;
 import mvc.Proxy;
@@ -13,9 +16,9 @@ public class ResProxy extends Proxy
 	private var resList:Array = [];
 	private var resCount:int = 0;
 	public static const NAME:String = "ResProxy";
+	private var gameBitmapFont:BitmapFont;
 	public function ResProxy() 
 	{
-		super();
 		this.proxyName = NAME;
 	}
 	
@@ -31,12 +34,33 @@ public class ResProxy extends Proxy
 		}
 	}
 	
+	/**
+	 * 初始化字体
+	 */
+	private function initFont():void
+	{
+		this.gameBitmapFont = new BitmapFont();
+		//这里不需要扩展名，外部保证fnt与png文件同名
+		this.gameBitmapFont.loadFont("font/GameFont.fnt", Handler.create(this, loadFontComplete));
+	}
+	
+	/**
+	 * 加载字体结束
+	 */
+	private function loadFontComplete():void
+	{
+		this.gameBitmapFont.setSpaceWidth(10);
+		Text.registerBitmapFont(GameConstant.GAME_FONT_NAME, this.gameBitmapFont);
+		this.sendNotification(MsgConstant.INIT_FIGHT_STAGE);
+	}
+	
 	private function loadCompleteHandler():void
 	{
 		this.resCount++;
 		if (this.resCount == this.resList.length)
 		{
-			this.sendNotification(MsgConstant.INIT_FIGHT_STAGE);
+			//加载字体
+			this.initFont();
 		}
 	}
 	

@@ -17,7 +17,7 @@ public class EquipProxy extends Proxy
 	private var equipAry:Array;
 	public function EquipProxy() 
 	{
-		
+		this.proxyName = NAME;
 	}
 	
 	override public function initData():void 

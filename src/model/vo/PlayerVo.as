@@ -20,6 +20,10 @@ public class PlayerVo
 	public var curStageNum:int;
 	//是否是当前层里的第一步
 	public var isFirstStep:Boolean;
+	//滚动间隔
+	public var slotsDelay:int;
+	//武器数据
+	public var weaponPo:EquipPo;
 	public function PlayerVo() 
 	{
 		

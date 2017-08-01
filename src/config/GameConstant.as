@@ -15,5 +15,8 @@ public class GameConstant
 	public static const DEBUG:Boolean = true;
 	//最大选择数量
 	public static const NUM_MAX:int = 9;
+	//游戏字体
+	public static var GAME_FONT_NAME:String = "gameFont";
+
 }
 }
