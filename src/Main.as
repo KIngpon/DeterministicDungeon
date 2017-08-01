@@ -9,6 +9,11 @@ import laya.utils.Stat;
 import view.ui.Layer;
 /**
  * ...主文件
+ * TODO 
+ * damage 出文字未击中！
+ * 选择敌人类型
+ * 选择关卡地形
+ * 选择移动格子
  * @author ...Kanon
  */
 public class Main 
