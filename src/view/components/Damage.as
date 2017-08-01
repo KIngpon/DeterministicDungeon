@@ -1,9 +1,7 @@
 package view.components 
 {
-import config.GameConstant;
 import laya.display.Sprite;
-import laya.display.Text;
-import laya.filters.ColorFilter;
+import utils.Random;
 import view.ui.Layer;
 /**
  * ...伤害或者加经验（跳数字）特效
@@ -11,6 +9,8 @@ import view.ui.Layer;
  */
 public class Damage 
 {
+	private static var damageAry:Array = [];
+	
 	/**
 	 * 显示伤害
 	 * @param	num		伤害数字
@@ -21,7 +21,52 @@ public class Damage
 	 */
 	public static function show(num:int, x:Number, y:Number, scale:int=1, flag:Boolean = false):void
 	{
-		var spt:Sprite = new Sprite();
+		var spt:DamageNum = new DamageNum(num, flag);
+		Layer.GAME_DAMAGE.addChild(spt);
+		spt.x = x;
+		spt.y = y;
+		spt.scale(scale, scale);
+		spt.vx = Random.randnum(-3, 3);
+		spt.vy = -16 + Random.randnum(-5, 5);
+		damageAry.push(spt);
+	}
+	
+	/**
+	 * 更新
+	 */
+	public static function update():void
+	{
+		for (var i:int = 0; i < damageAry.length; i++) 
+		{
+			var spt:DamageNum = damageAry[i];
+			spt.update();
+		}
+		
+		for (var i:int = 0; i < damageAry.length; i++) 
+		{
+			var spt:DamageNum = damageAry[i];
+			if (spt.y >= GameConstant.GAME_HEIGHT)
+			{
+				spt.removeSelf();
+				damageAry.splice(i, 1);
+			}
+		}
+	}
+	
+}
+}
+import config.GameConstant;
+import laya.display.Sprite;
+import laya.display.Text;
+import laya.filters.ColorFilter;
+
+class DamageNum extends Sprite
+{
+	public var vx:Number = 0;
+	public var vy:Number = 0;
+	public var g:Number = 1.8;
+	public function DamageNum(num:int, flag:Boolean):void
+	{
 		var numTxt:Text = new Text();
 		numTxt.font = GameConstant.GAME_FONT_NAME;
 		var str:String = "-";
@@ -41,17 +86,17 @@ public class Damage
 						 ];
 		}
 		numTxt.text = str + num.toString();
-		spt.addChild(numTxt);
+		this.addChild(numTxt);
 		//创建颜色滤镜
 		var fliter:ColorFilter = new ColorFilter(colorMatrix)
-		spt.filters = [fliter];
-		spt.scale(scale, scale);
-		Layer.GAME_DAMAGE.addChild(spt);
-		spt.x = x;
-		spt.y = y;
-		
-		
+		this.filters = [fliter];
 	}
 	
-}
+	
+	public function update():void
+	{
+		this.x += this.vx;
+		this.y += this.vy;
+		this.vy += this.g;
+	}
 }

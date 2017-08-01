@@ -2,6 +2,7 @@ package view.mediator
 {
 import config.GameConstant;
 import config.MsgConstant;
+import laya.display.Sprite;
 import laya.events.Event;
 import laya.events.Keyboard;
 import laya.utils.Handler;
@@ -113,6 +114,12 @@ public class GameStageMediator extends Mediator
 			Laya.stage.on(Event.CLICK, this, clickHandler);
 			Laya.stage.on(Event.KEY_DOWN, this, onKeyDownHandler);
 		}
+		Laya.timer.loop(1 / 60 * 1000, this, loopHandler);
+	}
+	
+	private function loopHandler():void 
+	{
+		Damage.update();
 	}
 	
 	/**
@@ -120,7 +127,7 @@ public class GameStageMediator extends Mediator
 	 */
 	private function clickHandler(event:Event):void 
 	{
-		Damage.show(100, event.stageX, event.stageY, 1.5);
+		//Damage.show(100, event.stageX, event.stageY, 1.5);
 	}
 	
 	private function onKeyDownHandler(event:Event):void 
@@ -175,7 +182,7 @@ public class GameStageMediator extends Mediator
 		{
 			this.isSelectEnemyCount = true;
 			this.enemyCount = this.slots.indexValue;
-			trace("this.enemyCount", this.enemyCount);
+			//trace("this.enemyCount", this.enemyCount);
 			this.gameStage.initEnemy(this.enemyCount);
 			this.gameStage.enemyMove(Handler.create(this, initSlotsAtk));
 		}
@@ -218,6 +225,8 @@ public class GameStageMediator extends Mediator
 	private function playerAtkComplete():void
 	{
 		this.gameStage.enemyHurt(this.roundIndex, Handler.create(this, enemyHurtComplete));
+		var enemy:Sprite = this.gameStage.getEnemyByIndex(this.roundIndex);
+		Damage.show(this.slots.indexValue, enemy.x, enemy.y - 100, 1.5);
 	}
 	
 	/**
@@ -234,6 +243,10 @@ public class GameStageMediator extends Mediator
 	private function enemyAtkComplete():void
 	{
 		this.gameStage.playerHurt(Handler.create(this, playerHurtComplete));
+		Damage.show(this.slots.indexValue, 
+					this.gameStage.player.x, 
+					this.gameStage.player.y - 100, 1.5);
+
 	}
 	
 	/**

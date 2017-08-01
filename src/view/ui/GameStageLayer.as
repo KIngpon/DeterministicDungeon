@@ -154,5 +154,18 @@ package view.ui
 			Tween.to(enemy, {x: enemy.x}, 200, Ease.strongOut, null, 100);
 			Tween.to(enemy, {x: enemy.x}, 300, Ease.strongOut, complete, 200);
 		}
+		
+		/**
+		 * 根据索引获取敌人
+		 * @param	index		位置索引
+		 * @return	敌人
+		 */
+		public function getEnemyByIndex(index:int):Sprite
+		{
+			if (!this.enemyAry) return null;
+			if (index < 0 || index > this.enemyAry.length - 1) return null;
+			var enemy:Sprite = this.enemyAry[index];
+			return enemy;
+		}
 	}
 }

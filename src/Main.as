@@ -5,6 +5,7 @@ import controller.InitDataCommand;
 import controller.ModelCommand;
 import controller.ViewCommand;
 import laya.display.Stage;
+import laya.utils.Stat;
 import view.ui.Layer;
 /**
  * ...主文件
@@ -19,6 +20,7 @@ public class Main
 		Laya.stage.screenMode = Stage.SCREEN_HORIZONTAL;
 		Laya.stage.bgColor = "#0F1312";
 		Layer.init(Laya.stage);
+		Stat.show(0, 0);
 		this.startMvc();
 	}
 	
