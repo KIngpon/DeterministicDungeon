@@ -89,6 +89,13 @@ public class SlotsPanel extends Sprite
 		for (var i:int = 0; i < count; ++i)
 		{
 			var icon:Sprite = this.contentSpt.getChildByName("m" + (i + 1)) as Sprite;
+			if (!this.contentSpt.getChildByName("mask"))
+			{
+				var mask:Sprite = new Sprite();
+				mask.name = "mask";
+				mask.loadImage("frame/enemySlotsBg.png");
+				icon.mask = mask;
+			}
 			var image:Image = new Image(imgAry[i]);
 			icon.addChild(image);
 			image.x = (icon.width -image.width) / 2;
@@ -280,6 +287,29 @@ public class SlotsPanel extends Sprite
 		}
 		this.initIcon(this.iconAry);
 		this.start(delay);
+	}
+	
+	/**
+	 * 设置icon的位置和缩放
+	 * @param	offsetX		x位置
+	 * @param	offsetY		y位置
+	 * @param	scale		缩放
+	 */
+	public function setIconOffset(offsetX:Number, offsetY:Number, scale:Number = 1):void
+	{
+		for (var i:int = 0; i < this._totalCount; ++i)
+		{
+			var icon:Sprite = this.contentSpt.getChildByName("m" + (i + 1)) as Sprite;
+			if (icon.numChildren > 0)
+			{
+				var image:Image = icon.getChildAt(0) as Image;
+				image.scale(scale, scale);
+				image.x = (icon.width - image.width * scale) / 2;
+				image.y = (icon.height - image.height * scale) / 2;
+				image.x += offsetX;
+				image.y += offsetY;
+			}
+		}
 	}
 	
 	/**

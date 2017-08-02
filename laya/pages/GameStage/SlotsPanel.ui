@@ -1,8 +1,8 @@
 {
     "x":0,
     "type":"Dialog",
-    "selectedBox":1,
-    "selecteID":79,
+    "selectedBox":40,
+    "selecteID":88,
     "props":{"width":1024,"sceneColor":"#000000","height":640,"alpha":100},
     "nodeParent":-1,
     "label":"Dialog",

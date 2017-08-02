@@ -222,6 +222,7 @@ public class GameStageMediator extends Mediator
 		this.slots.visible = true;
 		this.slots.selectedBtn.mouseEnabled = true;
 		this.slots.initNumSlotsByAry([0, 1, 2, 3], this.playerVo.slotsDelay);
+		this.slots.setIconOffset(0, -5);
 		this.slots.setTitle("选择敌人数量");
 	}
 	
@@ -235,6 +236,7 @@ public class GameStageMediator extends Mediator
 		this.slots.visible = true;
 		this.slots.selectedBtn.mouseEnabled = true;
 		this.slots.initNumSlotsByAry(this.playerProxy.getPlayerAtk(), this.playerVo.slotsDelay);
+		this.slots.setIconOffset(0, -5);
 		this.slots.setTitle("攻击强度");
 	}
 	
@@ -245,10 +247,10 @@ public class GameStageMediator extends Mediator
 	{
 		this.slots.visible = true;
 		this.slots.selectedBtn.mouseEnabled = true;
-		
 		this.slots.initImageSlots(["icon/enemy/e_icon1.png", "icon/enemy/e_icon2.png", "icon/enemy/e_icon3.png"], 
 									"frame/enemySlotsBg.png",
 									this.playerVo.slotsDelay);
+		this.slots.setIconOffset(0, 0, .8);
 	}
 	
 	/**
