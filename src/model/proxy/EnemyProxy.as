@@ -45,26 +45,12 @@ public class EnemyProxy extends Proxy
 				enemyPo.atk = Number(childNode.getAttribute("atk"));
 				enemyPo.exp = childNode.getAttribute("exp");
 				enemyPo.type = childNode.getAttribute("type");
-				enemyPo.level = childNode.getAttribute("level");
 				enemyPo.pic = String(childNode.getAttribute("pic"));
-				if (!this.enemyDict.get(enemyPo.level))
-					this.enemyDict.set(enemyPo.level, []);
-				var arr:Array = this.enemyDict.get(enemyPo.level);
-				arr.push(enemyPo);
+				enemyPo.icon = String(childNode.getAttribute("icon"));
 				this.enemyAry.push(enemyPo);
 			}
 			this.isLoaded = true;
 		}));
-	}
-	
-	/**
-	 * 根据层数获取敌人列表
-	 * @param	level	层数
-	 * @return	敌人列表
-	 */
-	public function getEnemyListByLevel(level:int):Array
-	{
-		return this.enemyDict.get(level);
 	}
 	
 	/**

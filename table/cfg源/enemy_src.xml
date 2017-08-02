@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <enemys>
-	<enemy id="1" name="" hp="" akt="" level="" exp="" type="" pic="" des=""/>
-	<enemy id="1" name="" hp="" akt="" level="" exp="" type="" pic="" des=""/>
+	<enemy id="1" name="" hp="" akt="" exp="" type="" pic="" des="" icon="" />
+	<enemy id="1" name="" hp="" akt="" exp="" type="" pic="" des="" icon="" />
 </enemys>

@@ -9,6 +9,7 @@ import view.ui.Layer;
  */
 public class Damage 
 {
+	//伤害列表
 	private static var damageAry:Array = [];
 	
 	/**
@@ -21,13 +22,34 @@ public class Damage
 	 */
 	public static function show(num:int, x:Number, y:Number, scale:int=1, flag:Boolean = false):void
 	{
-		var spt:DamageNum = new DamageNum(num, flag);
+		var spt:DamageNum = new DamageNum();
+		spt.setDamageByNum(num, flag);
 		Layer.GAME_DAMAGE.addChild(spt);
 		spt.x = x;
 		spt.y = y;
 		spt.scale(scale, scale);
-		spt.vx = Random.randnum(-3, 3);
-		spt.vy = -16 + Random.randnum(-5, 5);
+		spt.vx = Random.randnum(-2, 2);
+		spt.vy = -5 + Random.randnum(-1, 1);
+		damageAry.push(spt);
+	}
+	
+	/**
+	 * 根据字符串显示伤害
+	 * @param	str		字符串
+	 * @param	x		x位置
+	 * @param	y		y位置
+	 * @param	scale	缩放
+	 */
+	public static function showDamageByStr(str:String, x:Number, y:Number, scale:int = 1):void
+	{
+		var spt:DamageNum = new DamageNum();
+		spt.setDamageByStr(str);
+		Layer.GAME_DAMAGE.addChild(spt);
+		spt.x = x;
+		spt.y = y;
+		spt.scale(scale, scale);
+		spt.vx = Random.randnum(-2, 2);
+		spt.vy = -5 + Random.randnum(-1, 1);
 		damageAry.push(spt);
 	}
 	
@@ -64,13 +86,43 @@ class DamageNum extends Sprite
 {
 	public var vx:Number = 0;
 	public var vy:Number = 0;
-	public var g:Number = 1.8;
-	public function DamageNum(num:int, flag:Boolean):void
+	public var g:Number = .3;
+	public function DamageNum():void
+	{
+		
+	}
+	
+	/**
+	 * 根据文本内容显示文字
+	 * @param	str		内容
+	 */
+	public function setDamageByStr(str:String):void
+	{
+		var numTxt:Text = new Text();
+		numTxt.font = GameConstant.GAME_FONT_NAME;
+		var color:String = "#ff0000";
+		var colorMatrix:Array = [1, 0, 0, 0, 0, //R
+								 0, 0, 0, 0, 0, //G
+								 0, 0, 0, 0, 0, //B
+								 0, 0, 0, 1, 0, //A
+								];
+		numTxt.text = str;
+		this.addChild(numTxt);
+		//创建颜色滤镜
+		var fliter:ColorFilter = new ColorFilter(colorMatrix)
+		this.filters = [fliter];
+	}
+	
+	/**
+	 * 根据数字显示伤害
+	 * @param	num		数字
+	 * @param	flag	加减
+	 */
+	public function setDamageByNum(num:int, flag:Boolean):void
 	{
 		var numTxt:Text = new Text();
 		numTxt.font = GameConstant.GAME_FONT_NAME;
 		var str:String = "-";
-		var color:String = "#ff0000";
 		var colorMatrix:Array = [1, 0, 0, 0, 0, //R
 								 0, 0, 0, 0, 0, //G
 								 0, 0, 0, 0, 0, //B
@@ -91,7 +143,6 @@ class DamageNum extends Sprite
 		var fliter:ColorFilter = new ColorFilter(colorMatrix)
 		this.filters = [fliter];
 	}
-	
 	
 	public function update():void
 	{

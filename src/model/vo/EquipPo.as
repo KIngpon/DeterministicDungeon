@@ -17,6 +17,8 @@ public class EquipPo
 	public var type:int;
 	//图片资源
 	public var pic:String;
+	//icon
+	public var icon:String;
 	//常量
 	public static const WEAPON:int = 1;
 	public static const SHIELD:int = 2;

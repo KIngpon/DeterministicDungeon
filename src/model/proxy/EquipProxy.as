@@ -38,6 +38,7 @@ public class EquipProxy extends Proxy
 				if (ePo.type != EquipPo.WEAPON) ePo.def = childNode.getAttribute("def");
 				ePo.name = childNode.getAttribute("name");
 				ePo.pic = childNode.getAttribute("pic");
+				ePo.icon = String(childNode.getAttribute("icon"));
 				this.equipAry.push(ePo);
 			}
 			this.isLoaded = true;

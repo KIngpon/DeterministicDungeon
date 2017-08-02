@@ -51,6 +51,8 @@ public class GameStageMediator extends Mediator
 	private var slots:SlotsPanel;
 	//是否选择了敌人数量
 	private var isSelectEnemyCount:Boolean;
+	//是否选择敌人类型
+	private var isSelectEnemyType:Boolean;
 	//是否选择了攻击力
 	private var isSelectAtkIndex:Boolean;
 	//敌人当前数量
@@ -82,6 +84,8 @@ public class GameStageMediator extends Mediator
 				break;
 			case MsgConstant.START_FIGHT:
 				this.isSelectEnemyCount = false;
+				this.isSelectEnemyType = false;
+				this.isSelectAtkIndex = false;
 				if (this.playerVo.isFirstStep)
 				{
 					// 选择地形
@@ -182,7 +186,12 @@ public class GameStageMediator extends Mediator
 		{
 			this.isSelectEnemyCount = true;
 			this.enemyCount = this.slots.indexValue;
-			//trace("this.enemyCount", this.enemyCount);
+			this.initSlotsSelectEnemyType();
+		}
+		else if (!this.isSelectEnemyType)
+		{
+			this.isSelectEnemyType = true;
+			
 			this.gameStage.initEnemy(this.enemyCount);
 			this.gameStage.enemyMove(Handler.create(this, initSlotsAtk));
 		}
@@ -201,10 +210,19 @@ public class GameStageMediator extends Mediator
 	 */
 	private function playerMoveComplete():void
 	{
+		this.initSlotsSelectEnemyCount();
+	}
+	
+	/**
+	 * 初始化选择敌人数量
+	 */
+	private function initSlotsSelectEnemyCount():void
+	{
 		//选择敌人数量
 		this.slots.visible = true;
 		this.slots.selectedBtn.mouseEnabled = true;
-		this.slots.initNumSlotsByNum(4, this.playerVo.slotsDelay);
+		this.slots.initNumSlotsByAry([0, 1, 2, 3], this.playerVo.slotsDelay);
+		this.slots.setTitle("选择敌人数量");
 	}
 	
 	/**
@@ -217,6 +235,20 @@ public class GameStageMediator extends Mediator
 		this.slots.visible = true;
 		this.slots.selectedBtn.mouseEnabled = true;
 		this.slots.initNumSlotsByAry(this.playerProxy.getPlayerAtk(), this.playerVo.slotsDelay);
+		this.slots.setTitle("攻击强度");
+	}
+	
+	/**
+	 * 初始化选择敌人类型
+	 */
+	private function initSlotsSelectEnemyType():void
+	{
+		this.slots.visible = true;
+		this.slots.selectedBtn.mouseEnabled = true;
+		
+		this.slots.initImageSlots(["icon/enemy/e_icon1.png", "icon/enemy/e_icon2.png", "icon/enemy/e_icon3.png"], 
+									"frame/enemySlotsBg.png",
+									this.playerVo.slotsDelay);
 	}
 	
 	/**
@@ -226,7 +258,10 @@ public class GameStageMediator extends Mediator
 	{
 		this.gameStage.enemyHurt(this.roundIndex, Handler.create(this, enemyHurtComplete));
 		var enemy:Sprite = this.gameStage.getEnemyByIndex(this.roundIndex);
-		Damage.show(this.slots.indexValue, enemy.x, enemy.y - 100, 1.5);
+		if (this.slots.indexValue == 0)
+			Damage.showDamageByStr("miss!", enemy.x, enemy.y - 100, 1.5);
+		else
+			Damage.show(this.slots.indexValue, enemy.x, enemy.y - 100, 1.5);
 	}
 	
 	/**
@@ -243,10 +278,10 @@ public class GameStageMediator extends Mediator
 	private function enemyAtkComplete():void
 	{
 		this.gameStage.playerHurt(Handler.create(this, playerHurtComplete));
-		Damage.show(this.slots.indexValue, 
-					this.gameStage.player.x, 
-					this.gameStage.player.y - 100, 1.5);
-
+		if (this.slots.indexValue == 0)
+			Damage.showDamageByStr("miss!", this.gameStage.player.x, this.gameStage.player.y - 100, 1.5);
+		else
+			Damage.show(this.slots.indexValue, this.gameStage.player.x, this.gameStage.player.y - 100, 1.5);
 	}
 	
 	/**

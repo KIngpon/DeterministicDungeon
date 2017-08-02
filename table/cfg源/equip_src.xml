@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <equips>
-	<equip id="1" name="" atk="" def="" type="" pic="" des="" />
-	<equip id="2" name="" atk="" def="" type="" pic="" des="" />
+	<equip id="1" name="" atk="" def="" type="" pic="" des="" icon="" />
+	<equip id="2" name="" atk="" def="" type="" pic="" des="" icon="" />
 </equips>

@@ -10,10 +10,12 @@ import view.ui.Layer;
 /**
  * ...主文件
  * TODO 
- * damage 出文字未击中！
+ * [damage 出文字未击中！]
+ * 中文字体图
  * 选择敌人类型
  * 选择关卡地形
  * 选择移动格子
+ * 本地化文本
  * @author ...Kanon
  */
 public class Main 
