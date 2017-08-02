@@ -11,8 +11,8 @@ import view.ui.Layer;
  * ...主文件
  * TODO 
  * [damage 出文字未击中！]
+ * [选择敌人类型]
  * 中文字体图
- * 选择敌人类型
  * 敌人icon大小缩放
  * slots大小缩放接口
  * 关卡表配置

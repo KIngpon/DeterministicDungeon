@@ -304,8 +304,8 @@ public class SlotsPanel extends Sprite
 			{
 				var image:Image = icon.getChildAt(0) as Image;
 				image.scale(scale, scale);
-				image.x = (icon.width - image.width * scale) / 2;
-				image.y = (icon.height - image.height * scale) / 2;
+				//image.x = (icon.width - image.width * scale) / 2;
+				//image.y = (icon.height - image.height * scale) / 2;
 				image.x += offsetX;
 				image.y += offsetY;
 			}

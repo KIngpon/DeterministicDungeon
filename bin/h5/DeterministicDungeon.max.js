@@ -446,8 +446,8 @@ var Laya=window.Laya=(function(window,document){
 	*...主文件
 	*TODO
 	*[damage 出文字未击中！]
+	*[选择敌人类型]
 	*中文字体图
-	*选择敌人类型
 	*敌人icon大小缩放
 	*slots大小缩放接口
 	*关卡表配置
@@ -10331,6 +10331,8 @@ var Laya=window.Laya=(function(window,document){
 		*/
 		__proto.flashingCompleteHandler=function(){
 			this.slots.visible=false;
+			console.log("this.isSelectEnemyCount",this.isSelectEnemyCount);
+			console.log("this.isSelectEnemyType",this.isSelectEnemyType);
 			if (!this.isSelectEnemyCount){
 				this.isSelectEnemyCount=true;
 				this.enemyCount=this.slots.indexValue;
@@ -16445,8 +16447,6 @@ var Laya=window.Laya=(function(window,document){
 				if (icon.numChildren > 0){
 					var image=icon.getChildAt(0);
 					image.scale(scale,scale);
-					image.x=(icon.width-image.width *scale)/ 2;
-					image.y=(icon.height-image.height *scale)/ 2;
 					image.x+=offsetX;
 					image.y+=offsetY;
 				}

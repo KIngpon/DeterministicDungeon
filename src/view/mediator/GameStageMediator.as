@@ -182,16 +182,20 @@ public class GameStageMediator extends Mediator
 	private function flashingCompleteHandler():void 
 	{
 		this.slots.visible = false;
+		trace("this.isSelectEnemyCount", this.isSelectEnemyCount);
+		trace("this.isSelectEnemyType", this.isSelectEnemyType);
 		if (!this.isSelectEnemyCount) 
 		{
 			this.isSelectEnemyCount = true;
 			this.enemyCount = this.slots.indexValue;
-			this.initSlotsSelectEnemyType();
+			if (this.enemyCount > 0)
+				this.initSlotsSelectEnemyType();
+			else
+				//直接移动出舞台
 		}
 		else if (!this.isSelectEnemyType)
 		{
 			this.isSelectEnemyType = true;
-			
 			this.gameStage.initEnemy(this.enemyCount);
 			this.gameStage.enemyMove(Handler.create(this, initSlotsAtk));
 		}
