@@ -81,13 +81,11 @@ public class SlotsPanel extends Sprite
 	 * @param	imgAry	图片数组
 	 * @param	offsetX	x偏移量
 	 * @param	offsetY	y偏移量
-	 * @param	scale	缩放
 	 * @param	isMask	是否启用遮罩
 	 */
 	public function initIcon(imgAry:Array, 
 							 offsetX:Number = 0, 
 							 offsetY:Number = 0,
-							 scale:Number = 1, 
 							 isMask:Boolean = false):void
 	{
 		if (!imgAry) return;
@@ -99,8 +97,6 @@ public class SlotsPanel extends Sprite
 			var icon:Sprite = this.contentSpt.getChildByName("m" + (i + 1)) as Sprite;
 			var image:Image = new Image(imgAry[i]);
 			icon.addChild(image);
-			image.width *= scale;
-			image.height *= scale;
 			image.x = (icon.width - image.width) / 2;
 			image.y = (icon.height -image.height) / 2;
 			image.x += offsetX;
@@ -225,14 +221,12 @@ public class SlotsPanel extends Sprite
 	 * @param	delay		滚动间隔
 	 * @param	offsetX		x偏移量
 	 * @param	offsetY		y偏移量
-	 * @param	scale		缩放
 	 * @param	isMask		是否遮罩
 	 */
 	public function startNumSlotsByAry(numAry:Array, 
 									   delay:int, 
 									   offsetX:Number = 0, 
 									   offsetY:Number = 0,
-									   scale:Number = 1, 
 									   isMask:Boolean = false):void
 	{
 		var count:int = numAry.length;
@@ -252,7 +246,7 @@ public class SlotsPanel extends Sprite
 			var index:int = this.indexAry[i];
 			this.iconAry.push("comp/num" + index +".png");
 		}
-		this.initIcon(this.iconAry, offsetX, offsetY, scale, isMask);
+		this.initIcon(this.iconAry, offsetX, offsetY, isMask);
 		this.start(delay);
 	}
 	
@@ -263,14 +257,12 @@ public class SlotsPanel extends Sprite
 	 * @param	delay		滚动间隔
 	 * @param	offsetX		x偏移量
 	 * @param	offsetY		y偏移量
-	 * @param	scale		缩放
 	 * @param	isMask		是否遮罩
 	 */
 	public function startNumSlotsByNum(num:int, 
 									   delay:int, 
 									   offsetX:Number = 0, 
 									   offsetY:Number = 0,
-									   scale:Number = 1, 
 									   isMask:Boolean = false):void
 	{
 		this.initData(num);
@@ -288,7 +280,7 @@ public class SlotsPanel extends Sprite
 			var index:int = this.indexAry[i];
 			this.iconAry.push("comp/num" + index +".png");
 		}
-		this.initIcon(this.iconAry, offsetX, offsetY, scale, isMask);
+		this.initIcon(this.iconAry, offsetX, offsetY, isMask);
 		this.start(delay);
 	}
 	
