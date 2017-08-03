@@ -25,7 +25,7 @@ def exportExcel(path, macroName):
 
 
 #获取当前目录
-d = os.getcwd() + '\\cfg\\'
+d = os.path.dirname(os.getcwd()) + '\\table\\cfg\\'
 print "run in document: " + d 
 exportExcel(str(d), 'export()')
 

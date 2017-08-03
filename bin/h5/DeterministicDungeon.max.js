@@ -10228,6 +10228,7 @@ var Laya=window.Laya=(function(window,document){
 			this.isSelectEnemyType=false;
 			this.isSelectAtkIndex=false;
 			this.enemyCount=0;
+			this.curEnemyCount=0;
 			GameStageMediator.__super.call(this);
 			this.mediatorName="GameStageMediator";
 			this.playerProxy=this.retrieveProxy("PlayerProxy");
@@ -10331,17 +10332,22 @@ var Laya=window.Laya=(function(window,document){
 		*/
 		__proto.flashingCompleteHandler=function(){
 			this.slots.visible=false;
-			console.log("this.isSelectEnemyCount",this.isSelectEnemyCount);
-			console.log("this.isSelectEnemyType",this.isSelectEnemyType);
 			if (!this.isSelectEnemyCount){
 				this.isSelectEnemyCount=true;
 				this.enemyCount=this.slots.indexValue;
-				this.initSlotsSelectEnemyType();
+				this.curEnemyCount++;
+				if (this.enemyCount > 0)this.initSlotsSelectEnemyType();
 			}
 			else if (!this.isSelectEnemyType){
-				this.isSelectEnemyType=true;
-				this.gameStage.initEnemy(this.enemyCount);
-				this.gameStage.enemyMove(Handler.create(this,this.initSlotsAtk));
+				if (this.curEnemyCount==this.enemyCount){
+					this.isSelectEnemyType=true;
+					this.gameStage.initEnemy(this.enemyCount);
+					this.gameStage.enemyMove(Handler.create(this,this.initSlotsAtk));
+				}
+				else{
+					this.curEnemyCount++;
+					this.initSlotsSelectEnemyType();
+				}
 			}
 			else{
 				if (!this.isSelectAtkIndex){
@@ -10364,8 +10370,7 @@ var Laya=window.Laya=(function(window,document){
 		__proto.initSlotsSelectEnemyCount=function(){
 			this.slots.visible=true;
 			this.slots.selectedBtn.mouseEnabled=true;
-			this.slots.initNumSlotsByAry([0,1,2,3],this.playerVo.slotsDelay);
-			this.slots.setIconOffset(0,-5);
+			this.slots.startNumSlotsByAry([0,1,2,3],this.playerVo.slotsDelay,0,-5);
 			this.slots.setTitle("选择敌人数量");
 		}
 
@@ -10376,8 +10381,7 @@ var Laya=window.Laya=(function(window,document){
 			this.isSelectAtkIndex=false;
 			this.slots.visible=true;
 			this.slots.selectedBtn.mouseEnabled=true;
-			this.slots.initNumSlotsByAry(this.playerProxy.getPlayerAtk(),this.playerVo.slotsDelay);
-			this.slots.setIconOffset(0,-5);
+			this.slots.startNumSlotsByAry(this.playerProxy.getPlayerAtk(),this.playerVo.slotsDelay,0,-5);
 			this.slots.setTitle("攻击强度");
 		}
 
@@ -10387,10 +10391,10 @@ var Laya=window.Laya=(function(window,document){
 		__proto.initSlotsSelectEnemyType=function(){
 			this.slots.visible=true;
 			this.slots.selectedBtn.mouseEnabled=true;
-			this.slots.initImageSlots(["icon/enemy/e_icon1.png","icon/enemy/e_icon2.png","icon/enemy/e_icon3.png"],
+			this.slots.startImageSlots(["icon/enemy/e_icon1.png","icon/enemy/e_icon2.png","icon/enemy/e_icon3.png"],
 			"frame/enemySlotsBg.png",
-			this.playerVo.slotsDelay);
-			this.slots.setIconOffset(0,0,.8);
+			this.playerVo.slotsDelay,0,0,1,true);
+			this.slots.setTitle("放入"+this.curEnemyCount+"个敌人/"+this.enemyCount);
 		}
 
 		/**
@@ -16251,24 +16255,37 @@ var Laya=window.Laya=(function(window,document){
 		/**
 		*初始化numUI
 		*@param imgAry 图片数组
+		*@param offsetX x偏移量
+		*@param offsetY y偏移量
+		*@param scale 缩放
+		*@param isMask 是否启用遮罩
 		*/
-		__proto.initIcon=function(imgAry){
+		__proto.initIcon=function(imgAry,offsetX,offsetY,scale,isMask){
+			(offsetX===void 0)&& (offsetX=0);
+			(offsetY===void 0)&& (offsetY=0);
+			(scale===void 0)&& (scale=1);
+			(isMask===void 0)&& (isMask=false);
 			if (!imgAry)return;
 			this.clearIcon();
 			var count=imgAry.length;
 			if (count > 9)count=9;
 			for (var i=0;i < count;++i){
 				var icon=this.contentSpt.getChildByName("m"+(i+1));
-				if (!this.contentSpt.getChildByName("mask")){
-					var mask=new Sprite();
-					mask.name="mask";
-					mask.loadImage("frame/enemySlotsBg.png");
-					icon.mask=mask;
-				};
 				var image=new Image(imgAry[i]);
 				icon.addChild(image);
+				image.width *=scale;
+				image.height *=scale;
 				image.x=(icon.width-image.width)/ 2;
 				image.y=(icon.height-image.height)/ 2;
+				image.x+=offsetX;
+				image.y+=offsetY;
+				if (!image.mask && isMask){
+					var mask=new Sprite();
+					mask.loadImage("frame/enemySlotsBg.png");
+					mask.x=(image.width-mask.width)/ 2;
+					mask.y=(image.height-mask.height)/ 2;
+					image.mask=mask;
+				}
 			}
 		}
 
@@ -16365,8 +16382,16 @@ var Laya=window.Laya=(function(window,document){
 		*根据数字数组初始化数字icon的Slots
 		*@param numAry 数字数组
 		*@param delay 滚动间隔
+		*@param offsetX x偏移量
+		*@param offsetY y偏移量
+		*@param scale 缩放
+		*@param isMask 是否遮罩
 		*/
-		__proto.initNumSlotsByAry=function(numAry,delay){
+		__proto.startNumSlotsByAry=function(numAry,delay,offsetX,offsetY,scale,isMask){
+			(offsetX===void 0)&& (offsetX=0);
+			(offsetY===void 0)&& (offsetY=0);
+			(scale===void 0)&& (scale=1);
+			(isMask===void 0)&& (isMask=false);
 			var count=numAry.length;
 			this.initData(count);
 			this.initIconBg("frame/slotsNumBg.png",count);
@@ -16382,7 +16407,7 @@ var Laya=window.Laya=(function(window,document){
 				var index=this.indexAry[i];
 				this.iconAry.push("comp/num"+index+".png");
 			}
-			this.initIcon(this.iconAry);
+			this.initIcon(this.iconAry,offsetX,offsetY,scale,isMask);
 			this.start(delay);
 		}
 
@@ -16390,8 +16415,16 @@ var Laya=window.Laya=(function(window,document){
 		*根据数字初始化数字icon的Slots
 		*@param num 数字 包含0
 		*@param delay 滚动间隔
+		*@param offsetX x偏移量
+		*@param offsetY y偏移量
+		*@param scale 缩放
+		*@param isMask 是否遮罩
 		*/
-		__proto.initNumSlotsByNum=function(num,delay){
+		__proto.startNumSlotsByNum=function(num,delay,offsetX,offsetY,scale,isMask){
+			(offsetX===void 0)&& (offsetX=0);
+			(offsetY===void 0)&& (offsetY=0);
+			(scale===void 0)&& (scale=1);
+			(isMask===void 0)&& (isMask=false);
 			this.initData(num);
 			this.initIconBg("frame/slotsNumBg.png",num);
 			this.iconAry=[];
@@ -16405,7 +16438,7 @@ var Laya=window.Laya=(function(window,document){
 				var index=this.indexAry[i];
 				this.iconAry.push("comp/num"+index+".png");
 			}
-			this.initIcon(this.iconAry);
+			this.initIcon(this.iconAry,offsetX,offsetY,scale,isMask);
 			this.start(delay);
 		}
 
@@ -16414,8 +16447,16 @@ var Laya=window.Laya=(function(window,document){
 		*@param imgAry 图片路径列表
 		*@param frameBg 框的背景色路径
 		*@param delay 滚动间隔
+		*@param offsetX x偏移量
+		*@param offsetY y偏移量
+		*@param scale 缩放
+		*@param isMask 是否遮罩
 		*/
-		__proto.initImageSlots=function(imgAry,frameBg,delay){
+		__proto.startImageSlots=function(imgAry,frameBg,delay,offsetX,offsetY,scale,isMask){
+			(offsetX===void 0)&& (offsetX=0);
+			(offsetY===void 0)&& (offsetY=0);
+			(scale===void 0)&& (scale=1);
+			(isMask===void 0)&& (isMask=false);
 			var count=imgAry.length;
 			this.initData(count);
 			this.initIconBg(frameBg,count);
@@ -16430,27 +16471,8 @@ var Laya=window.Laya=(function(window,document){
 				var index=this.indexAry[i];
 				this.iconAry.push(imgAry[index]);
 			}
-			this.initIcon(this.iconAry);
+			this.initIcon(this.iconAry,offsetX,offsetY,scale,isMask);
 			this.start(delay);
-		}
-
-		/**
-		*设置icon的位置和缩放
-		*@param offsetX x位置
-		*@param offsetY y位置
-		*@param scale 缩放
-		*/
-		__proto.setIconOffset=function(offsetX,offsetY,scale){
-			(scale===void 0)&& (scale=1);
-			for (var i=0;i < this._totalCount;++i){
-				var icon=this.contentSpt.getChildByName("m"+(i+1));
-				if (icon.numChildren > 0){
-					var image=icon.getChildAt(0);
-					image.scale(scale,scale);
-					image.x+=offsetX;
-					image.y+=offsetY;
-				}
-			}
 		}
 
 		/**
@@ -26566,103 +26588,6 @@ var Laya=window.Laya=(function(window,document){
 
 
 	/**
-	*使用 <code>VSlider</code> 控件，用户可以通过在滑块轨道的终点之间移动滑块来选择值。
-	*<p> <code>VSlider</code> 控件采用垂直方向。滑块轨道从下往上扩展，而标签位于轨道的左右两侧。</p>
-	*
-	*@example <caption>以下示例代码，创建了一个 <code>VSlider</code> 实例。</caption>
-	*package
-	*{
-		*import laya.ui.HSlider;
-		*import laya.ui.VSlider;
-		*import laya.utils.Handler;
-		*public class VSlider_Example
-		*{
-			*private var vSlider:VSlider;
-			*public function VSlider_Example()
-			*{
-				*Laya.init(640,800);//设置游戏画布宽高。
-				*Laya.stage.bgColor="#efefef";//设置画布的背景颜色。
-				*Laya.loader.load(["resource/ui/vslider.png","resource/ui/vslider$bar.png"],Handler.create(this,onLoadComplete));//加载资源。
-				*}
-			*private function onLoadComplete():void
-			*{
-				*vSlider=new VSlider();//创建一个 VSlider 类的实例对象 vSlider 。
-				*vSlider.skin="resource/ui/vslider.png";//设置 vSlider 的皮肤。
-				*vSlider.min=0;//设置 vSlider 最低位置值。
-				*vSlider.max=10;//设置 vSlider 最高位置值。
-				*vSlider.value=2;//设置 vSlider 当前位置值。
-				*vSlider.tick=1;//设置 vSlider 刻度值。
-				*vSlider.x=100;//设置 vSlider 对象的属性 x 的值，用于控制 vSlider 对象的显示位置。
-				*vSlider.y=100;//设置 vSlider 对象的属性 y 的值，用于控制 vSlider 对象的显示位置。
-				*vSlider.changeHandler=new Handler(this,onChange);//设置 vSlider 位置变化处理器。
-				*Laya.stage.addChild(vSlider);//把 vSlider 添加到显示列表。
-				*}
-			*private function onChange(value:Number):void
-			*{
-				*trace("滑块的位置： value="+value);
-				*}
-			*}
-		*}
-	*@example
-	*Laya.init(640,800);//设置游戏画布宽高
-	*Laya.stage.bgColor="#efefef";//设置画布的背景颜色
-	*var vSlider;
-	*Laya.loader.load(["resource/ui/vslider.png","resource/ui/vslider$bar.png"],laya.utils.Handler.create(this,onLoadComplete));//加载资源。
-	*function onLoadComplete(){
-		*vSlider=new laya.ui.VSlider();//创建一个 VSlider 类的实例对象 vSlider 。
-		*vSlider.skin="resource/ui/vslider.png";//设置 vSlider 的皮肤。
-		*vSlider.min=0;//设置 vSlider 最低位置值。
-		*vSlider.max=10;//设置 vSlider 最高位置值。
-		*vSlider.value=2;//设置 vSlider 当前位置值。
-		*vSlider.tick=1;//设置 vSlider 刻度值。
-		*vSlider.x=100;//设置 vSlider 对象的属性 x 的值，用于控制 vSlider 对象的显示位置。
-		*vSlider.y=100;//设置 vSlider 对象的属性 y 的值，用于控制 vSlider 对象的显示位置。
-		*vSlider.changeHandler=new laya.utils.Handler(this,onChange);//设置 vSlider 位置变化处理器。
-		*Laya.stage.addChild(vSlider);//把 vSlider 添加到显示列表。
-		*}
-	*function onChange(value){
-		*console.log("滑块的位置： value="+value);
-		*}
-	*@example
-	*import HSlider=laya.ui.HSlider;
-	*import VSlider=laya.ui.VSlider;
-	*import Handler=laya.utils.Handler;
-	*class VSlider_Example {
-		*private vSlider:VSlider;
-		*constructor(){
-			*Laya.init(640,800);//设置游戏画布宽高。
-			*Laya.stage.bgColor="#efefef";//设置画布的背景颜色。
-			*Laya.loader.load(["resource/ui/vslider.png","resource/ui/vslider$bar.png"],Handler.create(this,this.onLoadComplete));//加载资源。
-			*}
-		*private onLoadComplete():void {
-			*this.vSlider=new VSlider();//创建一个 VSlider 类的实例对象 vSlider 。
-			*this.vSlider.skin="resource/ui/vslider.png";//设置 vSlider 的皮肤。
-			*this.vSlider.min=0;//设置 vSlider 最低位置值。
-			*this.vSlider.max=10;//设置 vSlider 最高位置值。
-			*this.vSlider.value=2;//设置 vSlider 当前位置值。
-			*this.vSlider.tick=1;//设置 vSlider 刻度值。
-			*this.vSlider.x=100;//设置 vSlider 对象的属性 x 的值，用于控制 vSlider 对象的显示位置。
-			*this.vSlider.y=100;//设置 vSlider 对象的属性 y 的值，用于控制 vSlider 对象的显示位置。
-			*this.vSlider.changeHandler=new Handler(this,this.onChange);//设置 vSlider 位置变化处理器。
-			*Laya.stage.addChild(this.vSlider);//把 vSlider 添加到显示列表。
-			*}
-		*private onChange(value:number):void {
-			*console.log("滑块的位置： value="+value);
-			*}
-		*}
-	*@see laya.ui.Slider
-	*/
-	//class laya.ui.VSlider extends laya.ui.Slider
-	var VSlider=(function(_super){
-		function VSlider(){VSlider.__super.call(this);;
-		};
-
-		__class(VSlider,'laya.ui.VSlider',_super);
-		return VSlider;
-	})(Slider)
-
-
-	/**
 	*<code>TextInput</code> 类用于创建显示对象以显示和输入文本。
 	*
 	*@example <caption>以下示例代码，创建了一个 <code>TextInput</code> 实例。</caption>
@@ -26983,6 +26908,103 @@ var Laya=window.Laya=(function(window,document){
 
 		return TextInput;
 	})(Label)
+
+
+	/**
+	*使用 <code>VSlider</code> 控件，用户可以通过在滑块轨道的终点之间移动滑块来选择值。
+	*<p> <code>VSlider</code> 控件采用垂直方向。滑块轨道从下往上扩展，而标签位于轨道的左右两侧。</p>
+	*
+	*@example <caption>以下示例代码，创建了一个 <code>VSlider</code> 实例。</caption>
+	*package
+	*{
+		*import laya.ui.HSlider;
+		*import laya.ui.VSlider;
+		*import laya.utils.Handler;
+		*public class VSlider_Example
+		*{
+			*private var vSlider:VSlider;
+			*public function VSlider_Example()
+			*{
+				*Laya.init(640,800);//设置游戏画布宽高。
+				*Laya.stage.bgColor="#efefef";//设置画布的背景颜色。
+				*Laya.loader.load(["resource/ui/vslider.png","resource/ui/vslider$bar.png"],Handler.create(this,onLoadComplete));//加载资源。
+				*}
+			*private function onLoadComplete():void
+			*{
+				*vSlider=new VSlider();//创建一个 VSlider 类的实例对象 vSlider 。
+				*vSlider.skin="resource/ui/vslider.png";//设置 vSlider 的皮肤。
+				*vSlider.min=0;//设置 vSlider 最低位置值。
+				*vSlider.max=10;//设置 vSlider 最高位置值。
+				*vSlider.value=2;//设置 vSlider 当前位置值。
+				*vSlider.tick=1;//设置 vSlider 刻度值。
+				*vSlider.x=100;//设置 vSlider 对象的属性 x 的值，用于控制 vSlider 对象的显示位置。
+				*vSlider.y=100;//设置 vSlider 对象的属性 y 的值，用于控制 vSlider 对象的显示位置。
+				*vSlider.changeHandler=new Handler(this,onChange);//设置 vSlider 位置变化处理器。
+				*Laya.stage.addChild(vSlider);//把 vSlider 添加到显示列表。
+				*}
+			*private function onChange(value:Number):void
+			*{
+				*trace("滑块的位置： value="+value);
+				*}
+			*}
+		*}
+	*@example
+	*Laya.init(640,800);//设置游戏画布宽高
+	*Laya.stage.bgColor="#efefef";//设置画布的背景颜色
+	*var vSlider;
+	*Laya.loader.load(["resource/ui/vslider.png","resource/ui/vslider$bar.png"],laya.utils.Handler.create(this,onLoadComplete));//加载资源。
+	*function onLoadComplete(){
+		*vSlider=new laya.ui.VSlider();//创建一个 VSlider 类的实例对象 vSlider 。
+		*vSlider.skin="resource/ui/vslider.png";//设置 vSlider 的皮肤。
+		*vSlider.min=0;//设置 vSlider 最低位置值。
+		*vSlider.max=10;//设置 vSlider 最高位置值。
+		*vSlider.value=2;//设置 vSlider 当前位置值。
+		*vSlider.tick=1;//设置 vSlider 刻度值。
+		*vSlider.x=100;//设置 vSlider 对象的属性 x 的值，用于控制 vSlider 对象的显示位置。
+		*vSlider.y=100;//设置 vSlider 对象的属性 y 的值，用于控制 vSlider 对象的显示位置。
+		*vSlider.changeHandler=new laya.utils.Handler(this,onChange);//设置 vSlider 位置变化处理器。
+		*Laya.stage.addChild(vSlider);//把 vSlider 添加到显示列表。
+		*}
+	*function onChange(value){
+		*console.log("滑块的位置： value="+value);
+		*}
+	*@example
+	*import HSlider=laya.ui.HSlider;
+	*import VSlider=laya.ui.VSlider;
+	*import Handler=laya.utils.Handler;
+	*class VSlider_Example {
+		*private vSlider:VSlider;
+		*constructor(){
+			*Laya.init(640,800);//设置游戏画布宽高。
+			*Laya.stage.bgColor="#efefef";//设置画布的背景颜色。
+			*Laya.loader.load(["resource/ui/vslider.png","resource/ui/vslider$bar.png"],Handler.create(this,this.onLoadComplete));//加载资源。
+			*}
+		*private onLoadComplete():void {
+			*this.vSlider=new VSlider();//创建一个 VSlider 类的实例对象 vSlider 。
+			*this.vSlider.skin="resource/ui/vslider.png";//设置 vSlider 的皮肤。
+			*this.vSlider.min=0;//设置 vSlider 最低位置值。
+			*this.vSlider.max=10;//设置 vSlider 最高位置值。
+			*this.vSlider.value=2;//设置 vSlider 当前位置值。
+			*this.vSlider.tick=1;//设置 vSlider 刻度值。
+			*this.vSlider.x=100;//设置 vSlider 对象的属性 x 的值，用于控制 vSlider 对象的显示位置。
+			*this.vSlider.y=100;//设置 vSlider 对象的属性 y 的值，用于控制 vSlider 对象的显示位置。
+			*this.vSlider.changeHandler=new Handler(this,this.onChange);//设置 vSlider 位置变化处理器。
+			*Laya.stage.addChild(this.vSlider);//把 vSlider 添加到显示列表。
+			*}
+		*private onChange(value:number):void {
+			*console.log("滑块的位置： value="+value);
+			*}
+		*}
+	*@see laya.ui.Slider
+	*/
+	//class laya.ui.VSlider extends laya.ui.Slider
+	var VSlider=(function(_super){
+		function VSlider(){VSlider.__super.call(this);;
+		};
+
+		__class(VSlider,'laya.ui.VSlider',_super);
+		return VSlider;
+	})(Slider)
 
 
 	/**
@@ -28311,7 +28333,7 @@ var Laya=window.Laya=(function(window,document){
 		}
 
 		__static(SlotsPanelUI,
-		['uiView',function(){return this.uiView={"type":"Dialog","props":{"width":1024,"height":640,"alpha":100},"child":[{"type":"Image","props":{"y":325,"x":512,"skin":"frame/slotsPanelBg.png","anchorY":0.5,"anchorX":0.5}},{"type":"Image","props":{"y":188,"x":512,"skin":"comp/slotsPanelTitleBg.png","anchorY":0.5,"anchorX":0.5}},{"type":"Image","props":{"y":142,"x":512,"skin":"comp/slotsTitle.png","anchorX":0.5}},{"type":"Label","props":{"y":208,"x":512,"width":219,"var":"titleTxt","text":"房间敌人数量","overflow":"visible","height":25,"fontSize":20,"font":"SimHei","color":"#033297","bold":true,"anchorY":0.5,"anchorX":0.5,"align":"center"}},{"type":"Button","props":{"y":463,"x":758,"var":"selectBtn","stateNum":"3","skin":"btn/selectBtn.png","anchorY":1,"anchorX":0.5}},{"type":"Sprite","props":{"y":231,"x":373,"width":279,"var":"bgSpt","height":224},"child":[{"type":"Image","props":{"y":7,"x":0,"width":84,"name":"bg1","height":63}},{"type":"Image","props":{"y":7,"x":97,"width":84,"name":"bg2","height":63}},{"type":"Image","props":{"y":7,"x":193,"width":84,"name":"bg3","height":63}},{"type":"Image","props":{"y":80,"x":0,"width":84,"name":"bg4","height":63}},{"type":"Image","props":{"y":80,"x":97,"width":84,"name":"bg5","height":63}},{"type":"Image","props":{"y":80,"x":193,"width":84,"name":"bg6","height":63}},{"type":"Image","props":{"y":152,"x":0,"width":84,"name":"bg7","height":63}},{"type":"Image","props":{"y":152,"x":97,"width":84,"name":"bg8","height":63}},{"type":"Image","props":{"y":152,"x":193,"width":84,"name":"bg9","height":63}}]},{"type":"Sprite","props":{"y":231,"x":373,"width":279,"var":"contentSpt","height":224},"child":[{"type":"Sprite","props":{"y":7,"x":0,"width":84,"name":"m1","height":63}},{"type":"Sprite","props":{"y":7,"x":97,"width":84,"name":"m2","height":63}},{"type":"Sprite","props":{"y":7,"x":193,"width":84,"name":"m3","height":63}},{"type":"Sprite","props":{"y":80,"x":0,"width":84,"name":"m4","height":63}},{"type":"Sprite","props":{"y":80,"x":97,"width":84,"name":"m5","height":63}},{"type":"Sprite","props":{"y":80,"x":193,"width":84,"name":"m6","height":63}},{"type":"Sprite","props":{"y":152,"x":0,"width":84,"name":"m7","height":63}},{"type":"Sprite","props":{"y":152,"x":97,"width":84,"name":"m8","height":63}},{"type":"Sprite","props":{"y":152,"x":193,"width":84,"name":"m9","height":63}},{"type":"Sprite","props":{"y":7,"x":0,"width":84,"name":"mask1","height":63}},{"type":"Sprite","props":{"y":7,"x":97,"width":84,"name":"mask2","height":63}},{"type":"Sprite","props":{"y":7,"x":193,"width":84,"name":"mask3","height":63}},{"type":"Sprite","props":{"y":80,"x":0,"width":84,"name":"mask4","height":63}},{"type":"Sprite","props":{"y":80,"x":97,"width":84,"name":"mask5","height":63}},{"type":"Sprite","props":{"y":80,"x":193,"width":84,"name":"mask6","height":63}},{"type":"Sprite","props":{"y":152,"x":0,"width":84,"name":"mask7","height":63}},{"type":"Sprite","props":{"y":152,"x":97,"width":84,"name":"mask8","height":63}},{"type":"Sprite","props":{"y":152,"x":193,"width":84,"name":"mask9","height":63}}]},{"type":"Sprite","props":{"y":231,"x":373,"width":279,"var":"frameSpt","height":224},"child":[{"type":"Image","props":{"y":7,"x":0,"width":84,"pivotX":0.5,"name":"frame1","height":63}},{"type":"Image","props":{"y":7,"x":97,"width":84,"name":"frame2","height":63}},{"type":"Image","props":{"y":7,"x":193,"width":84,"name":"frame3","height":63}},{"type":"Image","props":{"y":80,"x":0,"width":84,"name":"frame4","height":63}},{"type":"Image","props":{"y":80,"x":97,"width":84,"name":"frame5","height":63}},{"type":"Image","props":{"y":80,"x":193,"width":84,"name":"frame6","height":63}},{"type":"Image","props":{"y":152,"x":0,"width":84,"name":"frame7","height":63}},{"type":"Image","props":{"y":152,"x":97,"width":84,"name":"frame8","height":63}},{"type":"Image","props":{"y":152,"x":193,"width":84,"name":"frame9","height":63}},{"type":"Image","props":{"y":7,"var":"selectedImg","skin":"frame/slotsSelectedBg.png"}}]},{"type":"Image","props":{"y":229,"x":717,"var":"handImg","skin":"comp/hand.png"}}]};}
+		['uiView',function(){return this.uiView={"type":"Dialog","props":{"width":1024,"height":640,"alpha":100},"child":[{"type":"Image","props":{"y":325,"x":512,"skin":"frame/slotsPanelBg.png","anchorY":0.5,"anchorX":0.5}},{"type":"Image","props":{"y":188,"x":512,"skin":"comp/slotsPanelTitleBg.png","anchorY":0.5,"anchorX":0.5}},{"type":"Image","props":{"y":142,"x":512,"skin":"comp/slotsTitle.png","anchorX":0.5}},{"type":"Label","props":{"y":208,"x":512,"width":219,"var":"titleTxt","text":"房间敌人数量","overflow":"visible","height":25,"fontSize":20,"font":"SimHei","color":"#033297","bold":true,"anchorY":0.5,"anchorX":0.5,"align":"center"}},{"type":"Button","props":{"y":463,"x":758,"var":"selectBtn","stateNum":"3","skin":"btn/selectBtn.png","anchorY":1,"anchorX":0.5}},{"type":"Sprite","props":{"y":231,"x":373,"width":279,"var":"bgSpt","height":224},"child":[{"type":"Image","props":{"y":7,"x":0,"width":84,"name":"bg1","height":63}},{"type":"Image","props":{"y":7,"x":97,"width":84,"name":"bg2","height":63}},{"type":"Image","props":{"y":7,"x":193,"width":84,"name":"bg3","height":63}},{"type":"Image","props":{"y":80,"x":0,"width":84,"name":"bg4","height":63}},{"type":"Image","props":{"y":80,"x":97,"width":84,"name":"bg5","height":63}},{"type":"Image","props":{"y":80,"x":193,"width":84,"name":"bg6","height":63}},{"type":"Image","props":{"y":152,"x":0,"width":84,"name":"bg7","height":63}},{"type":"Image","props":{"y":152,"x":97,"width":84,"name":"bg8","height":63}},{"type":"Image","props":{"y":152,"x":193,"width":84,"name":"bg9","height":63}}]},{"type":"Sprite","props":{"y":231,"x":373,"width":279,"var":"contentSpt","height":224},"child":[{"type":"Sprite","props":{"y":7,"x":0,"width":84,"name":"m1","height":63}},{"type":"Sprite","props":{"y":7,"x":97,"width":84,"name":"m2","height":63}},{"type":"Sprite","props":{"y":7,"x":193,"width":84,"name":"m3","height":63}},{"type":"Sprite","props":{"y":80,"x":0,"width":84,"name":"m4","height":63}},{"type":"Sprite","props":{"y":80,"x":97,"width":84,"name":"m5","height":63}},{"type":"Sprite","props":{"y":80,"x":193,"width":84,"name":"m6","height":63}},{"type":"Sprite","props":{"y":152,"x":0,"width":84,"name":"m7","height":63}},{"type":"Sprite","props":{"y":152,"x":97,"width":84,"name":"m8","height":63}},{"type":"Sprite","props":{"y":152,"x":193,"width":84,"name":"m9","height":63}}]},{"type":"Sprite","props":{"y":231,"x":373,"width":279,"var":"frameSpt","height":224},"child":[{"type":"Image","props":{"y":7,"x":0,"width":84,"pivotX":0.5,"name":"frame1","height":63}},{"type":"Image","props":{"y":7,"x":97,"width":84,"name":"frame2","height":63}},{"type":"Image","props":{"y":7,"x":193,"width":84,"name":"frame3","height":63}},{"type":"Image","props":{"y":80,"x":0,"width":84,"name":"frame4","height":63}},{"type":"Image","props":{"y":80,"x":97,"width":84,"name":"frame5","height":63}},{"type":"Image","props":{"y":80,"x":193,"width":84,"name":"frame6","height":63}},{"type":"Image","props":{"y":152,"x":0,"width":84,"name":"frame7","height":63}},{"type":"Image","props":{"y":152,"x":97,"width":84,"name":"frame8","height":63}},{"type":"Image","props":{"y":152,"x":193,"width":84,"name":"frame9","height":63}},{"type":"Image","props":{"y":7,"var":"selectedImg","skin":"frame/slotsSelectedBg.png"}}]},{"type":"Image","props":{"y":229,"x":717,"var":"handImg","skin":"comp/hand.png"}}]};}
 		]);
 		return SlotsPanelUI;
 	})(Dialog)

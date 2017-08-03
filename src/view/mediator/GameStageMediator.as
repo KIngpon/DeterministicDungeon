@@ -57,6 +57,8 @@ public class GameStageMediator extends Mediator
 	private var isSelectAtkIndex:Boolean;
 	//敌人当前数量
 	private var enemyCount:int;
+	//当前数量
+	private var curEnemyCount:int;
 	public function GameStageMediator() 
 	{
 		this.mediatorName = NAME;
@@ -182,22 +184,28 @@ public class GameStageMediator extends Mediator
 	private function flashingCompleteHandler():void 
 	{
 		this.slots.visible = false;
-		trace("this.isSelectEnemyCount", this.isSelectEnemyCount);
-		trace("this.isSelectEnemyType", this.isSelectEnemyType);
 		if (!this.isSelectEnemyCount) 
 		{
 			this.isSelectEnemyCount = true;
 			this.enemyCount = this.slots.indexValue;
-			if (this.enemyCount > 0)
-				this.initSlotsSelectEnemyType();
-			else
-				//直接移动出舞台
+			this.curEnemyCount++;
+			if (this.enemyCount > 0) this.initSlotsSelectEnemyType();
+			//直接移动出舞台
 		}
 		else if (!this.isSelectEnemyType)
 		{
-			this.isSelectEnemyType = true;
-			this.gameStage.initEnemy(this.enemyCount);
-			this.gameStage.enemyMove(Handler.create(this, initSlotsAtk));
+			if (this.curEnemyCount == this.enemyCount)
+			{
+				//数量选择够了
+				this.isSelectEnemyType = true;
+				this.gameStage.initEnemy(this.enemyCount);
+				this.gameStage.enemyMove(Handler.create(this, initSlotsAtk));
+			}
+			else
+			{
+				this.curEnemyCount++;
+				this.initSlotsSelectEnemyType();
+			}
 		}
 		else
 		{
@@ -225,8 +233,7 @@ public class GameStageMediator extends Mediator
 		//选择敌人数量
 		this.slots.visible = true;
 		this.slots.selectedBtn.mouseEnabled = true;
-		this.slots.initNumSlotsByAry([0, 1, 2, 3], this.playerVo.slotsDelay);
-		this.slots.setIconOffset(0, -5);
+		this.slots.startNumSlotsByAry([0, 1, 2, 3], this.playerVo.slotsDelay, 0, -5);
 		this.slots.setTitle("选择敌人数量");
 	}
 	
@@ -239,8 +246,7 @@ public class GameStageMediator extends Mediator
 		this.isSelectAtkIndex = false;
 		this.slots.visible = true;
 		this.slots.selectedBtn.mouseEnabled = true;
-		this.slots.initNumSlotsByAry(this.playerProxy.getPlayerAtk(), this.playerVo.slotsDelay);
-		this.slots.setIconOffset(0, -5);
+		this.slots.startNumSlotsByAry(this.playerProxy.getPlayerAtk(), this.playerVo.slotsDelay, 0, -5);
 		this.slots.setTitle("攻击强度");
 	}
 	
@@ -251,10 +257,10 @@ public class GameStageMediator extends Mediator
 	{
 		this.slots.visible = true;
 		this.slots.selectedBtn.mouseEnabled = true;
-		this.slots.initImageSlots(["icon/enemy/e_icon1.png", "icon/enemy/e_icon2.png", "icon/enemy/e_icon3.png"], 
+		this.slots.startImageSlots(["icon/enemy/e_icon1.png", "icon/enemy/e_icon2.png", "icon/enemy/e_icon3.png"], 
 									"frame/enemySlotsBg.png",
-									this.playerVo.slotsDelay);
-		this.slots.setIconOffset(0, 0, .8);
+									this.playerVo.slotsDelay, 0, 0, 1, true);
+		this.slots.setTitle("放入" + this.curEnemyCount + "个敌人/" + this.enemyCount);
 	}
 	
 	/**
@@ -284,6 +290,7 @@ public class GameStageMediator extends Mediator
 	private function enemyAtkComplete():void
 	{
 		this.gameStage.playerHurt(Handler.create(this, playerHurtComplete));
+		//TODO 敌人攻击力随机
 		if (this.slots.indexValue == 0)
 			Damage.showDamageByStr("miss!", this.gameStage.player.x, this.gameStage.player.y - 100, 1.5);
 		else

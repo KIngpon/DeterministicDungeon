@@ -79,8 +79,16 @@ public class SlotsPanel extends Sprite
 	/**
 	 * 初始化numUI
 	 * @param	imgAry	图片数组
+	 * @param	offsetX	x偏移量
+	 * @param	offsetY	y偏移量
+	 * @param	scale	缩放
+	 * @param	isMask	是否启用遮罩
 	 */
-	public function initIcon(imgAry:Array):void
+	public function initIcon(imgAry:Array, 
+							 offsetX:Number = 0, 
+							 offsetY:Number = 0,
+							 scale:Number = 1, 
+							 isMask:Boolean = false):void
 	{
 		if (!imgAry) return;
 		this.clearIcon();
@@ -89,17 +97,22 @@ public class SlotsPanel extends Sprite
 		for (var i:int = 0; i < count; ++i)
 		{
 			var icon:Sprite = this.contentSpt.getChildByName("m" + (i + 1)) as Sprite;
-			if (!this.contentSpt.getChildByName("mask"))
-			{
-				var mask:Sprite = new Sprite();
-				mask.name = "mask";
-				mask.loadImage("frame/enemySlotsBg.png");
-				icon.mask = mask;
-			}
 			var image:Image = new Image(imgAry[i]);
 			icon.addChild(image);
-			image.x = (icon.width -image.width) / 2;
+			image.width *= scale;
+			image.height *= scale;
+			image.x = (icon.width - image.width) / 2;
 			image.y = (icon.height -image.height) / 2;
+			image.x += offsetX;
+			image.y += offsetY;
+			if (!image.mask && isMask)
+			{
+				var mask:Sprite = new Sprite();
+				mask.loadImage("frame/enemySlotsBg.png");
+				mask.x = (image.width - mask.width) / 2;
+				mask.y = (image.height - mask.height) / 2;
+				image.mask = mask;
+			}
 		}
 	}
 	
@@ -210,8 +223,17 @@ public class SlotsPanel extends Sprite
 	 * 根据数字数组初始化数字icon的Slots
 	 * @param	numAry		数字数组
 	 * @param	delay		滚动间隔
+	 * @param	offsetX		x偏移量
+	 * @param	offsetY		y偏移量
+	 * @param	scale		缩放
+	 * @param	isMask		是否遮罩
 	 */
-	public function initNumSlotsByAry(numAry:Array, delay:int):void
+	public function startNumSlotsByAry(numAry:Array, 
+									   delay:int, 
+									   offsetX:Number = 0, 
+									   offsetY:Number = 0,
+									   scale:Number = 1, 
+									   isMask:Boolean = false):void
 	{
 		var count:int = numAry.length;
 		this.initData(count);
@@ -230,7 +252,7 @@ public class SlotsPanel extends Sprite
 			var index:int = this.indexAry[i];
 			this.iconAry.push("comp/num" + index +".png");
 		}
-		this.initIcon(this.iconAry);
+		this.initIcon(this.iconAry, offsetX, offsetY, scale, isMask);
 		this.start(delay);
 	}
 	
@@ -239,8 +261,17 @@ public class SlotsPanel extends Sprite
 	 * 根据数字初始化数字icon的Slots
 	 * @param	num			数字 包含0
 	 * @param	delay		滚动间隔
+	 * @param	offsetX		x偏移量
+	 * @param	offsetY		y偏移量
+	 * @param	scale		缩放
+	 * @param	isMask		是否遮罩
 	 */
-	public function initNumSlotsByNum(num:int, delay:int):void
+	public function startNumSlotsByNum(num:int, 
+									   delay:int, 
+									   offsetX:Number = 0, 
+									   offsetY:Number = 0,
+									   scale:Number = 1, 
+									   isMask:Boolean = false):void
 	{
 		this.initData(num);
 		this.initIconBg("frame/slotsNumBg.png", num);
@@ -257,7 +288,7 @@ public class SlotsPanel extends Sprite
 			var index:int = this.indexAry[i];
 			this.iconAry.push("comp/num" + index +".png");
 		}
-		this.initIcon(this.iconAry);
+		this.initIcon(this.iconAry, offsetX, offsetY, scale, isMask);
 		this.start(delay);
 	}
 	
@@ -266,8 +297,18 @@ public class SlotsPanel extends Sprite
 	 * @param	imgAry		图片路径列表
 	 * @param	frameBg		框的背景色路径
 	 * @param	delay		滚动间隔
+	 * @param	offsetX		x偏移量
+	 * @param	offsetY		y偏移量
+	 * @param	scale		缩放
+	 * @param	isMask		是否遮罩
 	 */
-	public function initImageSlots(imgAry:Array, frameBg:String, delay:int):void
+	public function startImageSlots(imgAry:Array, 
+									frameBg:String, 
+									delay:int, 
+									offsetX:Number = 0, 
+									offsetY:Number = 0,
+									scale:Number = 1, 
+									isMask:Boolean = false):void
 	{
 		var count:int = imgAry.length;
 		this.initData(count);
@@ -285,31 +326,8 @@ public class SlotsPanel extends Sprite
 			var index:int = this.indexAry[i];
 			this.iconAry.push(imgAry[index]);
 		}
-		this.initIcon(this.iconAry);
+		this.initIcon(this.iconAry, offsetX, offsetY, scale, isMask);
 		this.start(delay);
-	}
-	
-	/**
-	 * 设置icon的位置和缩放
-	 * @param	offsetX		x位置
-	 * @param	offsetY		y位置
-	 * @param	scale		缩放
-	 */
-	public function setIconOffset(offsetX:Number, offsetY:Number, scale:Number = 1):void
-	{
-		for (var i:int = 0; i < this._totalCount; ++i)
-		{
-			var icon:Sprite = this.contentSpt.getChildByName("m" + (i + 1)) as Sprite;
-			if (icon.numChildren > 0)
-			{
-				var image:Image = icon.getChildAt(0) as Image;
-				image.scale(scale, scale);
-				//image.x = (icon.width - image.width * scale) / 2;
-				//image.y = (icon.height - image.height * scale) / 2;
-				image.x += offsetX;
-				image.y += offsetY;
-			}
-		}
 	}
 	
 	/**

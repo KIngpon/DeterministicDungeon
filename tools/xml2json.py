@@ -31,6 +31,6 @@ def xml2json(path):
         f.close() 
 
 #获取当前目录
-d = os.getcwd() + '\\cfg\\'
+d = os.path.dirname(os.getcwd()) + '\\table\\cfg\\'
 print "run in document: " + d 
 xml2json(str(d))
