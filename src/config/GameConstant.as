@@ -17,6 +17,8 @@ public class GameConstant
 	public static const NUM_MAX:int = 9;
 	//游戏字体
 	public static var GAME_FONT_NAME:String = "gameFont";
+	//敌人icon路径
+	public static const ENEMY_ICON:String = "icon/enemy/";
 
 }
 }

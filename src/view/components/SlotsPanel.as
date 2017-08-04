@@ -9,7 +9,9 @@ import laya.utils.Ease;
 import laya.utils.Handler;
 import laya.utils.Timer;
 import laya.utils.Tween;
+import model.po.EnemyPo;
 import ui.GameStage.SlotsPanelUI;
+import utils.GameUtils;
 import utils.Random;
 /**
  * ...滚动选择界面
@@ -235,6 +237,7 @@ public class SlotsPanel extends Sprite
 									   scale:Number = 1, 
 									   isMask:Boolean = false):void
 	{
+		if (!numAry) return;
 		var count:int = numAry.length;
 		this.initData(count);
 		this.initIconBg("frame/slotsNumBg.png", count);
@@ -310,6 +313,7 @@ public class SlotsPanel extends Sprite
 									scale:Number = 1, 
 									isMask:Boolean = false):void
 	{
+		if (!imgAry) return;
 		var count:int = imgAry.length;
 		this.initData(count);
 		this.initIconBg(frameBg, count);
@@ -328,6 +332,24 @@ public class SlotsPanel extends Sprite
 		}
 		this.initIcon(this.iconAry, offsetX, offsetY, scale, isMask);
 		this.start(delay);
+	}
+	
+	/**
+	 * 初始化敌人的Slots
+	 * @param	enemyList	敌人数据列表
+	 * @param	delay		滚动间隔
+	 */
+	public function startEnemySlots(enemyList:Array ,delay:int):void
+	{
+		if (!enemyList) return;
+		var imgAry:Array = [];
+		var count:int = enemyList.length;
+		for (var i:int = 0; i < count; ++i) 
+		{
+			var ePo:EnemyPo = enemyList[i];
+			imgAry.push(GameUtils.getEnemyIconById(ePo.id));
+		}
+		this.startImageSlots(imgAry, "frame/enemySlotsBg.png", delay, 0, 0, 1, true);
 	}
 	
 	/**

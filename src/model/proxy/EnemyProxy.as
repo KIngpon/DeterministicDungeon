@@ -3,7 +3,7 @@ package model.proxy
 import laya.net.Loader;
 import laya.utils.Dictionary;
 import laya.utils.Handler;
-import model.vo.EnemyPo;
+import model.po.EnemyPo;
 import mvc.Proxy;
 
 /**

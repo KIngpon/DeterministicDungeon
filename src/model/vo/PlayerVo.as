@@ -1,5 +1,6 @@
 package model.vo 
 {
+	import model.po.EquipPo;
 /**
  * ...角色动态数据
  * @author ...Kanon

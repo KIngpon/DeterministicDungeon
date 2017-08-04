@@ -12,14 +12,17 @@ import view.ui.Layer;
  * TODO 
  * [damage 出文字未击中！]
  * [选择敌人类型]
- * 中文字体图
- * 敌人icon大小缩放
- * slots大小缩放接口
+ * [敌人icon大小缩放]
+ * [slots大小缩放接口]
  * 关卡表配置
+ * 掉落表
+ * 道具表
+ * 特殊道处理
  * 关卡表对应关卡背景图片，敌人id
  * 选择关卡地形
  * 选择移动格子
  * 本地化文本
+ * 中文字体图
  * @author ...Kanon
  */
 public class Main 

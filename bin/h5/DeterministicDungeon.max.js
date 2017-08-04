@@ -405,6 +405,7 @@ var Laya=window.Laya=(function(window,document){
 		GameConstant.DEBUG=true;
 		GameConstant.NUM_MAX=9;
 		GameConstant.GAME_FONT_NAME="gameFont";
+		GameConstant.ENEMY_ICON="icon/enemy/";
 		return GameConstant;
 	})()
 
@@ -447,14 +448,17 @@ var Laya=window.Laya=(function(window,document){
 	*TODO
 	*[damage 出文字未击中！]
 	*[选择敌人类型]
-	*中文字体图
-	*敌人icon大小缩放
-	*slots大小缩放接口
+	*[敌人icon大小缩放]
+	*[slots大小缩放接口]
 	*关卡表配置
+	*掉落表
+	*道具表
+	*特殊道处理
 	*关卡表对应关卡背景图片，敌人id
 	*选择关卡地形
 	*选择移动格子
 	*本地化文本
+	*中文字体图
 	*@author ...Kanon
 	*/
 	//class Main
@@ -484,6 +488,93 @@ var Laya=window.Laya=(function(window,document){
 		}
 
 		return Main;
+	})()
+
+
+	/**
+	*...敌人数据
+	*@author ...Kanon
+	*/
+	//class model.po.EnemyPo
+	var EnemyPo=(function(){
+		function EnemyPo(){
+			this.id=0;
+			this.name=null;
+			this.atk=0;
+			this.hp=0;
+			this.exp=0;
+			this.type=0;
+			this.pic=null;
+			this.icon=null;
+		}
+
+		__class(EnemyPo,'model.po.EnemyPo');
+		return EnemyPo;
+	})()
+
+
+	/**
+	*...装备数据
+	*@author Kanon
+	*/
+	//class model.po.EquipPo
+	var EquipPo=(function(){
+		function EquipPo(){
+			this.id=0;
+			this.name=null;
+			this.atk=null;
+			this.def=0;
+			this.type=0;
+			this.pic=null;
+			this.icon=null;
+		}
+
+		__class(EquipPo,'model.po.EquipPo');
+		EquipPo.WEAPON=1;
+		EquipPo.SHIELD=2;
+		EquipPo.HELMET=3;
+		return EquipPo;
+	})()
+
+
+	/**
+	*...角色数据
+	*@author ...Kanon
+	*/
+	//class model.po.PlayerPo
+	var PlayerPo=(function(){
+		function PlayerPo(){
+			this.hp=0;
+			this.atk=NaN;
+			this.def=NaN;
+			this.magic=NaN;
+			this.exp=0;
+			this.level=0;
+		}
+
+		__class(PlayerPo,'model.po.PlayerPo');
+		return PlayerPo;
+	})()
+
+
+	/**
+	*...关卡配置
+	*@author ...Kanon
+	*/
+	//class model.po.StagePo
+	var StagePo=(function(){
+		function StagePo(){
+			this.id=0;
+			this.name=null;
+			this.enemyIds=null;
+			this.dropId=0;
+			this.bossId=false;
+			this.level=0;
+			this.points=0;
+		}
+
+		__class(StagePo,'model.po.StagePo');
+		return StagePo;
 	})()
 
 
@@ -518,72 +609,6 @@ var Laya=window.Laya=(function(window,document){
 		*/
 		__proto.initData=function(){}
 		return Proxy;
-	})()
-
-
-	/**
-	*...敌人数据
-	*@author ...Kanon
-	*/
-	//class model.vo.EnemyPo
-	var EnemyPo=(function(){
-		function EnemyPo(){
-			this.id=0;
-			this.name=null;
-			this.atk=0;
-			this.hp=0;
-			this.exp=0;
-			this.type=0;
-			this.pic=null;
-			this.icon=null;
-		}
-
-		__class(EnemyPo,'model.vo.EnemyPo');
-		return EnemyPo;
-	})()
-
-
-	/**
-	*...装备数据
-	*@author Kanon
-	*/
-	//class model.vo.EquipPo
-	var EquipPo=(function(){
-		function EquipPo(){
-			this.id=0;
-			this.name=null;
-			this.atk=null;
-			this.def=0;
-			this.type=0;
-			this.pic=null;
-			this.icon=null;
-		}
-
-		__class(EquipPo,'model.vo.EquipPo');
-		EquipPo.WEAPON=1;
-		EquipPo.SHIELD=2;
-		EquipPo.HELMET=3;
-		return EquipPo;
-	})()
-
-
-	/**
-	*...角色数据
-	*@author ...Kanon
-	*/
-	//class model.vo.PlayerPo
-	var PlayerPo=(function(){
-		function PlayerPo(){
-			this.hp=0;
-			this.atk=NaN;
-			this.def=NaN;
-			this.magic=NaN;
-			this.exp=0;
-			this.level=0;
-		}
-
-		__class(PlayerPo,'model.vo.PlayerPo');
-		return PlayerPo;
 	})()
 
 
@@ -1172,6 +1197,25 @@ var Laya=window.Laya=(function(window,document){
 		Handler._pool=[];
 		Handler._gid=1;
 		return Handler;
+	})()
+
+
+	/**
+	*...游戏内的一些快捷工具类
+	*@author Kanon
+	*/
+	//class utils.GameUtils
+	var GameUtils=(function(){
+		function GameUtils(){};
+		__class(GameUtils,'utils.GameUtils');
+		GameUtils.getEnemyIconById=function(id){
+			var eProxy=Facade.getInstance().retrieveProxy("EnemyProxy");
+			var ePo=eProxy.getEnemyPoById(id);
+			if (!ePo)return "";
+			return "icon/enemy/"+ePo.icon+".png";
+		}
+
+		return GameUtils;
 	})()
 
 
@@ -9904,6 +9948,7 @@ var Laya=window.Laya=(function(window,document){
 			this.facade.registerProxy(new EquipProxy());
 			this.facade.registerProxy(new EnemyProxy());
 			this.facade.registerProxy(new PlayerProxy());
+			this.facade.registerProxy(new StageProxy());
 			this.facade.registerProxy(new ResProxy());
 		}
 
@@ -10196,6 +10241,119 @@ var Laya=window.Laya=(function(window,document){
 
 
 	/**
+	*...关卡数据代理
+	*@author Kanon
+	*/
+	//class model.proxy.StageProxy extends mvc.Proxy
+	var StageProxy=(function(_super){
+		function StageProxy(){
+			this.isLoaded=false;
+			this.curLevel=1;
+			this.curPoints=1;
+			this.stageAry=null;
+			this.eProxy=null;
+			StageProxy.__super.call(this);
+			this.proxyName="StageProxy";
+			this.eProxy=this.retrieveProxy("EnemyProxy");
+		}
+
+		__class(StageProxy,'model.proxy.StageProxy',_super);
+		var __proto=StageProxy.prototype;
+		__proto.initData=function(){
+			this.isLoaded=false;
+			this.stageAry=[];
+			Laya.loader.load("data/stage.xml",Handler.create(this,function(data){
+				var xml=Laya.loader.getRes("data/stage.xml");
+				var elementList=xml.getElementsByTagName("stage");
+				var count=elementList.length;
+				for (var i=0;i < count;++i){
+					var childNode=elementList[i];
+					var stagePo=new StagePo();
+					stagePo.id=childNode.getAttribute("id");
+					stagePo.name=childNode.getAttribute("name");
+					stagePo.bossId=childNode.getAttribute("bossId");
+					stagePo.dropId=childNode.getAttribute("dropId");
+					stagePo.level=childNode.getAttribute("level");
+					stagePo.points=childNode.getAttribute("points");
+					stagePo.enemyIds=String(childNode.getAttribute("enemyIds")).split(",");
+					this.stageAry.push(stagePo);
+				}
+				this.isLoaded=true;
+			}));
+		}
+
+		/**
+		*根据关卡获取关卡列表数据
+		*@param level 关卡
+		*@return 关卡列表数据
+		*/
+		__proto.getStagePoListByLevel=function(level){
+			var arr=[];
+			var count=this.stageAry.length;
+			for (var i=0;i < count;i++){
+				var sPo=this.stageAry[i];
+				if (sPo.level==level)
+					arr.push(sPo);
+			}
+			return arr;
+		}
+
+		/**
+		*根据关卡和关卡点获取某一关的数据
+		*@param level 关卡
+		*@param points 关卡点
+		*@return 关卡数据
+		*/
+		__proto.getStagePoByLevelAndPoints=function(level,points){
+			var count=this.stageAry.length;
+			for (var i=0;i < count;i++){
+				var sPo=this.stageAry[i];
+				if (sPo.level==level && sPo.points==points)
+					return sPo;
+			}
+			return null;
+		}
+
+		/**
+		*获取当前关卡列表数据
+		*@return 当前关卡列表数据
+		*/
+		__proto.getCurStagePoList=function(){
+			return this.getStagePoListByLevel(this.curLevel);
+		}
+
+		/**
+		*获取当前关卡数据
+		*@return 当前关卡数据
+		*/
+		__proto.getCurStagePo=function(){
+			return this.getStagePoByLevelAndPoints(this.curLevel,this.curPoints);
+		}
+
+		/**
+		*获取当前关卡数据的敌人列表
+		*@return 敌人数据列表
+		*/
+		__proto.getCurStagePoEnemyList=function(){
+			var arr=[];
+			var sPo=this.getStagePoByLevelAndPoints(this.curLevel,this.curPoints);
+			if (sPo){
+				var count=sPo.enemyIds.length;
+				for (var i=0;i < count;++i){
+					var id=sPo.enemyIds[i];
+					var ePo=this.eProxy.getEnemyPoById(id);
+					arr.push(ePo);
+				}
+			}
+			return arr;
+		}
+
+		StageProxy.NAME="StageProxy";
+		return StageProxy;
+	})(Proxy)
+
+
+	/**
 	*...战斗系统中介
 	*战斗流程
 	*1.1.选择地形
@@ -10221,6 +10379,7 @@ var Laya=window.Laya=(function(window,document){
 		function GameStageMediator(){
 			this.gameStage=null;
 			this.playerProxy=null;
+			this.stageProxy=null;
 			this.playerVo=null;
 			this.roundIndex=0;
 			this.slots=null;
@@ -10229,9 +10388,10 @@ var Laya=window.Laya=(function(window,document){
 			this.isSelectAtkIndex=false;
 			this.enemyCount=0;
 			this.curEnemyCount=0;
+			this.curStagePo=null;
+			this.enemyList=null;
 			GameStageMediator.__super.call(this);
 			this.mediatorName="GameStageMediator";
-			this.playerProxy=this.retrieveProxy("PlayerProxy");
 		}
 
 		__class(GameStageMediator,'view.mediator.GameStageMediator',_super);
@@ -10246,10 +10406,9 @@ var Laya=window.Laya=(function(window,document){
 		__proto.handleNotification=function(notification){
 			switch (notification.notificationName){
 				case "INIT_FIGHT_STAGE":
-					this.initStage();
+					this.initData();
 					this.initUI();
 					this.initEvent();
-					this.playerVo=this.playerProxy.pVo;
 					this.sendNotification("START_FIGHT",null);
 					break ;
 				case "START_FIGHT":
@@ -10299,23 +10458,30 @@ var Laya=window.Laya=(function(window,document){
 		}
 
 		/**
-		*初始化舞台
+		*初始化数据
 		*/
-		__proto.initStage=function(){
-			if (this.gameStage)return;
-			this.gameStage=new GameStageLayer();
-			Layer.GAME_STAGE.addChild(this.gameStage);
+		__proto.initData=function(){
+			this.playerProxy=this.retrieveProxy("PlayerProxy");
+			this.stageProxy=this.retrieveProxy("StageProxy");
+			this.curStagePo=this.stageProxy.getCurStagePo();
+			this.playerVo=this.playerProxy.pVo;
+			this.enemyList=this.stageProxy.getCurStagePoEnemyList();
 		}
 
 		/**
 		*初始化UI
 		*/
 		__proto.initUI=function(){
-			if (this.slots)return;
-			this.slots=new SlotsPanel();
-			this.slots.visible=false;
-			this.slots.selectedBtn.on("mousedown",this,this.selectedBtnMouseDown);
-			Layer.GAME_ALERT.addChild(this.slots);
+			if (!this.slots){
+				this.slots=new SlotsPanel();
+				this.slots.visible=false;
+				this.slots.selectedBtn.on("mousedown",this,this.selectedBtnMouseDown);
+				Layer.GAME_ALERT.addChild(this.slots);
+			}
+			if (!this.gameStage){
+				this.gameStage=new GameStageLayer();
+				Layer.GAME_STAGE.addChild(this.gameStage);
+			}
 		}
 
 		/**
@@ -10391,9 +10557,7 @@ var Laya=window.Laya=(function(window,document){
 		__proto.initSlotsSelectEnemyType=function(){
 			this.slots.visible=true;
 			this.slots.selectedBtn.mouseEnabled=true;
-			this.slots.startImageSlots(["icon/enemy/e_icon1.png","icon/enemy/e_icon2.png","icon/enemy/e_icon3.png"],
-			"frame/enemySlotsBg.png",
-			this.playerVo.slotsDelay,0,0,1,true);
+			this.slots.startEnemySlots(this.enemyList,this.playerVo.slotsDelay);
 			this.slots.setTitle("放入"+this.curEnemyCount+"个敌人/"+this.enemyCount);
 		}
 
@@ -16392,6 +16556,7 @@ var Laya=window.Laya=(function(window,document){
 			(offsetY===void 0)&& (offsetY=0);
 			(scale===void 0)&& (scale=1);
 			(isMask===void 0)&& (isMask=false);
+			if (!numAry)return;
 			var count=numAry.length;
 			this.initData(count);
 			this.initIconBg("frame/slotsNumBg.png",count);
@@ -16457,6 +16622,7 @@ var Laya=window.Laya=(function(window,document){
 			(offsetY===void 0)&& (offsetY=0);
 			(scale===void 0)&& (scale=1);
 			(isMask===void 0)&& (isMask=false);
+			if (!imgAry)return;
 			var count=imgAry.length;
 			this.initData(count);
 			this.initIconBg(frameBg,count);
@@ -16473,6 +16639,22 @@ var Laya=window.Laya=(function(window,document){
 			}
 			this.initIcon(this.iconAry,offsetX,offsetY,scale,isMask);
 			this.start(delay);
+		}
+
+		/**
+		*初始化敌人的Slots
+		*@param enemyList 敌人数据列表
+		*@param delay 滚动间隔
+		*/
+		__proto.startEnemySlots=function(enemyList,delay){
+			if (!enemyList)return;
+			var imgAry=[];
+			var count=enemyList.length;
+			for (var i=0;i < count;++i){
+				var ePo=enemyList[i];
+				imgAry.push(GameUtils.getEnemyIconById(ePo.id));
+			}
+			this.startImageSlots(imgAry,"frame/enemySlotsBg.png",delay,0,0,1,true);
 		}
 
 		/**

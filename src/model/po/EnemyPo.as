@@ -1,4 +1,4 @@
-package model.vo 
+package model.po 
 {
 /**
  * ...敌人数据

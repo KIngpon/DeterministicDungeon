@@ -1,7 +1,7 @@
 package model.proxy 
 {
 import laya.utils.Handler;
-import model.vo.EquipPo;
+import model.po.EquipPo;
 import mvc.Proxy;
 
 /**

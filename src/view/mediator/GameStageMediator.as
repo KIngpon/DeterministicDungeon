@@ -6,7 +6,9 @@ import laya.display.Sprite;
 import laya.events.Event;
 import laya.events.Keyboard;
 import laya.utils.Handler;
+import model.po.StagePo;
 import model.proxy.PlayerProxy;
+import model.proxy.StageProxy;
 import model.vo.PlayerVo;
 import mvc.Mediator;
 import mvc.Notification;
@@ -43,6 +45,8 @@ public class GameStageMediator extends Mediator
 	private var gameStage:GameStageLayer;
 	//角色数据代理
 	private var playerProxy:PlayerProxy;
+	//关卡数据
+	private var stageProxy:StageProxy;
 	//角色数据
 	private var playerVo:PlayerVo;
 	//回合数
@@ -59,10 +63,13 @@ public class GameStageMediator extends Mediator
 	private var enemyCount:int;
 	//当前数量
 	private var curEnemyCount:int;
+	//关卡数据
+	private var curStagePo:StagePo;
+	//敌人列表
+	private var enemyList:Array;
 	public function GameStageMediator() 
 	{
 		this.mediatorName = NAME;
-		this.playerProxy = this.retrieveProxy(PlayerProxy.NAME) as PlayerProxy;
 	}
 	
 	override protected function listNotificationInterests():Vector.<String> 
@@ -78,10 +85,9 @@ public class GameStageMediator extends Mediator
 		switch (notification.notificationName) 
 		{
 			case MsgConstant.INIT_FIGHT_STAGE:
-				this.initStage();
+				this.initData();
 				this.initUI();
 				this.initEvent();
-				this.playerVo = this.playerProxy.pVo;
 				this.sendNotification(MsgConstant.START_FIGHT, null);
 				break;
 			case MsgConstant.START_FIGHT:
@@ -147,13 +153,15 @@ public class GameStageMediator extends Mediator
 	}
 	
 	/**
-	 * 初始化舞台
+	 * 初始化数据
 	 */
-	private function initStage():void
+	private function initData():void
 	{
-		if (this.gameStage) return;
-		this.gameStage = new GameStageLayer();
-		Layer.GAME_STAGE.addChild(this.gameStage);
+		this.playerProxy = this.retrieveProxy(PlayerProxy.NAME) as PlayerProxy;
+		this.stageProxy = this.retrieveProxy(StageProxy.NAME) as StageProxy;
+		this.curStagePo = this.stageProxy.getCurStagePo();
+		this.playerVo = this.playerProxy.pVo;
+		this.enemyList = this.stageProxy.getCurStagePoEnemyList();
 	}
 	
 	/**
@@ -161,11 +169,19 @@ public class GameStageMediator extends Mediator
 	 */
 	private function initUI():void
 	{
-		if (this.slots) return;
-		this.slots = new SlotsPanel();
-		this.slots.visible = false;
-		this.slots.selectedBtn.on(Event.MOUSE_DOWN, this, selectedBtnMouseDown);
-		Layer.GAME_ALERT.addChild(this.slots);
+		if (!this.slots) 
+		{
+			this.slots = new SlotsPanel();
+			this.slots.visible = false;
+			this.slots.selectedBtn.on(Event.MOUSE_DOWN, this, selectedBtnMouseDown);
+			Layer.GAME_ALERT.addChild(this.slots);
+		}
+		
+		if (!this.gameStage)
+		{
+			this.gameStage = new GameStageLayer();
+			Layer.GAME_STAGE.addChild(this.gameStage);
+		}
 	}
 	
 	/**
@@ -257,9 +273,7 @@ public class GameStageMediator extends Mediator
 	{
 		this.slots.visible = true;
 		this.slots.selectedBtn.mouseEnabled = true;
-		this.slots.startImageSlots(["icon/enemy/e_icon1.png", "icon/enemy/e_icon2.png", "icon/enemy/e_icon3.png"], 
-									"frame/enemySlotsBg.png",
-									this.playerVo.slotsDelay, 0, 0, 1, true);
+		this.slots.startEnemySlots(this.enemyList, this.playerVo.slotsDelay);
 		this.slots.setTitle("放入" + this.curEnemyCount + "个敌人/" + this.enemyCount);
 	}
 	
