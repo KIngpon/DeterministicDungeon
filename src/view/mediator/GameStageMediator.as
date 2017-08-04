@@ -66,10 +66,12 @@ public class GameStageMediator extends Mediator
 	//关卡数据
 	private var curStagePo:StagePo;
 	//敌人列表
-	private var enemyList:Array;
+	private var enemyPoList:Array;
 	public function GameStageMediator() 
 	{
 		this.mediatorName = NAME;
+		this.playerProxy = this.retrieveProxy(PlayerProxy.NAME) as PlayerProxy;
+		this.stageProxy = this.retrieveProxy(StageProxy.NAME) as StageProxy;
 	}
 	
 	override protected function listNotificationInterests():Vector.<String> 
@@ -85,15 +87,12 @@ public class GameStageMediator extends Mediator
 		switch (notification.notificationName) 
 		{
 			case MsgConstant.INIT_FIGHT_STAGE:
-				this.initData();
 				this.initUI();
 				this.initEvent();
 				this.sendNotification(MsgConstant.START_FIGHT, null);
 				break;
 			case MsgConstant.START_FIGHT:
-				this.isSelectEnemyCount = false;
-				this.isSelectEnemyType = false;
-				this.isSelectAtkIndex = false;
+				this.initData();
 				if (this.playerVo.isFirstStep)
 				{
 					// 选择地形
@@ -108,8 +107,9 @@ public class GameStageMediator extends Mediator
 					//选择移动位置
 					//角色移动
 				}
-				this.roundIndex = 0;
-				this.gameStage.playerMove(200, Handler.create(this, playerMoveComplete));
+				
+				this.gameStage.initPlayer();
+				this.gameStage.playerMove(200, 1000, Handler.create(this, playerMoveComplete));
 				break;
 			default:
 				break;
@@ -129,39 +129,19 @@ public class GameStageMediator extends Mediator
 		Laya.timer.loop(1 / 60 * 1000, this, loopHandler);
 	}
 	
-	private function loopHandler():void 
-	{
-		Damage.update();
-	}
-	
-	/**
-	 * 点击事件
-	 */
-	private function clickHandler(event:Event):void 
-	{
-		//Damage.show(100, event.stageX, event.stageY, 1.5);
-	}
-	
-	private function onKeyDownHandler(event:Event):void 
-	{
-		if (!this.gameStage) return;
-		if (event.keyCode == Keyboard.A) this.gameStage.playerAtk(Handler.create(this, playerAtkComplete));
-		if (event.keyCode == Keyboard.D) this.gameStage.playerHurt();
-		
-		if (event.keyCode == Keyboard.Z) this.gameStage.enemyAtk(Random.randint(0, 2));
-		if (event.keyCode == Keyboard.X) this.gameStage.enemyHurt(Random.randint(0, 2));
-	}
-	
 	/**
 	 * 初始化数据
 	 */
 	private function initData():void
 	{
-		this.playerProxy = this.retrieveProxy(PlayerProxy.NAME) as PlayerProxy;
-		this.stageProxy = this.retrieveProxy(StageProxy.NAME) as StageProxy;
+		this.isSelectEnemyCount = false;
+		this.isSelectEnemyType = false;
+		this.isSelectAtkIndex = false;
+		this.roundIndex = 0;
+		this.curEnemyCount = 0;
 		this.curStagePo = this.stageProxy.getCurStagePo();
 		this.playerVo = this.playerProxy.pVo;
-		this.enemyList = this.stageProxy.getCurStagePoEnemyList();
+		this.enemyPoList = this.stageProxy.getCurStagePoEnemyList();
 	}
 	
 	/**
@@ -185,6 +165,47 @@ public class GameStageMediator extends Mediator
 	}
 	
 	/**
+	 * 初始化选择敌人数量
+	 */
+	private function initSlotsSelectEnemyCount():void
+	{
+		//选择敌人数量
+		this.slots.visible = true;
+		this.slots.selectedBtn.mouseEnabled = true;
+		this.slots.startNumSlotsByAry([0, 1, 2, 3], this.playerVo.slotsDelay, 0, -5);
+		this.slots.setTitle("选择敌人数量");
+	}
+	
+	/**
+	 * 初始化攻击力滚动
+	 */
+	private function initSlotsAtk():void
+	{
+		//选择攻击力
+		this.isSelectAtkIndex = false;
+		this.slots.visible = true;
+		this.slots.selectedBtn.mouseEnabled = true;
+		this.slots.startNumSlotsByAry(this.playerProxy.getPlayerAtk(), this.playerVo.slotsDelay, 0, -5);
+		this.slots.setTitle("攻击强度");
+	}
+	
+	/**
+	 * 初始化选择敌人类型
+	 */
+	private function initSlotsSelectEnemyType():void
+	{
+		this.slots.visible = true;
+		this.slots.selectedBtn.mouseEnabled = true;
+		this.slots.startEnemySlots(this.enemyPoList, this.playerVo.slotsDelay);
+		this.slots.setTitle("放入" + this.curEnemyCount + "个敌人/" + this.enemyCount);
+	}
+	
+	//event handler
+	////////////////////////////////////////////////////
+	////////////////////////////////////////////////////
+	////////////////////////////////////////////////////
+	
+	/**
 	 * 点击选择按钮
 	 */
 	private function selectedBtnMouseDown():void 
@@ -205,7 +226,10 @@ public class GameStageMediator extends Mediator
 			this.isSelectEnemyCount = true;
 			this.enemyCount = this.slots.indexValue;
 			this.curEnemyCount++;
-			if (this.enemyCount > 0) this.initSlotsSelectEnemyType();
+			if (this.enemyCount > 0)
+				this.initSlotsSelectEnemyType();
+			else 
+				this.gameStage.playerMove(GameConstant.GAME_WIDTH, 3000, Handler.create(this, playerMoveOutComplete));
 			//直接移动出舞台
 		}
 		else if (!this.isSelectEnemyType)
@@ -241,40 +265,24 @@ public class GameStageMediator extends Mediator
 		this.initSlotsSelectEnemyCount();
 	}
 	
-	/**
-	 * 初始化选择敌人数量
-	 */
-	private function initSlotsSelectEnemyCount():void
+	private function playerMoveOutComplete():void 
 	{
-		//选择敌人数量
-		this.slots.visible = true;
-		this.slots.selectedBtn.mouseEnabled = true;
-		this.slots.startNumSlotsByAry([0, 1, 2, 3], this.playerVo.slotsDelay, 0, -5);
-		this.slots.setTitle("选择敌人数量");
-	}
-	
-	/**
-	 * 初始化攻击力滚动
-	 */
-	private function initSlotsAtk():void
-	{
-		//选择攻击力
-		this.isSelectAtkIndex = false;
-		this.slots.visible = true;
-		this.slots.selectedBtn.mouseEnabled = true;
-		this.slots.startNumSlotsByAry(this.playerProxy.getPlayerAtk(), this.playerVo.slotsDelay, 0, -5);
-		this.slots.setTitle("攻击强度");
-	}
-	
-	/**
-	 * 初始化选择敌人类型
-	 */
-	private function initSlotsSelectEnemyType():void
-	{
-		this.slots.visible = true;
-		this.slots.selectedBtn.mouseEnabled = true;
-		this.slots.startEnemySlots(this.enemyList, this.playerVo.slotsDelay);
-		this.slots.setTitle("放入" + this.curEnemyCount + "个敌人/" + this.enemyCount);
+		//胜利
+		this.stageProxy.curPoints++;
+		if (this.stageProxy.curPoints > this.stageProxy.getCurStagePointsCount())
+		{
+			this.stageProxy.curPoints = 1;
+			this.stageProxy.curLevel++;
+			if (this.stageProxy.curLevel > this.stageProxy.totalLevel)
+			{
+				trace("通关了");
+				//TODO 过关动画
+				return;
+			}
+		}
+		trace("this.stageProxy.curLevel", this.stageProxy.curLevel);
+		trace("this.stageProxy.curPoints", this.stageProxy.curPoints);
+		this.sendNotification(MsgConstant.START_FIGHT);
 	}
 	
 	/**
@@ -282,8 +290,8 @@ public class GameStageMediator extends Mediator
 	 */
 	private function playerAtkComplete():void
 	{
-		this.gameStage.enemyHurt(this.roundIndex, Handler.create(this, enemyHurtComplete));
 		var enemy:Sprite = this.gameStage.getEnemyByIndex(this.roundIndex);
+		this.gameStage.enemyHurt(this.roundIndex, this.slots.indexValue == 0, Handler.create(this, enemyHurtComplete));
 		if (this.slots.indexValue == 0)
 			Damage.showDamageByStr("miss!", enemy.x, enemy.y - 100, 1.5);
 		else
@@ -303,8 +311,8 @@ public class GameStageMediator extends Mediator
 	 */
 	private function enemyAtkComplete():void
 	{
-		this.gameStage.playerHurt(Handler.create(this, playerHurtComplete));
 		//TODO 敌人攻击力随机
+		this.gameStage.playerHurt(this.slots.indexValue == 0, Handler.create(this, playerHurtComplete));
 		if (this.slots.indexValue == 0)
 			Damage.showDamageByStr("miss!", this.gameStage.player.x, this.gameStage.player.y - 100, 1.5);
 		else
@@ -320,6 +328,32 @@ public class GameStageMediator extends Mediator
 		this.roundIndex++;
 		if (this.roundIndex > this.enemyCount - 1) this.roundIndex = 0;
 		this.initSlotsAtk();
+	}
+	
+	/**
+	 * 游戏循环
+	 */
+	private function loopHandler():void 
+	{
+		Damage.update();
+		//shake
+	}
+	
+	/**
+	 * 点击事件
+	 */
+	private function clickHandler(event:Event):void 
+	{
+		//Damage.show(100, event.stageX, event.stageY, 1.5);
+	}
+	
+	private function onKeyDownHandler(event:Event):void 
+	{
+		if (!this.gameStage) return;
+		if (event.keyCode == Keyboard.A) this.gameStage.playerAtk(Handler.create(this, playerAtkComplete));
+		if (event.keyCode == Keyboard.D) this.gameStage.playerHurt();
+		if (event.keyCode == Keyboard.Z) this.gameStage.enemyAtk(Random.randint(0, 2));
+		if (event.keyCode == Keyboard.X) this.gameStage.enemyHurt(Random.randint(0, 2));
 	}
 }
 }

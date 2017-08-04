@@ -93,7 +93,7 @@ public class SlotsPanel extends Sprite
 		if (!imgAry) return;
 		this.clearIcon();
 		var count:int = imgAry.length;
-		if (count > GameConstant.NUM_MAX) count = GameConstant.NUM_MAX;
+		if (count > GameConstant.SLOTS_NUM_MAX) count = GameConstant.SLOTS_NUM_MAX;
 		for (var i:int = 0; i < count; ++i)
 		{
 			var icon:Sprite = this.contentSpt.getChildByName("m" + (i + 1)) as Sprite;
@@ -119,7 +119,7 @@ public class SlotsPanel extends Sprite
 	 */
 	public function clearIcon():void
 	{
-		for (var i:int = 0; i < GameConstant.NUM_MAX; ++i) 
+		for (var i:int = 0; i < GameConstant.SLOTS_NUM_MAX; ++i) 
 		{
 			var icon:Sprite = this.contentSpt.getChildByName("m" + (i + 1)) as Sprite;
 			icon.removeChildren(0, 1);
@@ -149,7 +149,7 @@ public class SlotsPanel extends Sprite
 	 */
 	public function clearIconBg():void
 	{
-		for (var i:int = 0; i < GameConstant.NUM_MAX; i++) 
+		for (var i:int = 0; i < GameConstant.SLOTS_NUM_MAX; i++) 
 		{
 			var img:Image = this.bgSpt.getChildByName("bg" + (i + 1)) as Image;
 			var frameImg:Image = this.frameSpt.getChildByName("frame" + (i + 1)) as Image;
@@ -179,10 +179,12 @@ public class SlotsPanel extends Sprite
 	 */
 	public function start(delay:int):void
 	{
+		this._index = 0;
 		if (!this.timer) this.timer = new Timer();
 		this.timer.clear(this, loopHandler);
 		this.timer.loop(delay, this, loopHandler);
 		if (!this.flashingTimer) this.flashingTimer = new Timer();
+		this.updateSelectImg();
 	}
 	
 	/**
@@ -192,6 +194,7 @@ public class SlotsPanel extends Sprite
 	{
 		if (!this.timer) return;
 		this.timer.clear(this, loopHandler);
+		this.updateSelectImg();
 	}
 	
 	/**
@@ -233,6 +236,7 @@ public class SlotsPanel extends Sprite
 	{
 		if (!numAry) return;
 		var count:int = numAry.length;
+		if (count > GameConstant.SLOTS_NUM_MAX) count = GameConstant.SLOTS_NUM_MAX;
 		this.initData(count);
 		this.initIconBg("frame/slotsNumBg.png", count);
 		this.iconAry = [];
@@ -268,6 +272,7 @@ public class SlotsPanel extends Sprite
 									   offsetY:Number = 0,
 									   isMask:Boolean = false):void
 	{
+		if (num > GameConstant.SLOTS_NUM_MAX) num = GameConstant.SLOTS_NUM_MAX;
 		this.initData(num);
 		this.initIconBg("frame/slotsNumBg.png", num);
 		this.iconAry = [];
@@ -307,6 +312,7 @@ public class SlotsPanel extends Sprite
 	{
 		if (!imgAry) return;
 		var count:int = imgAry.length;
+		if (count > GameConstant.SLOTS_NUM_MAX) count = GameConstant.SLOTS_NUM_MAX;
 		this.initData(count);
 		this.initIconBg(frameBg, count);
 		this.iconAry = [];
@@ -377,6 +383,15 @@ public class SlotsPanel extends Sprite
 		this._index++;
 		if (this._index > this._totalCount - 1) this._index = 0;
 		this._indexValue = this.indexAry[this._index];
+		this.updateSelectImg();
+	}
+	
+	/**
+	 * 更新当前选择框位置
+	 */
+	private function updateSelectImg():void
+	{
+		if (!this.frameSpt) return;
 		var frameImg:Image = this.frameSpt.getChildByName("frame" + (this._index + 1)) as Image;
 		this.selectedImg.x = frameImg.x;
 		this.selectedImg.y = frameImg.y;

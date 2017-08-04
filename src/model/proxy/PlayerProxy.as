@@ -62,7 +62,7 @@ public class PlayerProxy extends Proxy
 			this.pVo.curLevelNum = 1;
 			this.pVo.curStageNum = 1;
 			this.pVo.isFirstStep = true;
-			this.pVo.slotsDelay = 70;
+			this.pVo.slotsDelay = 270;
 			this.pVo.weaponPo = this.equipProxy.getEquipPoById(1);
 			trace(this.pVo.curHp, this.pVo.level, this.pVo.maxExp);
 		}));

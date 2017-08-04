@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<drops>
+	<drop id="1" weaponIds="2,2,2,2,3,3,3,3,4,4" shieldIds="5,5,5,6,6,6,7,7" helmetIds="9,9,9,10,10,10,11,11,12" magicIds="0"/>
+	<drop id="2" weaponIds="2,2,2,2,3,3,3,4,4,4" shieldIds="5,5,6,6,6,7,7,7" helmetIds="9,9,10,10,10,11,11,12,12" magicIds="1"/>
+	<drop id="3" weaponIds="2,2,2,3,3,3,3,4,4,4" shieldIds="5,5,6,6,6,7,7,7" helmetIds="9,9,10,10,11,11,12,12,13" magicIds="2"/>
+	<drop id="4" weaponIds="2,2,3,3,3,3,4,4,4,4" shieldIds="5,5,6,6,7,7,7,7" helmetIds="9,10,10,10,11,11,11,13,13" magicIds="3"/>
+</drops>

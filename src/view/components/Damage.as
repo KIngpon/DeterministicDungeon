@@ -86,7 +86,7 @@ class DamageNum extends Sprite
 {
 	public var vx:Number = 0;
 	public var vy:Number = 0;
-	public var g:Number = .3;
+	public var g:Number = .6;
 	public function DamageNum():void
 	{
 		

@@ -403,7 +403,7 @@ var Laya=window.Laya=(function(window,document){
 		GameConstant.ENEMY_NUM=3;
 		GameConstant.ROLE_POS_Y=500;
 		GameConstant.DEBUG=true;
-		GameConstant.NUM_MAX=9;
+		GameConstant.SLOTS_NUM_MAX=9;
 		GameConstant.GAME_FONT_NAME="gameFont";
 		GameConstant.ENEMY_ICON="icon/enemy/";
 		return GameConstant;
@@ -450,15 +450,21 @@ var Laya=window.Laya=(function(window,document){
 	*[选择敌人类型]
 	*[敌人icon大小缩放]
 	*[slots大小缩放接口]
-	*关卡表配置
-	*掉落表
+	*[关卡表配置]
+	*[掉落表]
+	*随机的0个敌人直接胜利
+	*敌人扣血死亡胜利流程
+	*屏幕震动
 	*道具表
+	*装备icon
+	*本地化表
 	*特殊道处理
 	*关卡表对应关卡背景图片，敌人id
 	*选择关卡地形
 	*选择移动格子
 	*本地化文本
 	*中文字体图
+	*敌人动画
 	*@author ...Kanon
 	*/
 	//class Main
@@ -488,6 +494,25 @@ var Laya=window.Laya=(function(window,document){
 		}
 
 		return Main;
+	})()
+
+
+	/**
+	*...掉落数据
+	*@author Kanon
+	*/
+	//class model.po.DropPo
+	var DropPo=(function(){
+		function DropPo(){
+			this.id=0;
+			this.weaponIds=null;
+			this.shieldIds=null;
+			this.helmetIds=null;
+			this.magicIds=null;
+		}
+
+		__class(DropPo,'model.po.DropPo');
+		return DropPo;
 	})()
 
 
@@ -1355,7 +1380,7 @@ var Laya=window.Laya=(function(window,document){
 				function DamageNum(){
 					this.vx=0;
 					this.vy=0;
-					this.g=.3;
+					this.g=.6;
 					DamageNum.__super.call(this);
 				}
 				__class(DamageNum,'',_super);
@@ -9949,6 +9974,7 @@ var Laya=window.Laya=(function(window,document){
 			this.facade.registerProxy(new EnemyProxy());
 			this.facade.registerProxy(new PlayerProxy());
 			this.facade.registerProxy(new StageProxy());
+			this.facade.registerProxy(new DropProxy());
 			this.facade.registerProxy(new ResProxy());
 		}
 
@@ -9973,6 +9999,62 @@ var Laya=window.Laya=(function(window,document){
 
 		return ViewCommand;
 	})(Command)
+
+
+	/**
+	*...掉落数据代理
+	*@author Kanon
+	*/
+	//class model.proxy.DropProxy extends mvc.Proxy
+	var DropProxy=(function(_super){
+		function DropProxy(){
+			this.dropAry=null;
+			this.isLoaded=false;
+			DropProxy.__super.call(this);
+			this.proxyName="DropProxy";
+		}
+
+		__class(DropProxy,'model.proxy.DropProxy',_super);
+		var __proto=DropProxy.prototype;
+		__proto.initData=function(){
+			this.dropAry=[];
+			Laya.loader.load("data/drop.xml",Handler.create(this,function(data){
+				var xml=Laya.loader.getRes("data/drop.xml");
+				var elementList=xml.getElementsByTagName("drop");
+				var count=elementList.length;
+				for (var i=0;i < count;++i){
+					var childNode=elementList[i];
+					var dPo=new DropPo();
+					dPo.id=childNode.getAttribute("id");
+					dPo.weaponIds=String(childNode.getAttribute("weaponIds")).split(",");
+					dPo.shieldIds=String(childNode.getAttribute("shieldIds")).split(",");
+					dPo.helmetIds=String(childNode.getAttribute("helmetIds")).split(",");
+					dPo.magicIds=String(childNode.getAttribute("magicIds")).split(",");
+					this.dropAry.push(dPo);
+				}
+				this.isLoaded=true;
+			}));
+		}
+
+		/**
+		*根据掉落id获取掉落数据
+		*@param id 掉落id
+		*@return 掉落数据
+		*/
+		__proto.getDropPoById=function(id){
+			if (!this.dropAry)return null;
+			var count=this.dropAry.length;
+			for (var i=0;i < count;i++){
+				var dPo=this.dropAry[i];
+				if (dPo.id==id)
+					return dPo;
+			}
+			return null;
+		}
+
+		DropProxy.NAME="DropProxy";
+		return DropProxy;
+	})(Proxy)
 
 
 	/**
@@ -10148,7 +10230,7 @@ var Laya=window.Laya=(function(window,document){
 				this.pVo.curLevelNum=1;
 				this.pVo.curStageNum=1;
 				this.pVo.isFirstStep=true;
-				this.pVo.slotsDelay=70;
+				this.pVo.slotsDelay=270;
 				this.pVo.weaponPo=this.equipProxy.getEquipPoById(1);
 				console.log(this.pVo.curHp,this.pVo.level,this.pVo.maxExp);
 			}));
@@ -10250,11 +10332,16 @@ var Laya=window.Laya=(function(window,document){
 			this.isLoaded=false;
 			this.curLevel=1;
 			this.curPoints=1;
+			this._totalLevel=0;
 			this.stageAry=null;
 			this.eProxy=null;
+			this.equipProxy=null;
+			this.dProxy=null;
 			StageProxy.__super.call(this);
 			this.proxyName="StageProxy";
 			this.eProxy=this.retrieveProxy("EnemyProxy");
+			this.dProxy=this.retrieveProxy("DropProxy");
+			this.equipProxy=this.retrieveProxy("EquipProxy");
 		}
 
 		__class(StageProxy,'model.proxy.StageProxy',_super);
@@ -10266,6 +10353,7 @@ var Laya=window.Laya=(function(window,document){
 				var xml=Laya.loader.getRes("data/stage.xml");
 				var elementList=xml.getElementsByTagName("stage");
 				var count=elementList.length;
+				var prevLevel=0;
 				for (var i=0;i < count;++i){
 					var childNode=elementList[i];
 					var stagePo=new StagePo();
@@ -10276,6 +10364,10 @@ var Laya=window.Laya=(function(window,document){
 					stagePo.level=childNode.getAttribute("level");
 					stagePo.points=childNode.getAttribute("points");
 					stagePo.enemyIds=String(childNode.getAttribute("enemyIds")).split(",");
+					if (stagePo.level !=prevLevel){
+						prevLevel=stagePo.level;
+						this._totalLevel++;
+					}
 					this.stageAry.push(stagePo);
 				}
 				this.isLoaded=true;
@@ -10323,6 +10415,16 @@ var Laya=window.Laya=(function(window,document){
 		}
 
 		/**
+		*获取当前关卡总关卡点数
+		*@return 关卡点数量
+		*/
+		__proto.getCurStagePointsCount=function(){
+			var arr=this.getStagePoListByLevel(this.curLevel);
+			if (!arr)return 0;
+			return arr.length;
+		}
+
+		/**
 		*获取当前关卡数据
 		*@return 当前关卡数据
 		*/
@@ -10348,6 +10450,83 @@ var Laya=window.Laya=(function(window,document){
 			return arr;
 		}
 
+		/**
+		*获取当前关卡数据的武器掉落列表
+		*@return 武器掉落列表
+		*/
+		__proto.getCurStagePoWeaponList=function(){
+			var arr=[];
+			var sPo=this.getStagePoByLevelAndPoints(this.curLevel,this.curPoints);
+			if (sPo){
+				var dPo=this.dProxy.getDropPoById(sPo.dropId);
+				var count=dPo.weaponIds.length;
+				for (var i=0;i < count;++i){
+					var id=sPo.weaponIds[i];
+					var equipPo=this.equipProxy.getEquipPoById(id);
+					arr.push(equipPo);
+				}
+			}
+			return arr;
+		}
+
+		/**
+		*获取当前关卡的盾掉落数据列表
+		*@return 盾掉落数据列表
+		*/
+		__proto.getCurStagePoShieldList=function(){
+			var arr=[];
+			var sPo=this.getStagePoByLevelAndPoints(this.curLevel,this.curPoints);
+			if (sPo){
+				var dPo=this.dProxy.getDropPoById(sPo.dropId);
+				var count=dPo.shieldIds.length;
+				for (var i=0;i < count;++i){
+					var id=sPo.shieldIds[i];
+					var equipPo=this.equipProxy.getEquipPoById(id);
+					arr.push(equipPo);
+				}
+			}
+			return arr;
+		}
+
+		/**
+		*获取当前关卡的盔掉落数据列表
+		*@return 盔掉落数据列表
+		*/
+		__proto.getCurStagePoHelmetList=function(){
+			var arr=[];
+			var sPo=this.getStagePoByLevelAndPoints(this.curLevel,this.curPoints);
+			if (sPo){
+				var dPo=this.dProxy.getDropPoById(sPo.dropId);
+				var count=dPo.helmetIds.length;
+				for (var i=0;i < count;++i){
+					var id=sPo.helmetIds[i];
+					var equipPo=this.equipProxy.getEquipPoById(id);
+					arr.push(equipPo);
+				}
+			}
+			return arr;
+		}
+
+		/**
+		*根据类型获取掉落数据列表
+		*@param type 类型1.武器 2.盾牌 3.头盔
+		*@return 掉落数据列表
+		*/
+		__proto.getCurStagePoDropEquipListByType=function(type){
+			switch (type){
+				case 1:
+					return this.getCurStagePoWeaponList();
+				case 2:
+					return this.getCurStagePoShieldList();
+				case 3:
+					return this.getCurStagePoHelmetList();
+				}
+		}
+
+		/**
+		*总关卡数
+		*/
+		__getset(0,__proto,'totalLevel',function(){return this._totalLevel;});
 		StageProxy.NAME="StageProxy";
 		return StageProxy;
 	})(Proxy)
@@ -10389,9 +10568,11 @@ var Laya=window.Laya=(function(window,document){
 			this.enemyCount=0;
 			this.curEnemyCount=0;
 			this.curStagePo=null;
-			this.enemyList=null;
+			this.enemyPoList=null;
 			GameStageMediator.__super.call(this);
 			this.mediatorName="GameStageMediator";
+			this.playerProxy=this.retrieveProxy("PlayerProxy");
+			this.stageProxy=this.retrieveProxy("StageProxy");
 		}
 
 		__class(GameStageMediator,'view.mediator.GameStageMediator',_super);
@@ -10406,23 +10587,20 @@ var Laya=window.Laya=(function(window,document){
 		__proto.handleNotification=function(notification){
 			switch (notification.notificationName){
 				case "INIT_FIGHT_STAGE":
-					this.initData();
 					this.initUI();
 					this.initEvent();
 					this.sendNotification("START_FIGHT",null);
 					break ;
 				case "START_FIGHT":
-					this.isSelectEnemyCount=false;
-					this.isSelectEnemyType=false;
-					this.isSelectAtkIndex=false;
+					this.initData();
 					if (this.playerVo.isFirstStep){
 						if (this.playerVo.curLevelNum==3){
 						}
 					}
 					else{
 					}
-					this.roundIndex=0;
-					this.gameStage.playerMove(200,Handler.create(this,this.playerMoveComplete));
+					this.gameStage.initPlayer();
+					this.gameStage.playerMove(200,1000,Handler.create(this,this.playerMoveComplete));
 					break ;
 				default :
 					break ;
@@ -10440,32 +10618,18 @@ var Laya=window.Laya=(function(window,document){
 			Laya.timer.loop(1 / 60 *1000,this,this.loopHandler);
 		}
 
-		__proto.loopHandler=function(){
-			Damage.update();
-		}
-
-		/**
-		*点击事件
-		*/
-		__proto.clickHandler=function(event){}
-		//Damage.show(100,event.stageX,event.stageY,1.5);
-		__proto.onKeyDownHandler=function(event){
-			if (!this.gameStage)return;
-			if (event.keyCode==65)this.gameStage.playerAtk(Handler.create(this,this.playerAtkComplete));
-			if (event.keyCode==68)this.gameStage.playerHurt();
-			if (event.keyCode==90)this.gameStage.enemyAtk(Random.randint(0,2));
-			if (event.keyCode==88)this.gameStage.enemyHurt(Random.randint(0,2));
-		}
-
 		/**
 		*初始化数据
 		*/
 		__proto.initData=function(){
-			this.playerProxy=this.retrieveProxy("PlayerProxy");
-			this.stageProxy=this.retrieveProxy("StageProxy");
+			this.isSelectEnemyCount=false;
+			this.isSelectEnemyType=false;
+			this.isSelectAtkIndex=false;
+			this.roundIndex=0;
+			this.curEnemyCount=0;
 			this.curStagePo=this.stageProxy.getCurStagePo();
 			this.playerVo=this.playerProxy.pVo;
-			this.enemyList=this.stageProxy.getCurStagePoEnemyList();
+			this.enemyPoList=this.stageProxy.getCurStagePoEnemyList();
 		}
 
 		/**
@@ -10482,52 +10646,6 @@ var Laya=window.Laya=(function(window,document){
 				this.gameStage=new GameStageLayer();
 				Layer.GAME_STAGE.addChild(this.gameStage);
 			}
-		}
-
-		/**
-		*点击选择按钮
-		*/
-		__proto.selectedBtnMouseDown=function(){
-			this.slots.stop();
-			this.slots.selectedBtn.mouseEnabled=false;
-			this.slots.flashing(Handler.create(this,this.flashingCompleteHandler));
-		}
-
-		/**
-		*闪烁结束
-		*/
-		__proto.flashingCompleteHandler=function(){
-			this.slots.visible=false;
-			if (!this.isSelectEnemyCount){
-				this.isSelectEnemyCount=true;
-				this.enemyCount=this.slots.indexValue;
-				this.curEnemyCount++;
-				if (this.enemyCount > 0)this.initSlotsSelectEnemyType();
-			}
-			else if (!this.isSelectEnemyType){
-				if (this.curEnemyCount==this.enemyCount){
-					this.isSelectEnemyType=true;
-					this.gameStage.initEnemy(this.enemyCount);
-					this.gameStage.enemyMove(Handler.create(this,this.initSlotsAtk));
-				}
-				else{
-					this.curEnemyCount++;
-					this.initSlotsSelectEnemyType();
-				}
-			}
-			else{
-				if (!this.isSelectAtkIndex){
-					this.isSelectAtkIndex=true;
-					this.gameStage.playerAtk(Handler.create(this,this.playerAtkComplete));
-				}
-			}
-		}
-
-		/**
-		*角色移动结束
-		*/
-		__proto.playerMoveComplete=function(){
-			this.initSlotsSelectEnemyCount();
 		}
 
 		/**
@@ -10557,16 +10675,80 @@ var Laya=window.Laya=(function(window,document){
 		__proto.initSlotsSelectEnemyType=function(){
 			this.slots.visible=true;
 			this.slots.selectedBtn.mouseEnabled=true;
-			this.slots.startEnemySlots(this.enemyList,this.playerVo.slotsDelay);
+			this.slots.startEnemySlots(this.enemyPoList,this.playerVo.slotsDelay);
 			this.slots.setTitle("放入"+this.curEnemyCount+"个敌人/"+this.enemyCount);
+		}
+
+		/**
+		*点击选择按钮
+		*/
+		__proto.selectedBtnMouseDown=function(){
+			this.slots.stop();
+			this.slots.selectedBtn.mouseEnabled=false;
+			this.slots.flashing(Handler.create(this,this.flashingCompleteHandler));
+		}
+
+		/**
+		*闪烁结束
+		*/
+		__proto.flashingCompleteHandler=function(){
+			this.slots.visible=false;
+			if (!this.isSelectEnemyCount){
+				this.isSelectEnemyCount=true;
+				this.enemyCount=this.slots.indexValue;
+				this.curEnemyCount++;
+				if (this.enemyCount > 0)
+					this.initSlotsSelectEnemyType();
+				else
+				this.gameStage.playerMove(1136,3000,Handler.create(this,this.playerMoveOutComplete));
+			}
+			else if (!this.isSelectEnemyType){
+				if (this.curEnemyCount==this.enemyCount){
+					this.isSelectEnemyType=true;
+					this.gameStage.initEnemy(this.enemyCount);
+					this.gameStage.enemyMove(Handler.create(this,this.initSlotsAtk));
+				}
+				else{
+					this.curEnemyCount++;
+					this.initSlotsSelectEnemyType();
+				}
+			}
+			else{
+				if (!this.isSelectAtkIndex){
+					this.isSelectAtkIndex=true;
+					this.gameStage.playerAtk(Handler.create(this,this.playerAtkComplete));
+				}
+			}
+		}
+
+		/**
+		*角色移动结束
+		*/
+		__proto.playerMoveComplete=function(){
+			this.initSlotsSelectEnemyCount();
+		}
+
+		__proto.playerMoveOutComplete=function(){
+			this.stageProxy.curPoints++;
+			if (this.stageProxy.curPoints > this.stageProxy.getCurStagePointsCount()){
+				this.stageProxy.curPoints=1;
+				this.stageProxy.curLevel++;
+				if (this.stageProxy.curLevel > this.stageProxy.totalLevel){
+					console.log("通关了");
+					return;
+				}
+			}
+			console.log("this.stageProxy.curLevel",this.stageProxy.curLevel);
+			console.log("this.stageProxy.curPoints",this.stageProxy.curPoints);
+			this.sendNotification("START_FIGHT");
 		}
 
 		/**
 		*角色攻击动作结束
 		*/
 		__proto.playerAtkComplete=function(){
-			this.gameStage.enemyHurt(this.roundIndex,Handler.create(this,this.enemyHurtComplete));
 			var enemy=this.gameStage.getEnemyByIndex(this.roundIndex);
+			this.gameStage.enemyHurt(this.roundIndex,this.slots.indexValue==0,Handler.create(this,this.enemyHurtComplete));
 			if (this.slots.indexValue==0)
 				Damage.showDamageByStr("miss!",enemy.x,enemy.y-100,1.5);
 			else
@@ -10584,7 +10766,7 @@ var Laya=window.Laya=(function(window,document){
 		*敌人进攻结束
 		*/
 		__proto.enemyAtkComplete=function(){
-			this.gameStage.playerHurt(Handler.create(this,this.playerHurtComplete));
+			this.gameStage.playerHurt(this.slots.indexValue==0,Handler.create(this,this.playerHurtComplete));
 			if (this.slots.indexValue==0)
 				Damage.showDamageByStr("miss!",this.gameStage.player.x,this.gameStage.player.y-100,1.5);
 			else
@@ -10598,6 +10780,26 @@ var Laya=window.Laya=(function(window,document){
 			this.roundIndex++;
 			if (this.roundIndex > this.enemyCount-1)this.roundIndex=0;
 			this.initSlotsAtk();
+		}
+
+		/**
+		*游戏循环
+		*/
+		__proto.loopHandler=function(){
+			Damage.update();
+		}
+
+		/**
+		*点击事件
+		*/
+		__proto.clickHandler=function(event){}
+		//Damage.show(100,event.stageX,event.stageY,1.5);
+		__proto.onKeyDownHandler=function(event){
+			if (!this.gameStage)return;
+			if (event.keyCode==65)this.gameStage.playerAtk(Handler.create(this,this.playerAtkComplete));
+			if (event.keyCode==68)this.gameStage.playerHurt();
+			if (event.keyCode==90)this.gameStage.enemyAtk(Random.randint(0,2));
+			if (event.keyCode==88)this.gameStage.enemyHurt(Random.randint(0,2));
 		}
 
 		GameStageMediator.NAME="GameStageMediator";
@@ -16505,10 +16707,12 @@ var Laya=window.Laya=(function(window,document){
 		*@param delay 每一格的时间
 		*/
 		__proto.start=function(delay){
+			this._index=0;
 			if (!this._$3_timer)this._$3_timer=new Timer();
 			this.timer.clear(this,this.loopHandler);
 			this.timer.loop(delay,this,this.loopHandler);
 			if (!this.flashingTimer)this.flashingTimer=new Timer();
+			this.updateSelectImg();
 		}
 
 		/**
@@ -16517,6 +16721,7 @@ var Laya=window.Laya=(function(window,document){
 		__proto.stop=function(){
 			if (!this._$3_timer)return;
 			this.timer.clear(this,this.loopHandler);
+			this.updateSelectImg();
 		}
 
 		/**
@@ -16552,6 +16757,7 @@ var Laya=window.Laya=(function(window,document){
 			(isMask===void 0)&& (isMask=false);
 			if (!numAry)return;
 			var count=numAry.length;
+			if (count > 9)count=9;
 			this.initData(count);
 			this.initIconBg("frame/slotsNumBg.png",count);
 			this.iconAry=[];
@@ -16582,6 +16788,7 @@ var Laya=window.Laya=(function(window,document){
 			(offsetX===void 0)&& (offsetX=0);
 			(offsetY===void 0)&& (offsetY=0);
 			(isMask===void 0)&& (isMask=false);
+			if (num > 9)num=9;
 			this.initData(num);
 			this.initIconBg("frame/slotsNumBg.png",num);
 			this.iconAry=[];
@@ -16616,6 +16823,7 @@ var Laya=window.Laya=(function(window,document){
 			(isMask===void 0)&& (isMask=false);
 			if (!imgAry)return;
 			var count=imgAry.length;
+			if (count > 9)count=9;
 			this.initData(count);
 			this.initIconBg(frameBg,count);
 			this.iconAry=[];
@@ -16678,6 +16886,14 @@ var Laya=window.Laya=(function(window,document){
 			this._index++;
 			if (this._index > this._totalCount-1)this._index=0;
 			this._indexValue=this.indexAry[this._index];
+			this.updateSelectImg();
+		}
+
+		/**
+		*更新当前选择框位置
+		*/
+		__proto.updateSelectImg=function(){
+			if (!this.frameSpt)return;
 			var frameImg=this.frameSpt.getChildByName("frame"+(this._index+1));
 			this.selectedImg.x=frameImg.x;
 			this.selectedImg.y=frameImg.y;
@@ -16731,6 +16947,15 @@ var Laya=window.Laya=(function(window,document){
 		}
 
 		/**
+		*初始化角色
+		*/
+		__proto.initPlayer=function(){
+			if (!this.player)return;
+			this.player.x=-this.player.width / 2;
+			this.player.y=500;
+		}
+
+		/**
 		*初始化敌人
 		*@param num 敌人数量
 		*/
@@ -16766,11 +16991,13 @@ var Laya=window.Laya=(function(window,document){
 		/**
 		*角色移动
 		*@param targetX 目标位置
+		*@param duration 移动时间
 		*@param complete 移动结束
 		*/
-		__proto.playerMove=function(targetX,complete){
+		__proto.playerMove=function(targetX,duration,complete){
+			(duration===void 0)&& (duration=1000);
 			if (!this.player)return;
-			Tween.to(this.player,{x:targetX},1000,Ease.linearNone,complete);
+			Tween.to(this.player,{x:targetX},duration,Ease.linearNone,complete);
 		}
 
 		/**
@@ -16800,17 +17027,24 @@ var Laya=window.Laya=(function(window,document){
 
 		/**
 		*角色受伤
+		*@param isMiss 是否miss
 		*@param complete 受伤动作结束
 		*/
-		__proto.playerHurt=function(complete){
+		__proto.playerHurt=function(isMiss,complete){
+			(isMiss===void 0)&& (isMiss=false);
 			if (!this.player)return;
-			Tween.to(this.player,{x:this.player.x-50},100,Ease.strongOut);
-			Tween.to(this.player,{x:this.player.x},200,Ease.strongOut,null,100);
-			Tween.to(this.player,{x:this.player.x},300,Ease.strongOut,complete,200);
+			if (!isMiss){
+				Tween.to(this.player,{x:this.player.x-50},100,Ease.strongOut);
+				Tween.to(this.player,{x:this.player.x},200,Ease.strongOut,null,100);
+				Tween.to(this.player,{x:this.player.x},300,Ease.strongOut,complete,200);
+			}
+			else{
+				Tween.to(this.player,{x:this.player.x},500,Ease.linearNone,complete);
+			}
 		}
 
 		/**
-		*单个敌人受伤
+		*单个敌人攻击
 		*@param index 位置索引
 		*@param complete 动作结束
 		*/
@@ -16826,16 +17060,23 @@ var Laya=window.Laya=(function(window,document){
 		/**
 		*单个敌人受伤
 		*@param index 位置索引
+		*@param isMiss 是否miss
 		*@param complete 动作结束
 		*/
-		__proto.enemyHurt=function(index,complete){
+		__proto.enemyHurt=function(index,isMiss,complete){
+			(isMiss===void 0)&& (isMiss=false);
 			if (!this.enemyAry)return;
 			if (index < 0 || index > this.enemyAry.length-1)return;
 			var enemy=this.enemyAry[index];
 			if (!enemy)return;
-			Tween.to(enemy,{x:enemy.x+50},100,Ease.strongOut);
-			Tween.to(enemy,{x:enemy.x},200,Ease.strongOut,null,100);
-			Tween.to(enemy,{x:enemy.x},300,Ease.strongOut,complete,200);
+			if (!isMiss){
+				Tween.to(enemy,{x:enemy.x+50},100,Ease.strongOut);
+				Tween.to(enemy,{x:enemy.x},200,Ease.strongOut,null,100);
+				Tween.to(enemy,{x:enemy.x},300,Ease.strongOut,complete,200);
+			}
+			else{
+				Tween.to(enemy,{x:enemy.x},500,Ease.strongOut,complete);
+			}
 		}
 
 		/**
@@ -26762,103 +27003,6 @@ var Laya=window.Laya=(function(window,document){
 
 
 	/**
-	*使用 <code>VSlider</code> 控件，用户可以通过在滑块轨道的终点之间移动滑块来选择值。
-	*<p> <code>VSlider</code> 控件采用垂直方向。滑块轨道从下往上扩展，而标签位于轨道的左右两侧。</p>
-	*
-	*@example <caption>以下示例代码，创建了一个 <code>VSlider</code> 实例。</caption>
-	*package
-	*{
-		*import laya.ui.HSlider;
-		*import laya.ui.VSlider;
-		*import laya.utils.Handler;
-		*public class VSlider_Example
-		*{
-			*private var vSlider:VSlider;
-			*public function VSlider_Example()
-			*{
-				*Laya.init(640,800);//设置游戏画布宽高。
-				*Laya.stage.bgColor="#efefef";//设置画布的背景颜色。
-				*Laya.loader.load(["resource/ui/vslider.png","resource/ui/vslider$bar.png"],Handler.create(this,onLoadComplete));//加载资源。
-				*}
-			*private function onLoadComplete():void
-			*{
-				*vSlider=new VSlider();//创建一个 VSlider 类的实例对象 vSlider 。
-				*vSlider.skin="resource/ui/vslider.png";//设置 vSlider 的皮肤。
-				*vSlider.min=0;//设置 vSlider 最低位置值。
-				*vSlider.max=10;//设置 vSlider 最高位置值。
-				*vSlider.value=2;//设置 vSlider 当前位置值。
-				*vSlider.tick=1;//设置 vSlider 刻度值。
-				*vSlider.x=100;//设置 vSlider 对象的属性 x 的值，用于控制 vSlider 对象的显示位置。
-				*vSlider.y=100;//设置 vSlider 对象的属性 y 的值，用于控制 vSlider 对象的显示位置。
-				*vSlider.changeHandler=new Handler(this,onChange);//设置 vSlider 位置变化处理器。
-				*Laya.stage.addChild(vSlider);//把 vSlider 添加到显示列表。
-				*}
-			*private function onChange(value:Number):void
-			*{
-				*trace("滑块的位置： value="+value);
-				*}
-			*}
-		*}
-	*@example
-	*Laya.init(640,800);//设置游戏画布宽高
-	*Laya.stage.bgColor="#efefef";//设置画布的背景颜色
-	*var vSlider;
-	*Laya.loader.load(["resource/ui/vslider.png","resource/ui/vslider$bar.png"],laya.utils.Handler.create(this,onLoadComplete));//加载资源。
-	*function onLoadComplete(){
-		*vSlider=new laya.ui.VSlider();//创建一个 VSlider 类的实例对象 vSlider 。
-		*vSlider.skin="resource/ui/vslider.png";//设置 vSlider 的皮肤。
-		*vSlider.min=0;//设置 vSlider 最低位置值。
-		*vSlider.max=10;//设置 vSlider 最高位置值。
-		*vSlider.value=2;//设置 vSlider 当前位置值。
-		*vSlider.tick=1;//设置 vSlider 刻度值。
-		*vSlider.x=100;//设置 vSlider 对象的属性 x 的值，用于控制 vSlider 对象的显示位置。
-		*vSlider.y=100;//设置 vSlider 对象的属性 y 的值，用于控制 vSlider 对象的显示位置。
-		*vSlider.changeHandler=new laya.utils.Handler(this,onChange);//设置 vSlider 位置变化处理器。
-		*Laya.stage.addChild(vSlider);//把 vSlider 添加到显示列表。
-		*}
-	*function onChange(value){
-		*console.log("滑块的位置： value="+value);
-		*}
-	*@example
-	*import HSlider=laya.ui.HSlider;
-	*import VSlider=laya.ui.VSlider;
-	*import Handler=laya.utils.Handler;
-	*class VSlider_Example {
-		*private vSlider:VSlider;
-		*constructor(){
-			*Laya.init(640,800);//设置游戏画布宽高。
-			*Laya.stage.bgColor="#efefef";//设置画布的背景颜色。
-			*Laya.loader.load(["resource/ui/vslider.png","resource/ui/vslider$bar.png"],Handler.create(this,this.onLoadComplete));//加载资源。
-			*}
-		*private onLoadComplete():void {
-			*this.vSlider=new VSlider();//创建一个 VSlider 类的实例对象 vSlider 。
-			*this.vSlider.skin="resource/ui/vslider.png";//设置 vSlider 的皮肤。
-			*this.vSlider.min=0;//设置 vSlider 最低位置值。
-			*this.vSlider.max=10;//设置 vSlider 最高位置值。
-			*this.vSlider.value=2;//设置 vSlider 当前位置值。
-			*this.vSlider.tick=1;//设置 vSlider 刻度值。
-			*this.vSlider.x=100;//设置 vSlider 对象的属性 x 的值，用于控制 vSlider 对象的显示位置。
-			*this.vSlider.y=100;//设置 vSlider 对象的属性 y 的值，用于控制 vSlider 对象的显示位置。
-			*this.vSlider.changeHandler=new Handler(this,this.onChange);//设置 vSlider 位置变化处理器。
-			*Laya.stage.addChild(this.vSlider);//把 vSlider 添加到显示列表。
-			*}
-		*private onChange(value:number):void {
-			*console.log("滑块的位置： value="+value);
-			*}
-		*}
-	*@see laya.ui.Slider
-	*/
-	//class laya.ui.VSlider extends laya.ui.Slider
-	var VSlider=(function(_super){
-		function VSlider(){VSlider.__super.call(this);;
-		};
-
-		__class(VSlider,'laya.ui.VSlider',_super);
-		return VSlider;
-	})(Slider)
-
-
-	/**
 	*<code>TextInput</code> 类用于创建显示对象以显示和输入文本。
 	*
 	*@example <caption>以下示例代码，创建了一个 <code>TextInput</code> 实例。</caption>
@@ -27179,6 +27323,103 @@ var Laya=window.Laya=(function(window,document){
 
 		return TextInput;
 	})(Label)
+
+
+	/**
+	*使用 <code>VSlider</code> 控件，用户可以通过在滑块轨道的终点之间移动滑块来选择值。
+	*<p> <code>VSlider</code> 控件采用垂直方向。滑块轨道从下往上扩展，而标签位于轨道的左右两侧。</p>
+	*
+	*@example <caption>以下示例代码，创建了一个 <code>VSlider</code> 实例。</caption>
+	*package
+	*{
+		*import laya.ui.HSlider;
+		*import laya.ui.VSlider;
+		*import laya.utils.Handler;
+		*public class VSlider_Example
+		*{
+			*private var vSlider:VSlider;
+			*public function VSlider_Example()
+			*{
+				*Laya.init(640,800);//设置游戏画布宽高。
+				*Laya.stage.bgColor="#efefef";//设置画布的背景颜色。
+				*Laya.loader.load(["resource/ui/vslider.png","resource/ui/vslider$bar.png"],Handler.create(this,onLoadComplete));//加载资源。
+				*}
+			*private function onLoadComplete():void
+			*{
+				*vSlider=new VSlider();//创建一个 VSlider 类的实例对象 vSlider 。
+				*vSlider.skin="resource/ui/vslider.png";//设置 vSlider 的皮肤。
+				*vSlider.min=0;//设置 vSlider 最低位置值。
+				*vSlider.max=10;//设置 vSlider 最高位置值。
+				*vSlider.value=2;//设置 vSlider 当前位置值。
+				*vSlider.tick=1;//设置 vSlider 刻度值。
+				*vSlider.x=100;//设置 vSlider 对象的属性 x 的值，用于控制 vSlider 对象的显示位置。
+				*vSlider.y=100;//设置 vSlider 对象的属性 y 的值，用于控制 vSlider 对象的显示位置。
+				*vSlider.changeHandler=new Handler(this,onChange);//设置 vSlider 位置变化处理器。
+				*Laya.stage.addChild(vSlider);//把 vSlider 添加到显示列表。
+				*}
+			*private function onChange(value:Number):void
+			*{
+				*trace("滑块的位置： value="+value);
+				*}
+			*}
+		*}
+	*@example
+	*Laya.init(640,800);//设置游戏画布宽高
+	*Laya.stage.bgColor="#efefef";//设置画布的背景颜色
+	*var vSlider;
+	*Laya.loader.load(["resource/ui/vslider.png","resource/ui/vslider$bar.png"],laya.utils.Handler.create(this,onLoadComplete));//加载资源。
+	*function onLoadComplete(){
+		*vSlider=new laya.ui.VSlider();//创建一个 VSlider 类的实例对象 vSlider 。
+		*vSlider.skin="resource/ui/vslider.png";//设置 vSlider 的皮肤。
+		*vSlider.min=0;//设置 vSlider 最低位置值。
+		*vSlider.max=10;//设置 vSlider 最高位置值。
+		*vSlider.value=2;//设置 vSlider 当前位置值。
+		*vSlider.tick=1;//设置 vSlider 刻度值。
+		*vSlider.x=100;//设置 vSlider 对象的属性 x 的值，用于控制 vSlider 对象的显示位置。
+		*vSlider.y=100;//设置 vSlider 对象的属性 y 的值，用于控制 vSlider 对象的显示位置。
+		*vSlider.changeHandler=new laya.utils.Handler(this,onChange);//设置 vSlider 位置变化处理器。
+		*Laya.stage.addChild(vSlider);//把 vSlider 添加到显示列表。
+		*}
+	*function onChange(value){
+		*console.log("滑块的位置： value="+value);
+		*}
+	*@example
+	*import HSlider=laya.ui.HSlider;
+	*import VSlider=laya.ui.VSlider;
+	*import Handler=laya.utils.Handler;
+	*class VSlider_Example {
+		*private vSlider:VSlider;
+		*constructor(){
+			*Laya.init(640,800);//设置游戏画布宽高。
+			*Laya.stage.bgColor="#efefef";//设置画布的背景颜色。
+			*Laya.loader.load(["resource/ui/vslider.png","resource/ui/vslider$bar.png"],Handler.create(this,this.onLoadComplete));//加载资源。
+			*}
+		*private onLoadComplete():void {
+			*this.vSlider=new VSlider();//创建一个 VSlider 类的实例对象 vSlider 。
+			*this.vSlider.skin="resource/ui/vslider.png";//设置 vSlider 的皮肤。
+			*this.vSlider.min=0;//设置 vSlider 最低位置值。
+			*this.vSlider.max=10;//设置 vSlider 最高位置值。
+			*this.vSlider.value=2;//设置 vSlider 当前位置值。
+			*this.vSlider.tick=1;//设置 vSlider 刻度值。
+			*this.vSlider.x=100;//设置 vSlider 对象的属性 x 的值，用于控制 vSlider 对象的显示位置。
+			*this.vSlider.y=100;//设置 vSlider 对象的属性 y 的值，用于控制 vSlider 对象的显示位置。
+			*this.vSlider.changeHandler=new Handler(this,this.onChange);//设置 vSlider 位置变化处理器。
+			*Laya.stage.addChild(this.vSlider);//把 vSlider 添加到显示列表。
+			*}
+		*private onChange(value:number):void {
+			*console.log("滑块的位置： value="+value);
+			*}
+		*}
+	*@see laya.ui.Slider
+	*/
+	//class laya.ui.VSlider extends laya.ui.Slider
+	var VSlider=(function(_super){
+		function VSlider(){VSlider.__super.call(this);;
+		};
+
+		__class(VSlider,'laya.ui.VSlider',_super);
+		return VSlider;
+	})(Slider)
 
 
 	/**

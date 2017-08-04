@@ -1,10 +1,16 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <equips>
-	<equip id="1" name="空手" atk="0,1,1,1,1" def="0" type="1" pic="0" des="0" icon="e_icon1"/>
-	<equip id="2" name="木勺子" atk="0,1,2,1" def="0" type="1" pic="0" des="1" icon="e_icon2"/>
-	<equip id="3" name="无盾牌" atk="0" def="0" type="2" pic="0" des="2" icon="e_icon3"/>
-	<equip id="4" name="木头" atk="1" def="1" type="2" pic="0" des="3" icon="e_icon4"/>
-	<equip id="5" name="塑料" atk="0" def="4" type="2" pic="0" des="4" icon="e_icon5"/>
-	<equip id="6" name="无头盔" atk="0" def="0" type="3" pic="0" des="5" icon="e_icon6"/>
-	<equip id="7" name="木桶" atk="0" def="5" type="3" pic="0" des="6" icon="e_icon7"/>
+	<equip id="1" name="空手" atk="0,1,1,1,1" def="0" type="1" pic="0" des="0" icon="w_icon1"/>
+	<equip id="2" name="木勺子" atk="0,1,2,1" def="0" type="1" pic="0" des="1" icon="w_icon2"/>
+	<equip id="3" name="生锈的匕首" atk="0,0,1,2,3" def="0" type="1" pic="0" des="2" icon="w_icon3"/>
+	<equip id="4" name="短剑" atk="0,2,2,2,3,3,4" def="0" type="1" pic="0" des="3" icon="w_icon4"/>
+	<equip id="5" name="木头" atk="0" def="1" type="2" pic="0" des="4" icon="s_icon1"/>
+	<equip id="6" name="塑料" atk="0" def="4" type="2" pic="0" des="5" icon="s_icon2"/>
+	<equip id="7" name="铁" atk="0" def="6" type="2" pic="0" des="6" icon="s_icon3"/>
+	<equip id="8" name="光秃秃的头" atk="0" def="0" type="3" pic="0" des="7" icon="h_icon1"/>
+	<equip id="9" name="木桶" atk="0" def="5" type="3" pic="0" des="8" icon="h_icon2"/>
+	<equip id="10" name="黑色水壶" atk="0" def="10" type="3" pic="0" des="9" icon="h_icon3"/>
+	<equip id="11" name="锡箔纸" atk="0" def="13" type="3" pic="0" des="10" icon="h_icon4"/>
+	<equip id="12" name="诺玛尔" atk="0" def="15" type="3" pic="0" des="11" icon="h_icon5"/>
+	<equip id="13" name="水壶头盔" atk="0" def="16" type="3" pic="0" des="12" icon="h_icon6"/>
 </equips>
