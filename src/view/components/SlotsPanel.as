@@ -40,6 +40,7 @@ public class SlotsPanel extends Sprite
 	private var flashingIndex:int;
 	//icon数组
 	private var iconAry:Array;
+	private var idAry:Array;
 	//icon索引数组
 	private var indexAry:Array;
 	//手
@@ -277,6 +278,7 @@ public class SlotsPanel extends Sprite
 		this.initIconBg("frame/slotsNumBg.png", num);
 		this.iconAry = [];
 		this.indexAry = [];
+		this.idAry = [];
 		for (var i:int = 0; i < num; i++) 
 		{
 			this.indexAry.push(i);
@@ -317,6 +319,7 @@ public class SlotsPanel extends Sprite
 		this.initIconBg(frameBg, count);
 		this.iconAry = [];
 		this.indexAry = [];
+		this.idAry = [];
 		for (var i:int = 0; i < count; i++) 
 		{
 			this.indexAry.push(i);
@@ -348,6 +351,25 @@ public class SlotsPanel extends Sprite
 			imgAry.push(GameUtils.getEnemyIconById(ePo.id));
 		}
 		this.startImageSlots(imgAry, "frame/enemySlotsBg.png", delay, 0, 0, 1, true);
+		this.idAry = [];
+		count = this.indexAry.length;
+		for (i = 0; i < count; ++i) 
+		{
+			var index:int = this.indexAry[i];
+			var ePo:EnemyPo = enemyList[index];
+			this.idAry.push(ePo.id);
+		}
+	}
+	
+	/**
+	 * 获取当前选中的id
+	 * @return	选中的id
+	 */
+	public function getSelectId():int
+	{
+		if (!this.idAry) return 0;
+		if (this.index > this.idAry.length - 1) return 0;
+		return this.idAry[this.index];
 	}
 	
 	/**

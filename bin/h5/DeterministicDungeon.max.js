@@ -452,7 +452,7 @@ var Laya=window.Laya=(function(window,document){
 	*[slots大小缩放接口]
 	*[关卡表配置]
 	*[掉落表]
-	*随机的0个敌人直接胜利
+	*[随机的0个敌人直接胜利]
 	*敌人扣血死亡胜利流程
 	*屏幕震动
 	*道具表
@@ -634,6 +634,25 @@ var Laya=window.Laya=(function(window,document){
 		*/
 		__proto.initData=function(){}
 		return Proxy;
+	})()
+
+
+	/**
+	*...敌人动态数据
+	*@author ...Kanon
+	*/
+	//class model.vo.EnemyVo
+	var EnemyVo=(function(){
+		function EnemyVo(){
+			this.id=0;
+			this.no=0;
+			this.hp=0;
+			this.weapon=null;
+			this.enemyPo=null;
+		}
+
+		__class(EnemyVo,'model.vo.EnemyVo');
+		return EnemyVo;
 	})()
 
 
@@ -10117,6 +10136,21 @@ var Laya=window.Laya=(function(window,document){
 			return null;
 		}
 
+		/**
+		*创建敌人动态数据
+		*@param ePo 敌人静态数据
+		*@return 敌人动态数据
+		*/
+		__proto.createEnemyVo=function(ePo){
+			if (!ePo)return null;
+			var eVo=new EnemyVo();
+			eVo.id++;
+			eVo.no=ePo.id;
+			eVo.hp=ePo.hp;
+			eVo.enemyPo=ePo;
+			return eVo;
+		}
+
 		EnemyProxy.NAME="EnemyProxy";
 		return EnemyProxy;
 	})(Proxy)
@@ -10436,7 +10470,7 @@ var Laya=window.Laya=(function(window,document){
 		*获取当前关卡数据的敌人列表
 		*@return 敌人数据列表
 		*/
-		__proto.getCurStagePoEnemyList=function(){
+		__proto.getCurStagePoEnemyPoList=function(){
 			var arr=[];
 			var sPo=this.getStagePoByLevelAndPoints(this.curLevel,this.curPoints);
 			if (sPo){
@@ -10559,20 +10593,23 @@ var Laya=window.Laya=(function(window,document){
 			this.gameStage=null;
 			this.playerProxy=null;
 			this.stageProxy=null;
+			this.enemyProxy=null;
 			this.playerVo=null;
 			this.roundIndex=0;
 			this.slots=null;
 			this.isSelectEnemyCount=false;
 			this.isSelectEnemyType=false;
 			this.isSelectAtkIndex=false;
-			this.enemyCount=0;
-			this.curEnemyCount=0;
+			this.enemyCanSelectCount=0;
+			this.curEnemySelectCount=0;
 			this.curStagePo=null;
 			this.enemyPoList=null;
+			this.enemyVoList=null;
 			GameStageMediator.__super.call(this);
 			this.mediatorName="GameStageMediator";
 			this.playerProxy=this.retrieveProxy("PlayerProxy");
 			this.stageProxy=this.retrieveProxy("StageProxy");
+			this.enemyProxy=this.retrieveProxy("EnemyProxy");
 		}
 
 		__class(GameStageMediator,'view.mediator.GameStageMediator',_super);
@@ -10626,10 +10663,11 @@ var Laya=window.Laya=(function(window,document){
 			this.isSelectEnemyType=false;
 			this.isSelectAtkIndex=false;
 			this.roundIndex=0;
-			this.curEnemyCount=0;
+			this.curEnemySelectCount=0;
+			this.enemyVoList=[];
 			this.curStagePo=this.stageProxy.getCurStagePo();
 			this.playerVo=this.playerProxy.pVo;
-			this.enemyPoList=this.stageProxy.getCurStagePoEnemyList();
+			this.enemyPoList=this.stageProxy.getCurStagePoEnemyPoList();
 		}
 
 		/**
@@ -10676,7 +10714,22 @@ var Laya=window.Laya=(function(window,document){
 			this.slots.visible=true;
 			this.slots.selectedBtn.mouseEnabled=true;
 			this.slots.startEnemySlots(this.enemyPoList,this.playerVo.slotsDelay);
-			this.slots.setTitle("放入"+this.curEnemyCount+"个敌人/"+this.enemyCount);
+			this.slots.setTitle("放入"+this.curEnemySelectCount+"个敌人/"+this.enemyCanSelectCount);
+		}
+
+		/**
+		*根据id删除敌人数据
+		*@param id 敌人id
+		*/
+		__proto.removeEnemyVoById=function(id){
+			var count=this.enemyVoList.length;
+			for (var i=0;i < count;++i){
+				var eVo=this.enemyVoList[i];
+				if (id==eVo.id){
+					this.enemyVoList.splice(i,1);
+					break ;
+				}
+			}
 		}
 
 		/**
@@ -10695,21 +10748,25 @@ var Laya=window.Laya=(function(window,document){
 			this.slots.visible=false;
 			if (!this.isSelectEnemyCount){
 				this.isSelectEnemyCount=true;
-				this.enemyCount=this.slots.indexValue;
-				this.curEnemyCount++;
-				if (this.enemyCount > 0)
+				this.enemyCanSelectCount=this.slots.indexValue;
+				this.curEnemySelectCount++;
+				if (this.enemyCanSelectCount > 0)
 					this.initSlotsSelectEnemyType();
 				else
 				this.gameStage.playerMove(1136,3000,Handler.create(this,this.playerMoveOutComplete));
 			}
 			else if (!this.isSelectEnemyType){
-				if (this.curEnemyCount==this.enemyCount){
+				var id=this.slots.getSelectId();
+				var ePo=this.enemyProxy.getEnemyPoById(id);
+				console.log(ePo.name);
+				this.enemyVoList.push(this.enemyProxy.createEnemyVo(ePo));
+				if (this.curEnemySelectCount==this.enemyCanSelectCount){
 					this.isSelectEnemyType=true;
-					this.gameStage.initEnemy(this.enemyCount);
+					this.gameStage.initEnemy(this.enemyCanSelectCount);
 					this.gameStage.enemyMove(Handler.create(this,this.initSlotsAtk));
 				}
 				else{
-					this.curEnemyCount++;
+					this.curEnemySelectCount++;
 					this.initSlotsSelectEnemyType();
 				}
 			}
@@ -10738,8 +10795,6 @@ var Laya=window.Laya=(function(window,document){
 					return;
 				}
 			}
-			console.log("this.stageProxy.curLevel",this.stageProxy.curLevel);
-			console.log("this.stageProxy.curPoints",this.stageProxy.curPoints);
 			this.sendNotification("START_FIGHT");
 		}
 
@@ -10748,18 +10803,44 @@ var Laya=window.Laya=(function(window,document){
 		*/
 		__proto.playerAtkComplete=function(){
 			var enemy=this.gameStage.getEnemyByIndex(this.roundIndex);
-			this.gameStage.enemyHurt(this.roundIndex,this.slots.indexValue==0,Handler.create(this,this.enemyHurtComplete));
-			if (this.slots.indexValue==0)
+			var playerPo=this.playerProxy.getPlayerPoByLevel(this.playerVo.level);
+			console.log("this.slots.indexValue",this.slots.indexValue);
+			var hurt=this.slots.indexValue *playerPo.atk;
+			console.log("hurt",hurt);
+			this.gameStage.enemyHurt(this.roundIndex,hurt==0,Handler.create(this,this.enemyHurtComplete));
+			if (hurt==0){
 				Damage.showDamageByStr("miss!",enemy.x,enemy.y-100,1.5);
-			else
-			Damage.show(this.slots.indexValue,enemy.x,enemy.y-100,1.5);
+			}
+			else{
+				var eVo=this.enemyVoList[this.roundIndex];
+				eVo.hp-=hurt;
+				Damage.show(hurt,enemy.x,enemy.y-100,1.5);
+			}
 		}
 
 		/**
 		*敌人受伤还动作结束
 		*/
 		__proto.enemyHurtComplete=function(){
-			this.gameStage.enemyAtk(this.roundIndex,Handler.create(this,this.enemyAtkComplete));
+			var eVo=this.enemyVoList[this.roundIndex];
+			var enemy=this.gameStage.getEnemyByIndex(this.roundIndex);
+			var isDead=false;
+			if (eVo.hp <=0){
+				this.gameStage.removeEnemyByIndex(this.roundIndex);
+				this.removeEnemyVoById(eVo.id);
+				isDead=true;
+			}
+			if (this.enemyVoList.length==0){
+				this.gameStage.playerMove(1136,3000,Handler.create(this,this.playerMoveOutComplete));
+			}
+			else{
+				if (this.roundIndex > this.enemyVoList.length-1)this.roundIndex=0;
+				this.gameStage.enemyAtk(this.roundIndex,Handler.create(this,this.enemyAtkComplete));
+			}
+			if (!isDead){
+				this.roundIndex++;
+				if (this.roundIndex > this.enemyVoList.length-1)this.roundIndex=0;
+			}
 		}
 
 		/**
@@ -10777,8 +10858,6 @@ var Laya=window.Laya=(function(window,document){
 		*角色受伤动作结束
 		*/
 		__proto.playerHurtComplete=function(){
-			this.roundIndex++;
-			if (this.roundIndex > this.enemyCount-1)this.roundIndex=0;
 			this.initSlotsAtk();
 		}
 
@@ -16587,6 +16666,7 @@ var Laya=window.Laya=(function(window,document){
 			this.selectedImg=null;
 			this.flashingIndex=0;
 			this.iconAry=null;
+			this.idAry=null;
 			this.indexAry=null;
 			this.handImg=null;
 			this.titleTxt=null;
@@ -16793,6 +16873,7 @@ var Laya=window.Laya=(function(window,document){
 			this.initIconBg("frame/slotsNumBg.png",num);
 			this.iconAry=[];
 			this.indexAry=[];
+			this.idAry=[];
 			for (var i=0;i < num;i++){
 				this.indexAry.push(i);
 			}
@@ -16828,6 +16909,7 @@ var Laya=window.Laya=(function(window,document){
 			this.initIconBg(frameBg,count);
 			this.iconAry=[];
 			this.indexAry=[];
+			this.idAry=[];
 			for (var i=0;i < count;i++){
 				this.indexAry.push(i);
 			}
@@ -16855,6 +16937,23 @@ var Laya=window.Laya=(function(window,document){
 				imgAry.push(GameUtils.getEnemyIconById(ePo.id));
 			}
 			this.startImageSlots(imgAry,"frame/enemySlotsBg.png",delay,0,0,1,true);
+			this.idAry=[];
+			count=this.indexAry.length;
+			for (i=0;i < count;++i){
+				var index=this.indexAry[i];
+				var ePo=enemyList[index];
+				this.idAry.push(ePo.id);
+			}
+		}
+
+		/**
+		*获取当前选中的id
+		*@return 选中的id
+		*/
+		__proto.getSelectId=function(){
+			if (!this.idAry)return 0;
+			if (this.index > this.idAry.length-1)return 0;
+			return this.idAry[this.index];
 		}
 
 		/**
@@ -17089,6 +17188,18 @@ var Laya=window.Laya=(function(window,document){
 			if (index < 0 || index > this.enemyAry.length-1)return null;
 			var enemy=this.enemyAry[index];
 			return enemy;
+		}
+
+		/**
+		*根据索引删除敌人
+		*@param index 索引
+		*/
+		__proto.removeEnemyByIndex=function(index){
+			if (!this.enemyAry)return;
+			if (index < 0 || index > this.enemyAry.length-1)return;
+			var enemy=this.enemyAry[index];
+			enemy.removeSelf();
+			this.enemyAry.splice(index,1);
 		}
 
 		return GameStageLayer;

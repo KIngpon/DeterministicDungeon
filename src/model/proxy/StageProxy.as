@@ -5,6 +5,7 @@ import model.po.DropPo;
 import model.po.EnemyPo;
 import model.po.EquipPo;
 import model.po.StagePo;
+import model.vo.EnemyVo;
 import mvc.Proxy;
 
 /**
@@ -136,7 +137,7 @@ public class StageProxy extends Proxy
 	 * 获取当前关卡数据的敌人列表
 	 * @return	敌人数据列表
 	 */
-	public function getCurStagePoEnemyList():Array
+	public function getCurStagePoEnemyPoList():Array
 	{
 		var arr:Array = [];
 		var sPo:StagePo = this.getStagePoByLevelAndPoints(this.curLevel, this.curPoints);

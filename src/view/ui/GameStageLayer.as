@@ -194,5 +194,18 @@ public class GameStageLayer extends Sprite
 		var enemy:Sprite = this.enemyAry[index];
 		return enemy;
 	}
+	
+	/**
+	 * 根据索引删除敌人
+	 * @param	index	索引
+	 */
+	public function removeEnemyByIndex(index:int):void
+	{
+		if (!this.enemyAry) return;
+		if (index < 0 || index > this.enemyAry.length - 1) return;
+		var enemy:Sprite = this.enemyAry[index];
+		enemy.removeSelf();
+		this.enemyAry.splice(index, 1);
+	}
 }
 }

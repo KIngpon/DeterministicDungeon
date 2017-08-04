@@ -4,6 +4,7 @@ import laya.net.Loader;
 import laya.utils.Dictionary;
 import laya.utils.Handler;
 import model.po.EnemyPo;
+import model.vo.EnemyVo;
 import mvc.Proxy;
 
 /**
@@ -69,6 +70,22 @@ public class EnemyProxy extends Proxy
 				return ePo;
 		}
 		return null;
+	}
+	
+	/**
+	 * 创建敌人动态数据
+	 * @param	ePo		敌人静态数据
+	 * @return	敌人动态数据
+	 */
+	public function createEnemyVo(ePo:EnemyPo):EnemyVo
+	{
+		if (!ePo) return null;
+		var eVo:EnemyVo = new EnemyVo();
+		eVo.id++;
+		eVo.no = ePo.id;
+		eVo.hp = ePo.hp;
+		eVo.enemyPo = ePo;
+		return eVo;
 	}
 }
 }
