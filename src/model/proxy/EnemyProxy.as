@@ -18,6 +18,8 @@ public class EnemyProxy extends Proxy
 	private var enemyAry:Array;
 	//是否加载完成
 	public var isLoaded:Boolean;
+	//动态数组的唯一id
+	private var id:int = 0;
 	public function EnemyProxy() 
 	{
 		this.proxyName = NAME;
@@ -81,10 +83,12 @@ public class EnemyProxy extends Proxy
 	{
 		if (!ePo) return null;
 		var eVo:EnemyVo = new EnemyVo();
-		eVo.id++;
+		eVo.id = this.id++;
 		eVo.no = ePo.id;
 		eVo.hp = ePo.hp;
 		eVo.enemyPo = ePo;
+		trace("eVo.id", eVo.id);
+		trace("ePo.name", ePo.name);
 		return eVo;
 	}
 }

@@ -215,12 +215,15 @@ public class GameStageMediator extends Mediator
 	 */
 	private function removeEnemyVoById(id:int):void
 	{
+		trace("remove id", id);
 		var count:int = this.enemyVoList.length;
 		for (var i:int = 0; i < count; ++i) 
 		{
 			var eVo:EnemyVo = this.enemyVoList[i];
+			trace(eVo.id);
 			if (id == eVo.id)
 			{
+				trace("remove", eVo.enemyPo.name);
 				this.enemyVoList.splice(i, 1);
 				break;
 			}
@@ -263,13 +266,14 @@ public class GameStageMediator extends Mediator
 		{
 			var id:int = this.slots.getSelectId();
 			var ePo:EnemyPo = this.enemyProxy.getEnemyPoById(id);
-			trace(ePo.name);
+			//trace(ePo.name);
 			this.enemyVoList.push(this.enemyProxy.createEnemyVo(ePo));
 			if (this.curEnemySelectCount == this.enemyCanSelectCount)
 			{
 				//数量选择够了
 				this.isSelectEnemyType = true;
 				this.gameStage.initEnemy(this.enemyCanSelectCount);
+				this.gameStage.updateEnemyUI(this.enemyVoList);
 				this.gameStage.enemyMove(Handler.create(this, initSlotsAtk));
 			}
 			else
@@ -351,8 +355,10 @@ public class GameStageMediator extends Mediator
 			//TODO show dead;
 			this.gameStage.removeEnemyByIndex(this.roundIndex);
 			this.removeEnemyVoById(eVo.id);
+			trace("删除", eVo.enemyPo.name);
 			isDead = true;
 		}
+		this.gameStage.updateEnemyUI(this.enemyVoList);
 		if (this.enemyVoList.length == 0)
 		{
 			//all dead;

@@ -10086,6 +10086,7 @@ var Laya=window.Laya=(function(window,document){
 			this.enemyDict=null;
 			this.enemyAry=null;
 			this.isLoaded=false;
+			this.id=0;
 			EnemyProxy.__super.call(this);
 			this.proxyName="EnemyProxy";
 		}
@@ -10144,10 +10145,12 @@ var Laya=window.Laya=(function(window,document){
 		__proto.createEnemyVo=function(ePo){
 			if (!ePo)return null;
 			var eVo=new EnemyVo();
-			eVo.id++;
+			eVo.id=this.id++;
 			eVo.no=ePo.id;
 			eVo.hp=ePo.hp;
 			eVo.enemyPo=ePo;
+			console.log("eVo.id",eVo.id);
+			console.log("ePo.name",ePo.name);
 			return eVo;
 		}
 
@@ -10722,10 +10725,13 @@ var Laya=window.Laya=(function(window,document){
 		*@param id 敌人id
 		*/
 		__proto.removeEnemyVoById=function(id){
+			console.log("remove id",id);
 			var count=this.enemyVoList.length;
 			for (var i=0;i < count;++i){
 				var eVo=this.enemyVoList[i];
+				console.log(eVo.id);
 				if (id==eVo.id){
+					console.log("remove",eVo.enemyPo.name);
 					this.enemyVoList.splice(i,1);
 					break ;
 				}
@@ -10758,11 +10764,11 @@ var Laya=window.Laya=(function(window,document){
 			else if (!this.isSelectEnemyType){
 				var id=this.slots.getSelectId();
 				var ePo=this.enemyProxy.getEnemyPoById(id);
-				console.log(ePo.name);
 				this.enemyVoList.push(this.enemyProxy.createEnemyVo(ePo));
 				if (this.curEnemySelectCount==this.enemyCanSelectCount){
 					this.isSelectEnemyType=true;
 					this.gameStage.initEnemy(this.enemyCanSelectCount);
+					this.gameStage.updateEnemyUI(this.enemyVoList);
 					this.gameStage.enemyMove(Handler.create(this,this.initSlotsAtk));
 				}
 				else{
@@ -10828,8 +10834,10 @@ var Laya=window.Laya=(function(window,document){
 			if (eVo.hp <=0){
 				this.gameStage.removeEnemyByIndex(this.roundIndex);
 				this.removeEnemyVoById(eVo.id);
+				console.log("删除",eVo.enemyPo.name);
 				isDead=true;
 			}
+			this.gameStage.updateEnemyUI(this.enemyVoList);
 			if (this.enemyVoList.length==0){
 				this.gameStage.playerMove(1136,3000,Handler.create(this,this.playerMoveOutComplete));
 			}
@@ -17072,6 +17080,35 @@ var Laya=window.Laya=(function(window,document){
 				enemy.y=500;
 				this.addChild(enemy);
 				this.enemyAry.push(enemy);
+				var nameTxt=new Label();
+				nameTxt.name="nameLabel";
+				nameTxt.color="#CCFFAA";
+				nameTxt.fontSize=15;
+				nameTxt.x=-enemy.width / 2;
+				enemy.addChild(nameTxt);
+				var hpTxt=new Label();
+				hpTxt.name="hpTxt";
+				hpTxt.color="#CCFFAA";
+				hpTxt.fontSize=25;
+				hpTxt.x=-enemy.width / 2;
+				hpTxt.y=nameTxt.y+50;
+				enemy.addChild(hpTxt);
+			}
+		}
+
+		/**
+		*初始化敌人UI
+		*@param enemyVoList 敌人数据列表
+		*/
+		__proto.updateEnemyUI=function(enemyVoList){
+			var count=enemyVoList.length;
+			for (var i=0;i < count;i++){
+				var eVo=enemyVoList[i];
+				var enemy=this.enemyAry[i];
+				var nameTxt=enemy.getChildByName("nameLabel");
+				nameTxt.text=eVo.enemyPo.name;
+				var hpTxt=enemy.getChildByName("hpTxt");
+				hpTxt.text=eVo.hp;
 			}
 		}
 

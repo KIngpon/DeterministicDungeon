@@ -2,9 +2,11 @@ package view.ui
 {
 import config.GameConstant;
 import laya.display.Sprite;
+import laya.ui.Label;
 import laya.utils.Ease;
 import laya.utils.Handler;
 import laya.utils.Tween;
+import model.vo.EnemyVo;
 
 /**
  * ...战斗场景
@@ -66,6 +68,39 @@ public class GameStageLayer extends Sprite
 			enemy.y = GameConstant.ROLE_POS_Y;
 			this.addChild(enemy);
 			this.enemyAry.push(enemy);
+			
+			var nameTxt:Label = new Label();
+			nameTxt.name = "nameLabel";
+			nameTxt.color = "#CCFFAA";
+			nameTxt.fontSize = 15;
+			nameTxt.x = -enemy.width / 2;
+			enemy.addChild(nameTxt);
+			
+			var hpTxt:Label = new Label();
+			hpTxt.name = "hpTxt";
+			hpTxt.color = "#CCFFAA";
+			hpTxt.fontSize = 25;
+			hpTxt.x = -enemy.width / 2;
+			hpTxt.y = nameTxt.y + 50;
+			enemy.addChild(hpTxt);
+		}
+	}
+	
+	/**
+	 * 初始化敌人UI
+	 * @param	enemyVoList	敌人数据列表
+	 */
+	public function updateEnemyUI(enemyVoList:Array):void
+	{
+		var count:int = enemyVoList.length;
+		for (var i:int = 0; i < count; i++) 
+		{
+			var eVo:EnemyVo = enemyVoList[i];
+			var enemy:Sprite = this.enemyAry[i];
+			var nameTxt:Label = enemy.getChildByName("nameLabel") as Label;
+			nameTxt.text = eVo.enemyPo.name;
+			var hpTxt:Label = enemy.getChildByName("hpTxt") as Label;
+			hpTxt.text = eVo.hp;
 		}
 	}
 	
