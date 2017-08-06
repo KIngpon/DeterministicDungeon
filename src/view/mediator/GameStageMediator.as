@@ -73,7 +73,6 @@ public class GameStageMediator extends Mediator
 	private var curStagePo:StagePo;
 	//敌人列表
 	private var enemyPoList:Array;
-	private var enemyVoList:Array;
 	public function GameStageMediator() 
 	{
 		this.mediatorName = NAME;
@@ -117,7 +116,8 @@ public class GameStageMediator extends Mediator
 				}
 				
 				this.gameStage.initPlayer();
-				this.gameStage.playerMove(200, 1000, Handler.create(this, playerMoveComplete));
+				this.gameStage.updateStageBg(this.curStagePo, this.stageProxy);
+				this.gameStage.playerMove(300, 1000, Handler.create(this, playerMoveComplete));
 				break;
 			default:
 				break;
@@ -147,10 +147,10 @@ public class GameStageMediator extends Mediator
 		this.isSelectAtkIndex = false;
 		this.roundIndex = 0;
 		this.curEnemySelectCount = 0;
-		this.enemyVoList = [];
 		this.curStagePo = this.stageProxy.getCurStagePo();
 		this.playerVo = this.playerProxy.pVo;
 		this.enemyPoList = this.stageProxy.getCurStagePoEnemyPoList();
+		this.enemyProxy.clearStageEnemyList();
 	}
 	
 	/**
@@ -209,27 +209,6 @@ public class GameStageMediator extends Mediator
 		this.slots.setTitle("放入" + this.curEnemySelectCount + "个敌人/" + this.enemyCanSelectCount);
 	}
 	
-	/**
-	 * 根据id删除敌人数据
-	 * @param	id	敌人id
-	 */
-	private function removeEnemyVoById(id:int):void
-	{
-		trace("remove id", id);
-		var count:int = this.enemyVoList.length;
-		for (var i:int = 0; i < count; ++i) 
-		{
-			var eVo:EnemyVo = this.enemyVoList[i];
-			trace(eVo.id);
-			if (id == eVo.id)
-			{
-				trace("remove", eVo.enemyPo.name);
-				this.enemyVoList.splice(i, 1);
-				break;
-			}
-		}
-	}
-	
 	//event handler
 	////////////////////////////////////////////////////
 	////////////////////////////////////////////////////
@@ -266,14 +245,13 @@ public class GameStageMediator extends Mediator
 		{
 			var id:int = this.slots.getSelectId();
 			var ePo:EnemyPo = this.enemyProxy.getEnemyPoById(id);
-			//trace(ePo.name);
-			this.enemyVoList.push(this.enemyProxy.createEnemyVo(ePo));
+			this.enemyProxy.createEnemyVo(ePo);
 			if (this.curEnemySelectCount == this.enemyCanSelectCount)
 			{
 				//数量选择够了
 				this.isSelectEnemyType = true;
 				this.gameStage.initEnemy(this.enemyCanSelectCount);
-				this.gameStage.updateEnemyUI(this.enemyVoList);
+				this.gameStage.updateEnemyUI(this.enemyProxy.enemyVoList);
 				this.gameStage.enemyMove(Handler.create(this, initSlotsAtk));
 			}
 			else
@@ -336,7 +314,7 @@ public class GameStageMediator extends Mediator
 		}
 		else
 		{
-			var eVo:EnemyVo = this.enemyVoList[this.roundIndex];
+			var eVo:EnemyVo = this.enemyProxy.getEnemyVoByIndex(this.roundIndex);
 			eVo.hp -= hurt;
 			Damage.show(hurt, enemy.x, enemy.y - 100, 1.5);
 		}
@@ -347,33 +325,33 @@ public class GameStageMediator extends Mediator
 	 */
 	private function enemyHurtComplete():void
 	{
-		var eVo:EnemyVo = this.enemyVoList[this.roundIndex];
+		var eVo:EnemyVo = this.enemyProxy.getEnemyVoByIndex(this.roundIndex);
 		var enemy:Sprite = this.gameStage.getEnemyByIndex(this.roundIndex);
 		var isDead:Boolean = false;
 		if (eVo.hp <= 0)
 		{
 			//TODO show dead;
 			this.gameStage.removeEnemyByIndex(this.roundIndex);
-			this.removeEnemyVoById(eVo.id);
+			this.enemyProxy.removeEnemyVoById(eVo.id);
 			trace("删除", eVo.enemyPo.name);
 			isDead = true;
 		}
-		this.gameStage.updateEnemyUI(this.enemyVoList);
-		if (this.enemyVoList.length == 0)
+		this.gameStage.updateEnemyUI(this.enemyProxy.enemyVoList);
+		if (this.enemyProxy.getCurStageEnemyCount() == 0)
 		{
 			//all dead;
 			this.gameStage.playerMove(GameConstant.GAME_WIDTH, 3000, Handler.create(this, playerMoveOutComplete));
 		}
 		else
 		{
-			if (this.roundIndex > this.enemyVoList.length - 1) this.roundIndex = 0;
+			if (this.roundIndex > this.enemyProxy.getCurStageEnemyCount() - 1) this.roundIndex = 0;
 			this.gameStage.enemyAtk(this.roundIndex, Handler.create(this, enemyAtkComplete));
 		}
 		
 		if (!isDead)
 		{
 			this.roundIndex++;
-			if (this.roundIndex > this.enemyVoList.length - 1) this.roundIndex = 0;
+			if (this.roundIndex > this.enemyProxy.getCurStageEnemyCount() - 1) this.roundIndex = 0;
 		}
 	}
 	
@@ -397,6 +375,7 @@ public class GameStageMediator extends Mediator
 	{
 		//弹出选择攻击界面
 		this.initSlotsAtk();
+		this.gameStage.arrowImg.visible = false;
 	}
 	
 	/**

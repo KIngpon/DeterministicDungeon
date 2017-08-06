@@ -401,7 +401,7 @@ var Laya=window.Laya=(function(window,document){
 		GameConstant.GAME_WIDTH=1136;
 		GameConstant.GAME_HEIGHT=640;
 		GameConstant.ENEMY_NUM=3;
-		GameConstant.ROLE_POS_Y=500;
+		GameConstant.ROLE_POS_Y=437;
 		GameConstant.DEBUG=true;
 		GameConstant.SLOTS_NUM_MAX=9;
 		GameConstant.GAME_FONT_NAME="gameFont";
@@ -453,6 +453,7 @@ var Laya=window.Laya=(function(window,document){
 	*[关卡表配置]
 	*[掉落表]
 	*[随机的0个敌人直接胜利]
+	*自由选择敌人
 	*敌人扣血死亡胜利流程
 	*屏幕震动
 	*道具表
@@ -462,6 +463,7 @@ var Laya=window.Laya=(function(window,document){
 	*关卡表对应关卡背景图片，敌人id
 	*选择关卡地形
 	*选择移动格子
+	*小地图
 	*本地化文本
 	*中文字体图
 	*敌人动画
@@ -471,7 +473,7 @@ var Laya=window.Laya=(function(window,document){
 	var Main=(function(){
 		function Main(){
 			Laya.init(1136,640);
-			Laya.stage.scaleMode="fixedheight";
+			Laya.stage.scaleMode="showall";
 			Laya.stage.screenMode="horizontal";
 			Laya.stage.bgColor="#0F1312";
 			Layer.init(Laya.stage);
@@ -10086,6 +10088,7 @@ var Laya=window.Laya=(function(window,document){
 			this.enemyDict=null;
 			this.enemyAry=null;
 			this.isLoaded=false;
+			this.enemyVoList=null;
 			this.id=0;
 			EnemyProxy.__super.call(this);
 			this.proxyName="EnemyProxy";
@@ -10149,9 +10152,52 @@ var Laya=window.Laya=(function(window,document){
 			eVo.no=ePo.id;
 			eVo.hp=ePo.hp;
 			eVo.enemyPo=ePo;
-			console.log("eVo.id",eVo.id);
-			console.log("ePo.name",ePo.name);
+			this.enemyVoList.push(eVo);
 			return eVo;
+		}
+
+		/**
+		*清除当前关卡的敌人列表
+		*/
+		__proto.clearStageEnemyList=function(){
+			this.enemyVoList=[];
+		}
+
+		/**
+		*根据索引获取敌人数据
+		*@param index 索引
+		*@return 敌人数据
+		*/
+		__proto.getEnemyVoByIndex=function(index){
+			if (!this.enemyVoList)return null;
+			if (index < 0 || index > this.enemyVoList.length-1)return null;
+			return this.enemyVoList[index];
+		}
+
+		/**
+		*获取本关当前敌人数量
+		*@return 敌人数量
+		*/
+		__proto.getCurStageEnemyCount=function(){
+			if (!this.enemyVoList)return 0;
+			return this.enemyVoList.length;
+		}
+
+		/**
+		*根据id删除敌人数据
+		*@param id 敌人id
+		*/
+		__proto.removeEnemyVoById=function(id){
+			console.log("remove id",id);
+			var count=this.enemyVoList.length;
+			for (var i=0;i < count;++i){
+				var eVo=this.enemyVoList[i];
+				if (id==eVo.id){
+					console.log("remove",eVo.enemyPo.name);
+					this.enemyVoList.splice(i,1);
+					break ;
+				}
+			}
 		}
 
 		EnemyProxy.NAME="EnemyProxy";
@@ -10607,7 +10653,6 @@ var Laya=window.Laya=(function(window,document){
 			this.curEnemySelectCount=0;
 			this.curStagePo=null;
 			this.enemyPoList=null;
-			this.enemyVoList=null;
 			GameStageMediator.__super.call(this);
 			this.mediatorName="GameStageMediator";
 			this.playerProxy=this.retrieveProxy("PlayerProxy");
@@ -10640,7 +10685,8 @@ var Laya=window.Laya=(function(window,document){
 					else{
 					}
 					this.gameStage.initPlayer();
-					this.gameStage.playerMove(200,1000,Handler.create(this,this.playerMoveComplete));
+					this.gameStage.updateStageBg(this.curStagePo,this.stageProxy);
+					this.gameStage.playerMove(300,1000,Handler.create(this,this.playerMoveComplete));
 					break ;
 				default :
 					break ;
@@ -10667,10 +10713,10 @@ var Laya=window.Laya=(function(window,document){
 			this.isSelectAtkIndex=false;
 			this.roundIndex=0;
 			this.curEnemySelectCount=0;
-			this.enemyVoList=[];
 			this.curStagePo=this.stageProxy.getCurStagePo();
 			this.playerVo=this.playerProxy.pVo;
 			this.enemyPoList=this.stageProxy.getCurStagePoEnemyPoList();
+			this.enemyProxy.clearStageEnemyList();
 		}
 
 		/**
@@ -10721,24 +10767,6 @@ var Laya=window.Laya=(function(window,document){
 		}
 
 		/**
-		*根据id删除敌人数据
-		*@param id 敌人id
-		*/
-		__proto.removeEnemyVoById=function(id){
-			console.log("remove id",id);
-			var count=this.enemyVoList.length;
-			for (var i=0;i < count;++i){
-				var eVo=this.enemyVoList[i];
-				console.log(eVo.id);
-				if (id==eVo.id){
-					console.log("remove",eVo.enemyPo.name);
-					this.enemyVoList.splice(i,1);
-					break ;
-				}
-			}
-		}
-
-		/**
 		*点击选择按钮
 		*/
 		__proto.selectedBtnMouseDown=function(){
@@ -10764,11 +10792,11 @@ var Laya=window.Laya=(function(window,document){
 			else if (!this.isSelectEnemyType){
 				var id=this.slots.getSelectId();
 				var ePo=this.enemyProxy.getEnemyPoById(id);
-				this.enemyVoList.push(this.enemyProxy.createEnemyVo(ePo));
+				this.enemyProxy.createEnemyVo(ePo);
 				if (this.curEnemySelectCount==this.enemyCanSelectCount){
 					this.isSelectEnemyType=true;
 					this.gameStage.initEnemy(this.enemyCanSelectCount);
-					this.gameStage.updateEnemyUI(this.enemyVoList);
+					this.gameStage.updateEnemyUI(this.enemyProxy.enemyVoList);
 					this.gameStage.enemyMove(Handler.create(this,this.initSlotsAtk));
 				}
 				else{
@@ -10818,7 +10846,7 @@ var Laya=window.Laya=(function(window,document){
 				Damage.showDamageByStr("miss!",enemy.x,enemy.y-100,1.5);
 			}
 			else{
-				var eVo=this.enemyVoList[this.roundIndex];
+				var eVo=this.enemyProxy.getEnemyVoByIndex(this.roundIndex);
 				eVo.hp-=hurt;
 				Damage.show(hurt,enemy.x,enemy.y-100,1.5);
 			}
@@ -10828,26 +10856,26 @@ var Laya=window.Laya=(function(window,document){
 		*敌人受伤还动作结束
 		*/
 		__proto.enemyHurtComplete=function(){
-			var eVo=this.enemyVoList[this.roundIndex];
+			var eVo=this.enemyProxy.getEnemyVoByIndex(this.roundIndex);
 			var enemy=this.gameStage.getEnemyByIndex(this.roundIndex);
 			var isDead=false;
 			if (eVo.hp <=0){
 				this.gameStage.removeEnemyByIndex(this.roundIndex);
-				this.removeEnemyVoById(eVo.id);
+				this.enemyProxy.removeEnemyVoById(eVo.id);
 				console.log("删除",eVo.enemyPo.name);
 				isDead=true;
 			}
-			this.gameStage.updateEnemyUI(this.enemyVoList);
-			if (this.enemyVoList.length==0){
+			this.gameStage.updateEnemyUI(this.enemyProxy.enemyVoList);
+			if (this.enemyProxy.getCurStageEnemyCount()==0){
 				this.gameStage.playerMove(1136,3000,Handler.create(this,this.playerMoveOutComplete));
 			}
 			else{
-				if (this.roundIndex > this.enemyVoList.length-1)this.roundIndex=0;
+				if (this.roundIndex > this.enemyProxy.getCurStageEnemyCount()-1)this.roundIndex=0;
 				this.gameStage.enemyAtk(this.roundIndex,Handler.create(this,this.enemyAtkComplete));
 			}
 			if (!isDead){
 				this.roundIndex++;
-				if (this.roundIndex > this.enemyVoList.length-1)this.roundIndex=0;
+				if (this.roundIndex > this.enemyProxy.getCurStageEnemyCount()-1)this.roundIndex=0;
 			}
 		}
 
@@ -10867,6 +10895,7 @@ var Laya=window.Laya=(function(window,document){
 		*/
 		__proto.playerHurtComplete=function(){
 			this.initSlotsAtk();
+			this.gameStage.arrowImg.visible=false;
 		}
 
 		/**
@@ -16678,11 +16707,18 @@ var Laya=window.Laya=(function(window,document){
 			this.indexAry=null;
 			this.handImg=null;
 			this.titleTxt=null;
+			this.isStop=false;
 			this.selectedBtn=null;
+			this.bg=null;
 			SlotsPanel.__super.call(this);
 			this._index=0;
 			this.totalCount=0;
 			this.flashingIndex=0;
+			this.isStop=true;
+			this.bg=new Sprite();
+			this.bg.graphics.drawRect(0,0,1136,640,"#000000");
+			this.bg.alpha=.6;
+			this.addChild(this.bg);
 			this.panel=new SlotsPanelUI();
 			this.addChild(this.panel);
 			this.selectedBtn=this.panel.selectBtn;
@@ -16796,6 +16832,7 @@ var Laya=window.Laya=(function(window,document){
 		*/
 		__proto.start=function(delay){
 			this._index=0;
+			this.isStop=false;
 			if (!this._$3_timer)this._$3_timer=new Timer();
 			this.timer.clear(this,this.loopHandler);
 			this.timer.loop(delay,this,this.loopHandler);
@@ -16808,8 +16845,14 @@ var Laya=window.Laya=(function(window,document){
 		*/
 		__proto.stop=function(){
 			if (!this._$3_timer)return;
+			this.isStop=true;
+			console.log("stop")
 			this.timer.clear(this,this.loopHandler);
+			this._indexValue=this.indexAry[this._index];
 			this.updateSelectImg();
+			console.log("stop this.indexAry",this.indexAry);
+			console.log("stop this.index",this._index);
+			console.log("stop this._indexValue",this._indexValue);
 		}
 
 		/**
@@ -16944,8 +16987,8 @@ var Laya=window.Laya=(function(window,document){
 				var ePo=enemyList[i];
 				imgAry.push(GameUtils.getEnemyIconById(ePo.id));
 			}
-			this.startImageSlots(imgAry,"frame/enemySlotsBg.png",delay,0,0,1,true);
 			this.idAry=[];
+			this.startImageSlots(imgAry,"frame/enemySlotsBg.png",delay,0,0,1,true);
 			count=this.indexAry.length;
 			for (i=0;i < count;++i){
 				var index=this.indexAry[i];
@@ -16979,10 +17022,12 @@ var Laya=window.Laya=(function(window,document){
 			this.selectedImg.visible=!this.selectedImg.visible;
 			this.flashingIndex++;
 			if (this.flashingIndex >=10){
+				this.isStop=true;
 				this.flashingIndex=0;
 				this.flashingTimer.clear(this,this.flashingLoopHandler);
 				if (this.flashingCallBackHandler)
 					this.flashingCallBackHandler.run();
+				console.log("flashingLoopHandler stop");
 			}
 		}
 
@@ -16990,10 +17035,15 @@ var Laya=window.Laya=(function(window,document){
 		*循环
 		*/
 		__proto.loopHandler=function(){
+			console.log("this.isStop",this.isStop);
+			if (this.isStop)return;
 			this._index++;
 			if (this._index > this._totalCount-1)this._index=0;
 			this._indexValue=this.indexAry[this._index];
 			this.updateSelectImg();
+			console.log("this.indexAry",this.indexAry);
+			console.log("this.index",this._index);
+			console.log("this._indexValue",this._indexValue);
 		}
 
 		/**
@@ -17034,6 +17084,9 @@ var Laya=window.Laya=(function(window,document){
 		function GameStageLayer(){
 			this.player=null;
 			this.enemyAry=[];
+			this.arrowImg=null;
+			this.fontBg=null;
+			this.bgBg=null;
 			GameStageLayer.__super.call(this);
 			this.initUI();
 		}
@@ -17044,13 +17097,38 @@ var Laya=window.Laya=(function(window,document){
 		*初始化UI
 		*/
 		__proto.initUI=function(){
+			this.bgBg=new Image();
+			this.fontBg=new Image();
+			this.addChild(this.bgBg);
+			this.addChild(this.fontBg);
+			this.bgBg.scale(1.5,1.5);
+			this.fontBg.scale(1.5,1.5);
+			this.bgBg.anchorX=.5;
+			this.bgBg.x=1136 / 2;
+			this.fontBg.anchorX=.5;
+			this.fontBg.x=1136 / 2;
 			this.player=new Sprite();
 			this.player.width=70;
 			this.player.height=120;
 			this.player.graphics.drawRect(-this.player.width / 2,-this.player.height,this.player.width,this.player.height,"#ff0000");
 			this.addChild(this.player);
 			this.player.x=-this.player.width / 2;
-			this.player.y=500;
+			this.player.y=437;
+			if (!this.arrowImg)this.arrowImg=new Image("comp/roundArrow.png");
+			this.arrowImg.anchorX=.5;
+			this.arrowImg.x=this.player.x;
+			this.arrowImg.y=this.player.y+20;
+			Layer.GAME_UI.addChild(this.arrowImg);
+			this.arrowImg.visible=false;
+			this.arrowImgMove();
+		}
+
+		/**
+		*箭头移动
+		*/
+		__proto.arrowImgMove=function(){
+			Tween.to(this.arrowImg,{y:this.arrowImg.y-10 },200,Ease.circOut);
+			Tween.to(this.arrowImg,{y:this.arrowImg.y },200,Ease.circOut,Handler.create(this,this.arrowImgMove),100);
 		}
 
 		/**
@@ -17059,7 +17137,8 @@ var Laya=window.Laya=(function(window,document){
 		__proto.initPlayer=function(){
 			if (!this.player)return;
 			this.player.x=-this.player.width / 2;
-			this.player.y=500;
+			this.player.y=437;
+			this.arrowImg.visible=false;
 		}
 
 		/**
@@ -17068,7 +17147,7 @@ var Laya=window.Laya=(function(window,document){
 		*/
 		__proto.initEnemy=function(num){
 			this.removeAllEnemy();
-			var gap=30;
+			var gap=60;
 			var startX=Laya.stage.width;
 			if (num > 3)num=3;
 			for (var i=0;i < num;i++){
@@ -17077,7 +17156,7 @@ var Laya=window.Laya=(function(window,document){
 				enemy.height=120;
 				enemy.graphics.drawRect(-enemy.width / 2,-enemy.height,enemy.width,enemy.height,"#ff00ff");
 				enemy.x=startX+i *(enemy.width+gap)+enemy.width / 2;
-				enemy.y=500;
+				enemy.y=437;
 				this.addChild(enemy);
 				this.enemyAry.push(enemy);
 				var nameTxt=new Label();
@@ -17093,6 +17172,26 @@ var Laya=window.Laya=(function(window,document){
 				hpTxt.x=-enemy.width / 2;
 				hpTxt.y=nameTxt.y+50;
 				enemy.addChild(hpTxt);
+			}
+		}
+
+		/**
+		*更新地图背景
+		*@param stagePo 关卡数据
+		*@param stageProxy 关卡数据代理
+		*/
+		__proto.updateStageBg=function(stagePo,stageProxy){
+			if (!stagePo || !stageProxy)return;
+			console.log("stagePo.level",stagePo.level);
+			console.log("stagePo.points",stagePo.points);
+			console.log(" stageProxy.getCurStagePointsCount()",stageProxy.getCurStagePointsCount());
+			this.bgBg.skin="stage/"+"stage"+stagePo.level+"/stageBg.png";
+			this.fontBg.skin="stage/"+"stage"+stagePo.level+"/stageBg1.png";
+			if (stagePo.points==1){
+			}
+			else if (stagePo.points==stageProxy.getCurStagePointsCount()){
+			}
+			else{
 			}
 		}
 
@@ -17132,6 +17231,7 @@ var Laya=window.Laya=(function(window,document){
 		*/
 		__proto.playerMove=function(targetX,duration,complete){
 			(duration===void 0)&& (duration=1000);
+			this.arrowImg.visible=false;
 			if (!this.player)return;
 			Tween.to(this.player,{x:targetX},duration,Ease.linearNone,complete);
 		}
@@ -17145,9 +17245,9 @@ var Laya=window.Laya=(function(window,document){
 			for (var i=0;i < count;++i){
 				var enemy=this.enemyAry[i];
 				if (i==0)
-					Tween.to(enemy,{x:enemy.x-300},1000,Ease.linearNone,complete);
+					Tween.to(enemy,{x:enemy.x-450},1000,Ease.linearNone,complete);
 				else
-				Tween.to(enemy,{x:enemy.x-300},1000,Ease.linearNone);
+				Tween.to(enemy,{x:enemy.x-450},1000,Ease.linearNone);
 			}
 		}
 
@@ -17157,6 +17257,8 @@ var Laya=window.Laya=(function(window,document){
 		*/
 		__proto.playerAtk=function(complete){
 			if (!this.player)return;
+			this.arrowImg.visible=true;
+			this.arrowImg.x=this.player.x;
 			Tween.to(this.player,{x:this.player.x+50},100,Ease.strongOut);
 			Tween.to(this.player,{x:this.player.x},200,Ease.strongOut,complete,100);
 		}
@@ -17172,7 +17274,7 @@ var Laya=window.Laya=(function(window,document){
 			if (!isMiss){
 				Tween.to(this.player,{x:this.player.x-50},100,Ease.strongOut);
 				Tween.to(this.player,{x:this.player.x},200,Ease.strongOut,null,100);
-				Tween.to(this.player,{x:this.player.x},300,Ease.strongOut,complete,200);
+				Tween.to(this.player,{x:this.player.x},500,Ease.strongOut,complete,200);
 			}
 			else{
 				Tween.to(this.player,{x:this.player.x},500,Ease.linearNone,complete);
@@ -17189,6 +17291,8 @@ var Laya=window.Laya=(function(window,document){
 			if (index < 0 || index > this.enemyAry.length-1)return;
 			var enemy=this.enemyAry[index];
 			if (!enemy)return;
+			this.arrowImg.visible=true;
+			this.arrowImg.x=enemy.x;
 			Tween.to(enemy,{x:enemy.x-50},100,Ease.strongOut);
 			Tween.to(enemy,{x:enemy.x},200,Ease.strongOut,complete,100);
 		}
@@ -17208,7 +17312,7 @@ var Laya=window.Laya=(function(window,document){
 			if (!isMiss){
 				Tween.to(enemy,{x:enemy.x+50},100,Ease.strongOut);
 				Tween.to(enemy,{x:enemy.x},200,Ease.strongOut,null,100);
-				Tween.to(enemy,{x:enemy.x},300,Ease.strongOut,complete,200);
+				Tween.to(enemy,{x:enemy.x},500,Ease.strongOut,complete,200);
 			}
 			else{
 				Tween.to(enemy,{x:enemy.x},500,Ease.strongOut,complete);

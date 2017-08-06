@@ -17,6 +17,7 @@ import view.ui.Layer;
  * [关卡表配置]
  * [掉落表]
  * [随机的0个敌人直接胜利]
+ * 自由选择敌人
  * 敌人扣血死亡胜利流程
  * 屏幕震动
  * 道具表
@@ -26,6 +27,7 @@ import view.ui.Layer;
  * 关卡表对应关卡背景图片，敌人id
  * 选择关卡地形
  * 选择移动格子
+ * 小地图
  * 本地化文本
  * 中文字体图
  * 敌人动画
@@ -36,7 +38,7 @@ public class Main
 	public function Main() 
 	{
 		Laya.init(GameConstant.GAME_WIDTH, GameConstant.GAME_HEIGHT);
-		Laya.stage.scaleMode = Stage.SCALE_FIXED_HEIGHT;
+		Laya.stage.scaleMode = Stage.SCALE_SHOWALL;
 		Laya.stage.screenMode = Stage.SCREEN_HORIZONTAL;
 		Laya.stage.bgColor = "#0F1312";
 		Layer.init(Laya.stage);

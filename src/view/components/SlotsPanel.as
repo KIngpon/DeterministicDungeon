@@ -46,14 +46,23 @@ public class SlotsPanel extends Sprite
 	//手
 	private var handImg:Image;
 	private var titleTxt:Label;
+	private var isStop:Boolean;
 	//选择按钮
 	public var selectedBtn:Button;
+	//背景层
+	private var bg:Sprite;
 	//标题
 	public function SlotsPanel() 
 	{
 		this._index = 0;
 		this.totalCount = 0;
 		this.flashingIndex = 0;
+		this.isStop = true;
+		
+		this.bg = new Sprite();
+		this.bg.graphics.drawRect(0, 0, GameConstant.GAME_WIDTH, GameConstant.GAME_HEIGHT, "#000000");
+		this.bg.alpha = .6;
+		this.addChild(this.bg);
 		
 		this.panel = new SlotsPanelUI();
 		this.addChild(this.panel);
@@ -181,6 +190,7 @@ public class SlotsPanel extends Sprite
 	public function start(delay:int):void
 	{
 		this._index = 0;
+		this.isStop = false;
 		if (!this.timer) this.timer = new Timer();
 		this.timer.clear(this, loopHandler);
 		this.timer.loop(delay, this, loopHandler);
@@ -194,8 +204,14 @@ public class SlotsPanel extends Sprite
 	public function stop():void
 	{
 		if (!this.timer) return;
+		this.isStop = true;
+		trace("stop")
 		this.timer.clear(this, loopHandler);
+		this._indexValue = this.indexAry[this._index];
 		this.updateSelectImg();
+		trace("stop this.indexAry", this.indexAry);
+		trace("stop this.index", this._index);
+		trace("stop this._indexValue", this._indexValue);
 	}
 	
 	/**
@@ -350,8 +366,8 @@ public class SlotsPanel extends Sprite
 			var ePo:EnemyPo = enemyList[i];
 			imgAry.push(GameUtils.getEnemyIconById(ePo.id));
 		}
-		this.startImageSlots(imgAry, "frame/enemySlotsBg.png", delay, 0, 0, 1, true);
 		this.idAry = [];
+		this.startImageSlots(imgAry, "frame/enemySlotsBg.png", delay, 0, 0, 1, true);
 		count = this.indexAry.length;
 		for (i = 0; i < count; ++i) 
 		{
@@ -390,10 +406,12 @@ public class SlotsPanel extends Sprite
 		this.flashingIndex++;
 		if (this.flashingIndex >= 10)
 		{
+			this.isStop = true;
 			this.flashingIndex = 0;
 			this.flashingTimer.clear(this, flashingLoopHandler);
 			if (this.flashingCallBackHandler)
 				this.flashingCallBackHandler.run();
+			trace("flashingLoopHandler stop");
 		}
 	}
 	
@@ -402,10 +420,15 @@ public class SlotsPanel extends Sprite
 	 */
 	private function loopHandler():void 
 	{
+		trace("this.isStop", this.isStop);
+		if (this.isStop) return;
 		this._index++;
 		if (this._index > this._totalCount - 1) this._index = 0;
 		this._indexValue = this.indexAry[this._index];
 		this.updateSelectImg();
+		trace("this.indexAry", this.indexAry);
+		trace("this.index", this._index);
+		trace("this._indexValue", this._indexValue);
 	}
 	
 	/**
