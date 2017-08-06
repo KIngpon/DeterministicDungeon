@@ -10686,7 +10686,7 @@ var Laya=window.Laya=(function(window,document){
 					}
 					this.gameStage.initPlayer();
 					this.gameStage.updateStageBg(this.curStagePo,this.stageProxy);
-					this.gameStage.playerMove(300,1000,Handler.create(this,this.playerMoveComplete));
+					this.gameStage.playerMove(250,1000,Handler.create(this,this.playerMoveComplete));
 					break ;
 				default :
 					break ;

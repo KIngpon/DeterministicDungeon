@@ -117,7 +117,7 @@ public class GameStageMediator extends Mediator
 				
 				this.gameStage.initPlayer();
 				this.gameStage.updateStageBg(this.curStagePo, this.stageProxy);
-				this.gameStage.playerMove(300, 1000, Handler.create(this, playerMoveComplete));
+				this.gameStage.playerMove(250, 1000, Handler.create(this, playerMoveComplete));
 				break;
 			default:
 				break;
