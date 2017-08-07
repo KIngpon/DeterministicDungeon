@@ -10866,7 +10866,6 @@ var Laya=window.Laya=(function(window,document){
 				this.gameStage.removeEnemyByIndex(this.roundIndex);
 				this.gameStage.removeHpBarByIndex(this.roundIndex);
 				this.enemyProxy.removeEnemyVoById(eVo.id);
-				console.log("删除",eVo.enemyPo.name);
 				isDead=true;
 			}
 			this.gameStage.updateEnemyUI(this.enemyProxy.enemyVoList);
@@ -16699,6 +16698,7 @@ var Laya=window.Laya=(function(window,document){
 			this.p=NaN;
 			this.barImg=null;
 			this.barBg=null;
+			this.deadIcon=null;
 			HpBar.__super.call(this);
 			this.curHp=0;
 			this.maxHp=1;
@@ -16711,20 +16711,28 @@ var Laya=window.Laya=(function(window,document){
 		*初始化UI
 		*/
 		__proto.initUI=function(){
-			var frame=new Image("bar/hpBarFrameBg.png");
 			var bgLight=new Image("bar/hpBarLight.png");
+			var hpIcon=new Image("bar/hpIcon.png");
+			var hpIconFrame=new Image("bar/hpIconFrame.png");
 			this.barBg=new Image("bar/hpBarBg.png");
 			this.barImg=new Image("bar/hpBar.png");
+			this.deadIcon=new Image("bar/hpIconDeadIcon.png");
 			this.barImg.anchorX=1;
-			this.addChild(frame);
 			this.addChild(this.barBg);
 			this.addChild(this.barImg);
 			this.addChild(bgLight);
-			frame.x=-6.5;
-			frame.y=-6;
+			this.addChild(hpIcon);
+			this.addChild(this.deadIcon);
+			this.addChild(hpIconFrame);
+			hpIcon.y=-7;
+			hpIconFrame.x=58;
+			hpIconFrame.y=-10;
+			this.deadIcon.x=61.5;
+			this.deadIcon.y=-6.4;
 			this.barImg.x=this.barImg.width;
-			this.width=frame.width;
-			this.height=frame.height;
+			this.width=hpIcon.width;
+			this.height=hpIcon.height;
+			this.scale(1.5,1.5);
 		}
 
 		/**
@@ -17241,8 +17249,8 @@ var Laya=window.Laya=(function(window,document){
 		*/
 		__proto.initHpBar=function(num){
 			this.removeAllHpBar();
-			var gap=100;
-			var startX=550;
+			var gap=70;
+			var startX=530;
 			if (num > 3)num=3;
 			for (var i=0;i < num;i++){
 				var hpBar=new HpBar();

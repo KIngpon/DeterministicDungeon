@@ -133,8 +133,8 @@ public class GameStageLayer extends Sprite
 	public function initHpBar(num:int):void
 	{
 		this.removeAllHpBar();
-		var gap:Number = 100;
-		var startX:Number = 550;
+		var gap:Number = 70;
+		var startX:Number = 530;
 		if (num > GameConstant.ENEMY_NUM) num = GameConstant.ENEMY_NUM;
 		for (var i:int = 0; i < num; i++)
 		{

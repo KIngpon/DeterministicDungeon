@@ -42,31 +42,10 @@
             "rotated": false,
             "trimed": false
         },
-        "hpBarFrameBg.png": {
-            "frame": {
-                "x": 0,
-                "y": 37,
-                "w": 80,
-                "h": 46,
-                "idx": 0
-            },
-            "spriteSourceSize": {
-                "x": 0,
-                "y": 0,
-                "w": 80,
-                "h": 46
-            },
-            "sourceSize": {
-                "w": 80,
-                "h": 46
-            },
-            "rotated": false,
-            "trimed": false
-        },
         "hpBarLight.png": {
             "frame": {
                 "x": 0,
-                "y": 85,
+                "y": 37,
                 "w": 68,
                 "h": 34,
                 "idx": 0
@@ -80,6 +59,69 @@
             "sourceSize": {
                 "w": 68,
                 "h": 34
+            },
+            "rotated": false,
+            "trimed": false
+        },
+        "hpIcon.png": {
+            "frame": {
+                "x": 0,
+                "y": 73,
+                "w": 109,
+                "h": 50,
+                "idx": 0
+            },
+            "spriteSourceSize": {
+                "x": 0,
+                "y": 0,
+                "w": 109,
+                "h": 50
+            },
+            "sourceSize": {
+                "w": 109,
+                "h": 50
+            },
+            "rotated": false,
+            "trimed": false
+        },
+        "hpIconDeadIcon.png": {
+            "frame": {
+                "x": 111,
+                "y": 37,
+                "w": 47,
+                "h": 47,
+                "idx": 0
+            },
+            "spriteSourceSize": {
+                "x": 0,
+                "y": 0,
+                "w": 47,
+                "h": 47
+            },
+            "sourceSize": {
+                "w": 47,
+                "h": 47
+            },
+            "rotated": false,
+            "trimed": false
+        },
+        "hpIconFrame.png": {
+            "frame": {
+                "x": 111,
+                "y": 86,
+                "w": 54,
+                "h": 54,
+                "idx": 0
+            },
+            "spriteSourceSize": {
+                "x": 0,
+                "y": 0,
+                "w": 54,
+                "h": 54
+            },
+            "sourceSize": {
+                "w": 54,
+                "h": 54
             },
             "rotated": false,
             "trimed": false
