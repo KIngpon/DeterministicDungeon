@@ -1,7 +1,10 @@
 package view.components 
 {
 import laya.display.Sprite;
+import laya.display.Stage;
+import laya.display.Text;
 import laya.ui.Image;
+import laya.ui.Label;
 /**
  * ...血条
  * @author ...Kanon
@@ -18,6 +21,7 @@ public class HpBar extends Sprite
 	private var barImg:Image;
 	private var barBg:Image;
 	private var deadIcon:Image;
+	public var nameTxt:Label;
 	public function HpBar() 
 	{
 		this.curHp = 0;
@@ -56,7 +60,19 @@ public class HpBar extends Sprite
 		this.barImg.x = this.barImg.width;
 		this.width = hpIcon.width;
 		this.height = hpIcon.height;
-		this.scale(1.5, 1.5);
+		
+		this.nameTxt = new Label();
+		this.nameTxt.font = "Microsoft YaHei";
+		this.nameTxt.name = "nameLabel";
+		this.nameTxt.color = "#FFFFFF";
+		this.nameTxt.fontSize = 12;
+		this.nameTxt.anchorX = 1;
+		this.nameTxt.align = Stage.ALIGN_RIGHT;
+		this.nameTxt.width = 120;
+		this.nameTxt.x = hpIcon.x + hpIcon.width;
+		this.nameTxt.y = hpIconFrame.y + hpIconFrame.height;
+		this.addChild(this.nameTxt);
+		//this.scale(1.5, 1.5);
 	}
 	
 	/**

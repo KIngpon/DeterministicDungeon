@@ -168,7 +168,7 @@ public class StageProxy extends Proxy
 			var count:int = dPo.weaponIds.length;
 			for (var i:int = 0; i < count; ++i) 
 			{
-				var id:int = sPo.weaponIds[i];
+				var id:int = dPo.weaponIds[i];
 				var equipPo:EquipPo = this.equipProxy.getEquipPoById(id);
 				arr.push(equipPo);
 			}
@@ -190,7 +190,7 @@ public class StageProxy extends Proxy
 			var count:int = dPo.shieldIds.length;
 			for (var i:int = 0; i < count; ++i) 
 			{
-				var id:int = sPo.shieldIds[i];
+				var id:int = dPo.shieldIds[i];
 				var equipPo:EquipPo = this.equipProxy.getEquipPoById(id);
 				arr.push(equipPo);
 			}
@@ -212,7 +212,7 @@ public class StageProxy extends Proxy
 			var count:int = dPo.helmetIds.length;
 			for (var i:int = 0; i < count; ++i) 
 			{
-				var id:int = sPo.helmetIds[i];
+				var id:int = dPo.helmetIds[i];
 				var equipPo:EquipPo = this.equipProxy.getEquipPoById(id);
 				arr.push(equipPo);
 			}
@@ -236,6 +236,7 @@ public class StageProxy extends Proxy
 			case EquipPo.HELMET:
 				return this.getCurStagePoHelmetList();
 		}
+		return null;
 	}
 	
 	/**

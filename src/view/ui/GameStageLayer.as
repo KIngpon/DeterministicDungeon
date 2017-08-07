@@ -57,7 +57,7 @@ public class GameStageLayer extends Sprite
 		this.uiBg.anchorX = .5;
 		this.uiBg.x = GameConstant.GAME_WIDTH / 2;
 		this.uiBg.scale(1.55, 1.55);
-		this.uiBg.y = 520;
+		this.uiBg.y = 510;
 		
 		this.player = new Sprite();
 		this.player.width = 70;
@@ -116,13 +116,6 @@ public class GameStageLayer extends Sprite
 			enemy.y = GameConstant.ROLE_POS_Y;
 			this.addChild(enemy);
 			this.enemyAry.push(enemy);
-			
-			var nameTxt:Label = new Label();
-			nameTxt.name = "nameLabel";
-			nameTxt.color = "#CCFFAA";
-			nameTxt.fontSize = 15;
-			nameTxt.x = -enemy.width / 2;
-			enemy.addChild(nameTxt);
 		}
 	}
 	
@@ -134,16 +127,35 @@ public class GameStageLayer extends Sprite
 	{
 		this.removeAllHpBar();
 		var gap:Number = 70;
-		var startX:Number = 530;
+		var startX:Number = 670;
 		if (num > GameConstant.ENEMY_NUM) num = GameConstant.ENEMY_NUM;
 		for (var i:int = 0; i < num; i++)
 		{
 			var hpBar:HpBar = new HpBar();
-			hpBar.x = startX + i * (hpBar.width + gap) + hpBar.width / 2;
-			hpBar.y = 550;
+			hpBar.x = startX + i * (hpBar.width + gap);
+			hpBar.y = 580;
+			hpBar.pivotX = hpBar.width / 2;
+			hpBar.pivotY = hpBar.height / 2;
+			hpBar.scale(0, 0);
 			this.addChild(hpBar);
 			this.hpBarAry.push(hpBar);
 			this.allHpBarAry.push(hpBar);
+		}
+	}
+	
+	/**
+	 * 血条显示效果
+	 * @param	flag	显示或隐藏
+	 */
+	public function hpBarShow(flag:Boolean):void
+	{
+		if (!this.allHpBarAry) return;
+		var count:int = this.allHpBarAry.length;
+		for (var i:int = 0; i < count; i++) 
+		{
+			var hpBar:HpBar = this.allHpBarAry[i];
+			if (flag) Tween.to(hpBar, { scaleX:1.5, scaleY:1.5 }, 200, Ease.circOut);
+			else Tween.to(hpBar, { y:hpBar.y + 150 }, 350, Ease.circIn, null, 200 * (3 - i));
 		}
 	}
 	
@@ -189,9 +201,8 @@ public class GameStageLayer extends Sprite
 		for (var i:int = 0; i < count; i++) 
 		{
 			var eVo:EnemyVo = enemyVoList[i];
-			var enemy:Sprite = this.enemyAry[i];
-			var nameTxt:Label = enemy.getChildByName("nameLabel") as Label;
-			nameTxt.text = eVo.enemyPo.name;
+			var hpBar:HpBar = this.allHpBarAry[i];
+			hpBar.nameTxt.text = eVo.enemyPo.name;
 		}
 	}
 	
@@ -373,7 +384,7 @@ public class GameStageLayer extends Sprite
 	 * 根据索引获取血条
 	 * @return		血条UI
 	 */
-	public function getHpBarByIndex():HpBar
+	public function getHpBarByIndex(index:int):HpBar
 	{
 		if (!this.hpBarAry) return null;
 		if (index < 0 || index > this.hpBarAry.length - 1) return null;

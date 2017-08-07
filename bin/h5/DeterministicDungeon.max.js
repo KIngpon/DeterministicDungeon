@@ -10545,7 +10545,7 @@ var Laya=window.Laya=(function(window,document){
 				var dPo=this.dProxy.getDropPoById(sPo.dropId);
 				var count=dPo.weaponIds.length;
 				for (var i=0;i < count;++i){
-					var id=sPo.weaponIds[i];
+					var id=dPo.weaponIds[i];
 					var equipPo=this.equipProxy.getEquipPoById(id);
 					arr.push(equipPo);
 				}
@@ -10564,7 +10564,7 @@ var Laya=window.Laya=(function(window,document){
 				var dPo=this.dProxy.getDropPoById(sPo.dropId);
 				var count=dPo.shieldIds.length;
 				for (var i=0;i < count;++i){
-					var id=sPo.shieldIds[i];
+					var id=dPo.shieldIds[i];
 					var equipPo=this.equipProxy.getEquipPoById(id);
 					arr.push(equipPo);
 				}
@@ -10583,7 +10583,7 @@ var Laya=window.Laya=(function(window,document){
 				var dPo=this.dProxy.getDropPoById(sPo.dropId);
 				var count=dPo.helmetIds.length;
 				for (var i=0;i < count;++i){
-					var id=sPo.helmetIds[i];
+					var id=dPo.helmetIds[i];
 					var equipPo=this.equipProxy.getEquipPoById(id);
 					arr.push(equipPo);
 				}
@@ -10605,6 +10605,7 @@ var Laya=window.Laya=(function(window,document){
 				case 3:
 					return this.getCurStagePoHelmetList();
 				}
+			return null;
 		}
 
 		/**
@@ -10799,6 +10800,7 @@ var Laya=window.Laya=(function(window,document){
 					this.gameStage.initEnemy(this.enemyCanSelectCount);
 					this.gameStage.initHpBar(this.enemyCanSelectCount);
 					this.gameStage.updateEnemyUI(this.enemyProxy.enemyVoList);
+					this.gameStage.hpBarShow(true);
 					this.gameStage.enemyMove(Handler.create(this,this.initSlotsAtk));
 				}
 				else{
@@ -10870,6 +10872,7 @@ var Laya=window.Laya=(function(window,document){
 			}
 			this.gameStage.updateEnemyUI(this.enemyProxy.enemyVoList);
 			if (this.enemyProxy.getCurStageEnemyCount()==0){
+				this.gameStage.hpBarShow(false);
 				this.gameStage.playerMove(1136,3000,Handler.create(this,this.playerMoveOutComplete));
 			}
 			else{
@@ -16699,6 +16702,7 @@ var Laya=window.Laya=(function(window,document){
 			this.barImg=null;
 			this.barBg=null;
 			this.deadIcon=null;
+			this.nameTxt=null;
 			HpBar.__super.call(this);
 			this.curHp=0;
 			this.maxHp=1;
@@ -16732,7 +16736,17 @@ var Laya=window.Laya=(function(window,document){
 			this.barImg.x=this.barImg.width;
 			this.width=hpIcon.width;
 			this.height=hpIcon.height;
-			this.scale(1.5,1.5);
+			this.nameTxt=new Label();
+			this.nameTxt.font="Microsoft YaHei";
+			this.nameTxt.name="nameLabel";
+			this.nameTxt.color="#FFFFFF";
+			this.nameTxt.fontSize=12;
+			this.nameTxt.anchorX=1;
+			this.nameTxt.align="right";
+			this.nameTxt.width=120;
+			this.nameTxt.x=hpIcon.x+hpIcon.width;
+			this.nameTxt.y=hpIconFrame.y+hpIconFrame.height;
+			this.addChild(this.nameTxt);
 		}
 
 		/**
@@ -17181,7 +17195,7 @@ var Laya=window.Laya=(function(window,document){
 			this.uiBg.anchorX=.5;
 			this.uiBg.x=1136 / 2;
 			this.uiBg.scale(1.55,1.55);
-			this.uiBg.y=520;
+			this.uiBg.y=510;
 			this.player=new Sprite();
 			this.player.width=70;
 			this.player.height=120;
@@ -17234,12 +17248,6 @@ var Laya=window.Laya=(function(window,document){
 				enemy.y=450;
 				this.addChild(enemy);
 				this.enemyAry.push(enemy);
-				var nameTxt=new Label();
-				nameTxt.name="nameLabel";
-				nameTxt.color="#CCFFAA";
-				nameTxt.fontSize=15;
-				nameTxt.x=-enemy.width / 2;
-				enemy.addChild(nameTxt);
 			}
 		}
 
@@ -17250,15 +17258,32 @@ var Laya=window.Laya=(function(window,document){
 		__proto.initHpBar=function(num){
 			this.removeAllHpBar();
 			var gap=70;
-			var startX=530;
+			var startX=670;
 			if (num > 3)num=3;
 			for (var i=0;i < num;i++){
 				var hpBar=new HpBar();
-				hpBar.x=startX+i *(hpBar.width+gap)+hpBar.width / 2;
-				hpBar.y=550;
+				hpBar.x=startX+i *(hpBar.width+gap);
+				hpBar.y=580;
+				hpBar.pivotX=hpBar.width / 2;
+				hpBar.pivotY=hpBar.height / 2;
+				hpBar.scale(0,0);
 				this.addChild(hpBar);
 				this.hpBarAry.push(hpBar);
 				this.allHpBarAry.push(hpBar);
+			}
+		}
+
+		/**
+		*血条显示效果
+		*@param flag 显示或隐藏
+		*/
+		__proto.hpBarShow=function(flag){
+			if (!this.allHpBarAry)return;
+			var count=this.allHpBarAry.length;
+			for (var i=0;i < count;i++){
+				var hpBar=this.allHpBarAry[i];
+				if (flag)Tween.to(hpBar,{scaleX:1.5,scaleY:1.5 },200,Ease.circOut);
+				else Tween.to(hpBar,{y:hpBar.y+150 },350,Ease.circIn,null,200 *(3-i));
 			}
 		}
 
@@ -17290,9 +17315,8 @@ var Laya=window.Laya=(function(window,document){
 			var count=enemyVoList.length;
 			for (var i=0;i < count;i++){
 				var eVo=enemyVoList[i];
-				var enemy=this.enemyAry[i];
-				var nameTxt=enemy.getChildByName("nameLabel");
-				nameTxt.text=eVo.enemyPo.name;
+				var hpBar=this.allHpBarAry[i];
+				hpBar.nameTxt.text=eVo.enemyPo.name;
 			}
 		}
 
@@ -17458,10 +17482,10 @@ var Laya=window.Laya=(function(window,document){
 		*根据索引获取血条
 		*@return 血条UI
 		*/
-		__proto.getHpBarByIndex=function(){
+		__proto.getHpBarByIndex=function(index){
 			if (!this.hpBarAry)return null;
-			if (/*no*/this.index < 0 || /*no*/this.index > this.hpBarAry.length-1)return null;
-			var hpBar=this.hpBarAry[/*no*/this.index];
+			if (index < 0 || index > this.hpBarAry.length-1)return null;
+			var hpBar=this.hpBarAry[index];
 			return hpBar;
 		}
 
@@ -29133,7 +29157,7 @@ var Laya=window.Laya=(function(window,document){
 		}
 
 		__static(SlotsPanelUI,
-		['uiView',function(){return this.uiView={"type":"Dialog","props":{"width":1024,"height":640,"alpha":100},"child":[{"type":"Image","props":{"y":325,"x":512,"skin":"frame/slotsPanelBg.png","anchorY":0.5,"anchorX":0.5}},{"type":"Image","props":{"y":188,"x":512,"skin":"comp/slotsPanelTitleBg.png","anchorY":0.5,"anchorX":0.5}},{"type":"Image","props":{"y":142,"x":512,"skin":"comp/slotsTitle.png","anchorX":0.5}},{"type":"Label","props":{"y":208,"x":512,"width":219,"var":"titleTxt","text":"房间敌人数量","overflow":"visible","height":25,"fontSize":20,"font":"SimHei","color":"#033297","bold":true,"anchorY":0.5,"anchorX":0.5,"align":"center"}},{"type":"Button","props":{"y":463,"x":758,"var":"selectBtn","stateNum":"3","skin":"btn/selectBtn.png","anchorY":1,"anchorX":0.5}},{"type":"Sprite","props":{"y":231,"x":373,"width":279,"var":"bgSpt","height":224},"child":[{"type":"Image","props":{"y":7,"x":0,"width":84,"name":"bg1","height":63}},{"type":"Image","props":{"y":7,"x":97,"width":84,"name":"bg2","height":63}},{"type":"Image","props":{"y":7,"x":193,"width":84,"name":"bg3","height":63}},{"type":"Image","props":{"y":80,"x":0,"width":84,"name":"bg4","height":63}},{"type":"Image","props":{"y":80,"x":97,"width":84,"name":"bg5","height":63}},{"type":"Image","props":{"y":80,"x":193,"width":84,"name":"bg6","height":63}},{"type":"Image","props":{"y":152,"x":0,"width":84,"name":"bg7","height":63}},{"type":"Image","props":{"y":152,"x":97,"width":84,"name":"bg8","height":63}},{"type":"Image","props":{"y":152,"x":193,"width":84,"name":"bg9","height":63}}]},{"type":"Sprite","props":{"y":231,"x":373,"width":279,"var":"contentSpt","height":224},"child":[{"type":"Sprite","props":{"y":7,"x":0,"width":84,"name":"m1","height":63}},{"type":"Sprite","props":{"y":7,"x":97,"width":84,"name":"m2","height":63}},{"type":"Sprite","props":{"y":7,"x":193,"width":84,"name":"m3","height":63}},{"type":"Sprite","props":{"y":80,"x":0,"width":84,"name":"m4","height":63}},{"type":"Sprite","props":{"y":80,"x":97,"width":84,"name":"m5","height":63}},{"type":"Sprite","props":{"y":80,"x":193,"width":84,"name":"m6","height":63}},{"type":"Sprite","props":{"y":152,"x":0,"width":84,"name":"m7","height":63}},{"type":"Sprite","props":{"y":152,"x":97,"width":84,"name":"m8","height":63}},{"type":"Sprite","props":{"y":152,"x":193,"width":84,"name":"m9","height":63}}]},{"type":"Sprite","props":{"y":231,"x":373,"width":279,"var":"frameSpt","height":224},"child":[{"type":"Image","props":{"y":7,"x":0,"width":84,"pivotX":0.5,"name":"frame1","height":63}},{"type":"Image","props":{"y":7,"x":97,"width":84,"name":"frame2","height":63}},{"type":"Image","props":{"y":7,"x":193,"width":84,"name":"frame3","height":63}},{"type":"Image","props":{"y":80,"x":0,"width":84,"name":"frame4","height":63}},{"type":"Image","props":{"y":80,"x":97,"width":84,"name":"frame5","height":63}},{"type":"Image","props":{"y":80,"x":193,"width":84,"name":"frame6","height":63}},{"type":"Image","props":{"y":152,"x":0,"width":84,"name":"frame7","height":63}},{"type":"Image","props":{"y":152,"x":97,"width":84,"name":"frame8","height":63}},{"type":"Image","props":{"y":152,"x":193,"width":84,"name":"frame9","height":63}},{"type":"Image","props":{"y":7,"var":"selectedImg","skin":"frame/slotsSelectedBg.png"}}]},{"type":"Image","props":{"y":229,"x":717,"var":"handImg","skin":"comp/hand.png"}}]};}
+		['uiView',function(){return this.uiView={"type":"Dialog","props":{"width":1024,"height":640,"alpha":100},"child":[{"type":"Image","props":{"y":325,"x":512,"skin":"frame/slotsPanelBg.png","anchorY":0.5,"anchorX":0.5}},{"type":"Image","props":{"y":188,"x":512,"skin":"comp/slotsPanelTitleBg.png","anchorY":0.5,"anchorX":0.5}},{"type":"Image","props":{"y":142,"x":512,"skin":"comp/slotsTitle.png","anchorX":0.5}},{"type":"Label","props":{"y":205,"x":512,"width":219,"var":"titleTxt","text":"房间敌人数量","overflow":"visible","height":25,"fontSize":20,"font":"Microsoft YaHei","color":"#033297","bold":true,"anchorY":0.5,"anchorX":0.5,"align":"center"}},{"type":"Button","props":{"y":463,"x":758,"var":"selectBtn","stateNum":"3","skin":"btn/selectBtn.png","anchorY":1,"anchorX":0.5}},{"type":"Sprite","props":{"y":231,"x":373,"width":279,"var":"bgSpt","height":224},"child":[{"type":"Image","props":{"y":7,"x":0,"width":84,"name":"bg1","height":63}},{"type":"Image","props":{"y":7,"x":97,"width":84,"name":"bg2","height":63}},{"type":"Image","props":{"y":7,"x":193,"width":84,"name":"bg3","height":63}},{"type":"Image","props":{"y":80,"x":0,"width":84,"name":"bg4","height":63}},{"type":"Image","props":{"y":80,"x":97,"width":84,"name":"bg5","height":63}},{"type":"Image","props":{"y":80,"x":193,"width":84,"name":"bg6","height":63}},{"type":"Image","props":{"y":152,"x":0,"width":84,"name":"bg7","height":63}},{"type":"Image","props":{"y":152,"x":97,"width":84,"name":"bg8","height":63}},{"type":"Image","props":{"y":152,"x":193,"width":84,"name":"bg9","height":63}}]},{"type":"Sprite","props":{"y":231,"x":373,"width":279,"var":"contentSpt","height":224},"child":[{"type":"Sprite","props":{"y":7,"x":0,"width":84,"name":"m1","height":63}},{"type":"Sprite","props":{"y":7,"x":97,"width":84,"name":"m2","height":63}},{"type":"Sprite","props":{"y":7,"x":193,"width":84,"name":"m3","height":63}},{"type":"Sprite","props":{"y":80,"x":0,"width":84,"name":"m4","height":63}},{"type":"Sprite","props":{"y":80,"x":97,"width":84,"name":"m5","height":63}},{"type":"Sprite","props":{"y":80,"x":193,"width":84,"name":"m6","height":63}},{"type":"Sprite","props":{"y":152,"x":0,"width":84,"name":"m7","height":63}},{"type":"Sprite","props":{"y":152,"x":97,"width":84,"name":"m8","height":63}},{"type":"Sprite","props":{"y":152,"x":193,"width":84,"name":"m9","height":63}}]},{"type":"Sprite","props":{"y":231,"x":373,"width":279,"var":"frameSpt","height":224},"child":[{"type":"Image","props":{"y":7,"x":0,"width":84,"pivotX":0.5,"name":"frame1","height":63}},{"type":"Image","props":{"y":7,"x":97,"width":84,"name":"frame2","height":63}},{"type":"Image","props":{"y":7,"x":193,"width":84,"name":"frame3","height":63}},{"type":"Image","props":{"y":80,"x":0,"width":84,"name":"frame4","height":63}},{"type":"Image","props":{"y":80,"x":97,"width":84,"name":"frame5","height":63}},{"type":"Image","props":{"y":80,"x":193,"width":84,"name":"frame6","height":63}},{"type":"Image","props":{"y":152,"x":0,"width":84,"name":"frame7","height":63}},{"type":"Image","props":{"y":152,"x":97,"width":84,"name":"frame8","height":63}},{"type":"Image","props":{"y":152,"x":193,"width":84,"name":"frame9","height":63}},{"type":"Image","props":{"y":7,"var":"selectedImg","skin":"frame/slotsSelectedBg.png"}}]},{"type":"Image","props":{"y":229,"x":717,"var":"handImg","skin":"comp/hand.png"}}]};}
 		]);
 		return SlotsPanelUI;
 	})(Dialog)
@@ -29143,10 +29167,3 @@ var Laya=window.Laya=(function(window,document){
 	new Main();
 
 })(window,document,Laya);
-
-
-/*
-1 file:///F:/workspace/kanon/myProject/html5/laya/DeterministicDungeon/src/view/ui/GameStageLayer.as (367):warning:index This variable is not defined.
-2 file:///F:/workspace/kanon/myProject/html5/laya/DeterministicDungeon/src/view/ui/GameStageLayer.as (367):warning:index This variable is not defined.
-3 file:///F:/workspace/kanon/myProject/html5/laya/DeterministicDungeon/src/view/ui/GameStageLayer.as (368):warning:index This variable is not defined.
-*/

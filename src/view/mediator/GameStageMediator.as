@@ -253,6 +253,7 @@ public class GameStageMediator extends Mediator
 				this.gameStage.initEnemy(this.enemyCanSelectCount);
 				this.gameStage.initHpBar(this.enemyCanSelectCount);
 				this.gameStage.updateEnemyUI(this.enemyProxy.enemyVoList);
+				this.gameStage.hpBarShow(true);
 				this.gameStage.enemyMove(Handler.create(this, initSlotsAtk));
 			}
 			else
@@ -342,6 +343,7 @@ public class GameStageMediator extends Mediator
 		if (this.enemyProxy.getCurStageEnemyCount() == 0)
 		{
 			//all dead;
+			this.gameStage.hpBarShow(false);
 			this.gameStage.playerMove(GameConstant.GAME_WIDTH, 3000, Handler.create(this, playerMoveOutComplete));
 		}
 		else
