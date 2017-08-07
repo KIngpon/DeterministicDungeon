@@ -401,7 +401,7 @@ var Laya=window.Laya=(function(window,document){
 		GameConstant.GAME_WIDTH=1136;
 		GameConstant.GAME_HEIGHT=640;
 		GameConstant.ENEMY_NUM=3;
-		GameConstant.ROLE_POS_Y=437;
+		GameConstant.ROLE_POS_Y=450;
 		GameConstant.DEBUG=true;
 		GameConstant.SLOTS_NUM_MAX=9;
 		GameConstant.GAME_FONT_NAME="gameFont";
@@ -17087,6 +17087,7 @@ var Laya=window.Laya=(function(window,document){
 			this.arrowImg=null;
 			this.fontBg=null;
 			this.bgBg=null;
+			this.uiBg=null;
 			GameStageLayer.__super.call(this);
 			this.initUI();
 		}
@@ -17101,19 +17102,25 @@ var Laya=window.Laya=(function(window,document){
 			this.fontBg=new Image();
 			this.addChild(this.bgBg);
 			this.addChild(this.fontBg);
-			this.bgBg.scale(1.5,1.5);
-			this.fontBg.scale(1.5,1.5);
+			this.bgBg.scale(1.55,1.55);
+			this.fontBg.scale(1.55,1.55);
 			this.bgBg.anchorX=.5;
 			this.bgBg.x=1136 / 2;
 			this.fontBg.anchorX=.5;
 			this.fontBg.x=1136 / 2;
+			this.uiBg=new Image("frame/uiBg.png");
+			this.addChild(this.uiBg);
+			this.uiBg.anchorX=.5;
+			this.uiBg.x=1136 / 2;
+			this.uiBg.scale(1.55,1.55);
+			this.uiBg.y=520;
 			this.player=new Sprite();
 			this.player.width=70;
 			this.player.height=120;
 			this.player.graphics.drawRect(-this.player.width / 2,-this.player.height,this.player.width,this.player.height,"#ff0000");
 			this.addChild(this.player);
 			this.player.x=-this.player.width / 2;
-			this.player.y=437;
+			this.player.y=450;
 			if (!this.arrowImg)this.arrowImg=new Image("comp/roundArrow.png");
 			this.arrowImg.anchorX=.5;
 			this.arrowImg.x=this.player.x;
@@ -17137,7 +17144,7 @@ var Laya=window.Laya=(function(window,document){
 		__proto.initPlayer=function(){
 			if (!this.player)return;
 			this.player.x=-this.player.width / 2;
-			this.player.y=437;
+			this.player.y=450;
 			this.arrowImg.visible=false;
 		}
 
@@ -17156,7 +17163,7 @@ var Laya=window.Laya=(function(window,document){
 				enemy.height=120;
 				enemy.graphics.drawRect(-enemy.width / 2,-enemy.height,enemy.width,enemy.height,"#ff00ff");
 				enemy.x=startX+i *(enemy.width+gap)+enemy.width / 2;
-				enemy.y=437;
+				enemy.y=450;
 				this.addChild(enemy);
 				this.enemyAry.push(enemy);
 				var nameTxt=new Label();

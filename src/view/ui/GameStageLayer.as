@@ -26,6 +26,8 @@ public class GameStageLayer extends Sprite
 	//前景
 	private var fontBg:Image;
 	private var bgBg:Image;
+	//ui的背景
+	private var uiBg:Image;
 	public function GameStageLayer()
 	{
 		this.initUI();
@@ -40,12 +42,18 @@ public class GameStageLayer extends Sprite
 		this.fontBg = new Image();
 		this.addChild(this.bgBg);
 		this.addChild(this.fontBg);
-		this.bgBg.scale(1.5, 1.5);
-		this.fontBg.scale(1.5, 1.5);
+		this.bgBg.scale(1.55, 1.55);
+		this.fontBg.scale(1.55, 1.55);
 		this.bgBg.anchorX = .5;
 		this.bgBg.x = GameConstant.GAME_WIDTH / 2;
 		this.fontBg.anchorX = .5;
 		this.fontBg.x = GameConstant.GAME_WIDTH / 2;
+		this.uiBg = new Image("frame/uiBg.png");
+		this.addChild(this.uiBg);
+		this.uiBg.anchorX = .5;
+		this.uiBg.x = GameConstant.GAME_WIDTH / 2;
+		this.uiBg.scale(1.55, 1.55);
+		this.uiBg.y = 520;
 		
 		this.player = new Sprite();
 		this.player.width = 70;
