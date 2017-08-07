@@ -205,13 +205,13 @@ public class SlotsPanel extends Sprite
 	{
 		if (!this.timer) return;
 		this.isStop = true;
-		trace("stop")
+		//trace("stop")
 		this.timer.clear(this, loopHandler);
 		this._indexValue = this.indexAry[this._index];
 		this.updateSelectImg();
-		trace("stop this.indexAry", this.indexAry);
-		trace("stop this.index", this._index);
-		trace("stop this._indexValue", this._indexValue);
+		//trace("stop this.indexAry", this.indexAry);
+		//trace("stop this.index", this._index);
+		//trace("stop this._indexValue", this._indexValue);
 	}
 	
 	/**
@@ -411,7 +411,7 @@ public class SlotsPanel extends Sprite
 			this.flashingTimer.clear(this, flashingLoopHandler);
 			if (this.flashingCallBackHandler)
 				this.flashingCallBackHandler.run();
-			trace("flashingLoopHandler stop");
+			//trace("flashingLoopHandler stop");
 		}
 	}
 	
@@ -420,15 +420,15 @@ public class SlotsPanel extends Sprite
 	 */
 	private function loopHandler():void 
 	{
-		trace("this.isStop", this.isStop);
+		//trace("this.isStop", this.isStop);
 		if (this.isStop) return;
 		this._index++;
 		if (this._index > this._totalCount - 1) this._index = 0;
 		this._indexValue = this.indexAry[this._index];
 		this.updateSelectImg();
-		trace("this.indexAry", this.indexAry);
-		trace("this.index", this._index);
-		trace("this._indexValue", this._indexValue);
+		//trace("this.indexAry", this.indexAry);
+		//trace("this.index", this._index);
+		//trace("this._indexValue", this._indexValue);
 	}
 	
 	/**

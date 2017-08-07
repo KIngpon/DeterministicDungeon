@@ -10,6 +10,7 @@ import laya.utils.Tween;
 import model.po.StagePo;
 import model.proxy.StageProxy;
 import model.vo.EnemyVo;
+import view.components.HpBar;
 
 /**
  * ...战斗场景
@@ -20,7 +21,10 @@ public class GameStageLayer extends Sprite
 	//玩家
 	public var player:Sprite;
 	//敌人列表
-	public var enemyAry:Array = [];
+	private var enemyAry:Array = [];
+	//血条数组
+	private var hpBarAry:Array = [];
+	private var allHpBarAry:Array = [];
 	//箭头
 	public var arrowImg:Image;
 	//前景
@@ -119,14 +123,27 @@ public class GameStageLayer extends Sprite
 			nameTxt.fontSize = 15;
 			nameTxt.x = -enemy.width / 2;
 			enemy.addChild(nameTxt);
-			
-			var hpTxt:Label = new Label();
-			hpTxt.name = "hpTxt";
-			hpTxt.color = "#CCFFAA";
-			hpTxt.fontSize = 25;
-			hpTxt.x = -enemy.width / 2;
-			hpTxt.y = nameTxt.y + 50;
-			enemy.addChild(hpTxt);
+		}
+	}
+	
+	/**
+	 * 初始化血条
+	 * @param	num		数量
+	 */
+	public function initHpBar(num:int):void
+	{
+		this.removeAllHpBar();
+		var gap:Number = 100;
+		var startX:Number = 550;
+		if (num > GameConstant.ENEMY_NUM) num = GameConstant.ENEMY_NUM;
+		for (var i:int = 0; i < num; i++)
+		{
+			var hpBar:HpBar = new HpBar();
+			hpBar.x = startX + i * (hpBar.width + gap) + hpBar.width / 2;
+			hpBar.y = 550;
+			this.addChild(hpBar);
+			this.hpBarAry.push(hpBar);
+			this.allHpBarAry.push(hpBar);
 		}
 	}
 	
@@ -175,8 +192,22 @@ public class GameStageLayer extends Sprite
 			var enemy:Sprite = this.enemyAry[i];
 			var nameTxt:Label = enemy.getChildByName("nameLabel") as Label;
 			nameTxt.text = eVo.enemyPo.name;
-			var hpTxt:Label = enemy.getChildByName("hpTxt") as Label;
-			hpTxt.text = eVo.hp;
+		}
+	}
+	
+	/**
+	 * 更新敌人血条数据
+	 * @param	enemyVoList		敌人数据列表
+	 */
+	public function updateEnemyHpBar(enemyVoList:Array):void
+	{
+		var count:int = enemyVoList.length;
+		for (var i:int = 0; i < count; i++) 
+		{
+			var eVo:EnemyVo = enemyVoList[i];
+			var hpBar:HpBar = this.hpBarAry[i];
+			hpBar.setMaxHp(eVo.enemyPo.hp);
+			hpBar.setHp(eVo.hp);
 		}
 	}
 	
@@ -191,6 +222,20 @@ public class GameStageLayer extends Sprite
 			var enemy:Sprite = this.enemyAry[i];
 			enemy.removeSelf();
 			this.enemyAry.splice(i, 1);
+		}
+	}
+	
+	/**
+	 * 删除所有血条
+	 */
+	public function removeAllHpBar():void
+	{
+		var count:int = this.allHpBarAry.length;
+		for (var i:int = count - 1; i >= 0; --i)
+		{
+			var hpBar:HpBar = this.allHpBarAry[i];
+			hpBar.removeSelf();
+			this.allHpBarAry.splice(i, 1);
 		}
 	}
 	
@@ -322,6 +367,30 @@ public class GameStageLayer extends Sprite
 		var enemy:Sprite = this.enemyAry[index];
 		enemy.removeSelf();
 		this.enemyAry.splice(index, 1);
+	}
+	
+	/**
+	 * 根据索引获取血条
+	 * @return		血条UI
+	 */
+	public function getHpBarByIndex():HpBar
+	{
+		if (!this.hpBarAry) return null;
+		if (index < 0 || index > this.hpBarAry.length - 1) return null;
+		var hpBar:HpBar = this.hpBarAry[index];
+		return hpBar;
+	}
+	
+	/**
+	 * 根据索引删除血条
+	 * @param	index	索引
+	 */
+	public function removeHpBarByIndex(index:int):void
+	{
+		if (!this.hpBarAry) return;
+		if (index < 0 || index > this.hpBarAry.length - 1) return;
+		var hpBar:HpBar = this.hpBarAry[index];
+		this.hpBarAry.splice(index, 1);
 	}
 }
 }

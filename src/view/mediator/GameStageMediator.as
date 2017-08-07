@@ -251,6 +251,7 @@ public class GameStageMediator extends Mediator
 				//数量选择够了
 				this.isSelectEnemyType = true;
 				this.gameStage.initEnemy(this.enemyCanSelectCount);
+				this.gameStage.initHpBar(this.enemyCanSelectCount);
 				this.gameStage.updateEnemyUI(this.enemyProxy.enemyVoList);
 				this.gameStage.enemyMove(Handler.create(this, initSlotsAtk));
 			}
@@ -318,6 +319,7 @@ public class GameStageMediator extends Mediator
 			eVo.hp -= hurt;
 			Damage.show(hurt, enemy.x, enemy.y - 100, 1.5);
 		}
+		this.gameStage.updateEnemyHpBar(this.enemyProxy.enemyVoList);
 	}
 	
 	/**
@@ -332,8 +334,8 @@ public class GameStageMediator extends Mediator
 		{
 			//TODO show dead;
 			this.gameStage.removeEnemyByIndex(this.roundIndex);
+			this.gameStage.removeHpBarByIndex(this.roundIndex);
 			this.enemyProxy.removeEnemyVoById(eVo.id);
-			trace("删除", eVo.enemyPo.name);
 			isDead = true;
 		}
 		this.gameStage.updateEnemyUI(this.enemyProxy.enemyVoList);

@@ -28,6 +28,7 @@ public class ResProxy extends Proxy
 		this.resList.push("res/atlas/comp.json");
 		this.resList.push("res/atlas/frame.json");
 		this.resList.push("res/atlas/icon/enemy.json");
+		this.resList.push("res/atlas/bar.json");
 		var count:int = this.resList.length;
 		for (var i:int = 0; i < count; i++) 
 		{

@@ -10370,6 +10370,7 @@ var Laya=window.Laya=(function(window,document){
 			this.resList.push("res/atlas/comp.json");
 			this.resList.push("res/atlas/frame.json");
 			this.resList.push("res/atlas/icon/enemy.json");
+			this.resList.push("res/atlas/bar.json");
 			var count=this.resList.length;
 			for (var i=0;i < count;i++){
 				Laya.loader.load([{url:this.resList[i],type:"atlas"}],Handler.create(this,this.loadCompleteHandler));
@@ -10796,6 +10797,7 @@ var Laya=window.Laya=(function(window,document){
 				if (this.curEnemySelectCount==this.enemyCanSelectCount){
 					this.isSelectEnemyType=true;
 					this.gameStage.initEnemy(this.enemyCanSelectCount);
+					this.gameStage.initHpBar(this.enemyCanSelectCount);
 					this.gameStage.updateEnemyUI(this.enemyProxy.enemyVoList);
 					this.gameStage.enemyMove(Handler.create(this,this.initSlotsAtk));
 				}
@@ -10850,6 +10852,7 @@ var Laya=window.Laya=(function(window,document){
 				eVo.hp-=hurt;
 				Damage.show(hurt,enemy.x,enemy.y-100,1.5);
 			}
+			this.gameStage.updateEnemyHpBar(this.enemyProxy.enemyVoList);
 		}
 
 		/**
@@ -10861,6 +10864,7 @@ var Laya=window.Laya=(function(window,document){
 			var isDead=false;
 			if (eVo.hp <=0){
 				this.gameStage.removeEnemyByIndex(this.roundIndex);
+				this.gameStage.removeHpBarByIndex(this.roundIndex);
 				this.enemyProxy.removeEnemyVoById(eVo.id);
 				console.log("删除",eVo.enemyPo.name);
 				isDead=true;
@@ -16684,6 +16688,69 @@ var Laya=window.Laya=(function(window,document){
 
 
 	/**
+	*...血条
+	*@author ...Kanon
+	*/
+	//class view.components.HpBar extends laya.display.Sprite
+	var HpBar=(function(_super){
+		function HpBar(){
+			this.curHp=0;
+			this.maxHp=0;
+			this.p=NaN;
+			this.barImg=null;
+			this.barBg=null;
+			HpBar.__super.call(this);
+			this.curHp=0;
+			this.maxHp=1;
+			this.initUI();
+		}
+
+		__class(HpBar,'view.components.HpBar',_super);
+		var __proto=HpBar.prototype;
+		/**
+		*初始化UI
+		*/
+		__proto.initUI=function(){
+			var frame=new Image("bar/hpBarFrameBg.png");
+			var bgLight=new Image("bar/hpBarLight.png");
+			this.barBg=new Image("bar/hpBarBg.png");
+			this.barImg=new Image("bar/hpBar.png");
+			this.barImg.anchorX=1;
+			this.addChild(frame);
+			this.addChild(this.barBg);
+			this.addChild(this.barImg);
+			this.addChild(bgLight);
+			frame.x=-6.5;
+			frame.y=-6;
+			this.barImg.x=this.barImg.width;
+			this.width=frame.width;
+			this.height=frame.height;
+		}
+
+		/**
+		*设置总血
+		*@param hp 总血
+		*/
+		__proto.setMaxHp=function(hp){
+			this.maxHp=hp;
+		}
+
+		/**
+		*设置当前血
+		*@param hp 当前血
+		*/
+		__proto.setHp=function(hp){
+			this.curHp=hp;
+			this.p=Number(this.curHp)/ Number(this.maxHp);
+			console.log("this.p",this.p);
+			this.barImg.scaleX=this.p;
+		}
+
+		return HpBar;
+	})(Sprite)
+
+
+	/**
 	*...滚动选择界面
 	*@author ...Kanon
 	*/
@@ -16846,13 +16913,9 @@ var Laya=window.Laya=(function(window,document){
 		__proto.stop=function(){
 			if (!this._$3_timer)return;
 			this.isStop=true;
-			console.log("stop")
 			this.timer.clear(this,this.loopHandler);
 			this._indexValue=this.indexAry[this._index];
 			this.updateSelectImg();
-			console.log("stop this.indexAry",this.indexAry);
-			console.log("stop this.index",this._index);
-			console.log("stop this._indexValue",this._indexValue);
 		}
 
 		/**
@@ -17027,7 +17090,6 @@ var Laya=window.Laya=(function(window,document){
 				this.flashingTimer.clear(this,this.flashingLoopHandler);
 				if (this.flashingCallBackHandler)
 					this.flashingCallBackHandler.run();
-				console.log("flashingLoopHandler stop");
 			}
 		}
 
@@ -17035,15 +17097,11 @@ var Laya=window.Laya=(function(window,document){
 		*循环
 		*/
 		__proto.loopHandler=function(){
-			console.log("this.isStop",this.isStop);
 			if (this.isStop)return;
 			this._index++;
 			if (this._index > this._totalCount-1)this._index=0;
 			this._indexValue=this.indexAry[this._index];
 			this.updateSelectImg();
-			console.log("this.indexAry",this.indexAry);
-			console.log("this.index",this._index);
-			console.log("this._indexValue",this._indexValue);
 		}
 
 		/**
@@ -17084,6 +17142,8 @@ var Laya=window.Laya=(function(window,document){
 		function GameStageLayer(){
 			this.player=null;
 			this.enemyAry=[];
+			this.hpBarAry=[];
+			this.allHpBarAry=[];
 			this.arrowImg=null;
 			this.fontBg=null;
 			this.bgBg=null;
@@ -17172,13 +17232,25 @@ var Laya=window.Laya=(function(window,document){
 				nameTxt.fontSize=15;
 				nameTxt.x=-enemy.width / 2;
 				enemy.addChild(nameTxt);
-				var hpTxt=new Label();
-				hpTxt.name="hpTxt";
-				hpTxt.color="#CCFFAA";
-				hpTxt.fontSize=25;
-				hpTxt.x=-enemy.width / 2;
-				hpTxt.y=nameTxt.y+50;
-				enemy.addChild(hpTxt);
+			}
+		}
+
+		/**
+		*初始化血条
+		*@param num 数量
+		*/
+		__proto.initHpBar=function(num){
+			this.removeAllHpBar();
+			var gap=100;
+			var startX=550;
+			if (num > 3)num=3;
+			for (var i=0;i < num;i++){
+				var hpBar=new HpBar();
+				hpBar.x=startX+i *(hpBar.width+gap)+hpBar.width / 2;
+				hpBar.y=550;
+				this.addChild(hpBar);
+				this.hpBarAry.push(hpBar);
+				this.allHpBarAry.push(hpBar);
 			}
 		}
 
@@ -17213,8 +17285,20 @@ var Laya=window.Laya=(function(window,document){
 				var enemy=this.enemyAry[i];
 				var nameTxt=enemy.getChildByName("nameLabel");
 				nameTxt.text=eVo.enemyPo.name;
-				var hpTxt=enemy.getChildByName("hpTxt");
-				hpTxt.text=eVo.hp;
+			}
+		}
+
+		/**
+		*更新敌人血条数据
+		*@param enemyVoList 敌人数据列表
+		*/
+		__proto.updateEnemyHpBar=function(enemyVoList){
+			var count=enemyVoList.length;
+			for (var i=0;i < count;i++){
+				var eVo=enemyVoList[i];
+				var hpBar=this.hpBarAry[i];
+				hpBar.setMaxHp(eVo.enemyPo.hp);
+				hpBar.setHp(eVo.hp);
 			}
 		}
 
@@ -17227,6 +17311,18 @@ var Laya=window.Laya=(function(window,document){
 				var enemy=this.enemyAry[i];
 				enemy.removeSelf();
 				this.enemyAry.splice(i,1);
+			}
+		}
+
+		/**
+		*删除所有血条
+		*/
+		__proto.removeAllHpBar=function(){
+			var count=this.allHpBarAry.length;
+			for (var i=count-1;i >=0;--i){
+				var hpBar=this.allHpBarAry[i];
+				hpBar.removeSelf();
+				this.allHpBarAry.splice(i,1);
 			}
 		}
 
@@ -17348,6 +17444,28 @@ var Laya=window.Laya=(function(window,document){
 			var enemy=this.enemyAry[index];
 			enemy.removeSelf();
 			this.enemyAry.splice(index,1);
+		}
+
+		/**
+		*根据索引获取血条
+		*@return 血条UI
+		*/
+		__proto.getHpBarByIndex=function(){
+			if (!this.hpBarAry)return null;
+			if (/*no*/this.index < 0 || /*no*/this.index > this.hpBarAry.length-1)return null;
+			var hpBar=this.hpBarAry[/*no*/this.index];
+			return hpBar;
+		}
+
+		/**
+		*根据索引删除血条
+		*@param index 索引
+		*/
+		__proto.removeHpBarByIndex=function(index){
+			if (!this.hpBarAry)return;
+			if (index < 0 || index > this.hpBarAry.length-1)return;
+			var hpBar=this.hpBarAry[index];
+			this.hpBarAry.splice(index,1);
 		}
 
 		return GameStageLayer;
@@ -29017,3 +29135,10 @@ var Laya=window.Laya=(function(window,document){
 	new Main();
 
 })(window,document,Laya);
+
+
+/*
+1 file:///F:/workspace/kanon/myProject/html5/laya/DeterministicDungeon/src/view/ui/GameStageLayer.as (367):warning:index This variable is not defined.
+2 file:///F:/workspace/kanon/myProject/html5/laya/DeterministicDungeon/src/view/ui/GameStageLayer.as (367):warning:index This variable is not defined.
+3 file:///F:/workspace/kanon/myProject/html5/laya/DeterministicDungeon/src/view/ui/GameStageLayer.as (368):warning:index This variable is not defined.
+*/
