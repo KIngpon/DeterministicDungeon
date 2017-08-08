@@ -8,8 +8,8 @@
 	<pic id="100006" icon="e_icon5" smallIcon="se_icon6"/>
 	<pic id="100007" icon="e_icon6" smallIcon="se_icon7"/>
 	<pic id="100008" icon="0" smallIcon="se_icon8"/>
-	<pic id="100009" icon="e_icon8" smallIcon="se_icon9"/>
-	<pic id="100010" icon="e_icon9" smallIcon="se_icon10"/>
-	<pic id="100011" icon="e_icon10" smallIcon="se_icon11"/>
+	<pic id="100009" icon="e_icon7" smallIcon="se_icon9"/>
+	<pic id="100010" icon="e_icon8" smallIcon="se_icon10"/>
+	<pic id="100011" icon="e_icon9" smallIcon="se_icon11"/>
 	<pic id="100012" icon="0" smallIcon="se_icon12"/>
 </pics>

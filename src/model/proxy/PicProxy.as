@@ -85,7 +85,7 @@ public class PicProxy extends Proxy
 	 * @param	id	
 	 * @return	smallIcon
 	 */
-	public function getBigIconById(id:int):String
+	public function getSmallIconById(id:int):String
 	{
 		var pPo:PicPo = this.getPicPoById(id);
 		if (!pPo) return null;

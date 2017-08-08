@@ -28,5 +28,21 @@ public class GameUtils
 		var icon:String = pProxy.getIconById(ePo.icon);
 		return GameConstant.ENEMY_ICON + icon + ".png";
 	}
+	
+	
+		/**
+	 * 根据敌人的id获取敌人icon地址
+	 * @param	id	敌人id
+	 * @return	icon地址
+	 */
+	public static function getEnemySmallIconById(id:int):String
+	{
+		var eProxy:EnemyProxy = Facade.getInstance().retrieveProxy(EnemyProxy.NAME) as EnemyProxy;
+		var pProxy:PicProxy = Facade.getInstance().retrieveProxy(PicProxy.NAME) as PicProxy;
+		var ePo:EnemyPo = eProxy.getEnemyPoById(id);
+		if (!ePo) return "";
+		var icon:String = pProxy.getSmallIconById(ePo.icon);
+		return GameConstant.ENEMY_ICON + icon + ".png";
+	}
 }
 }

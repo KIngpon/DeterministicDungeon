@@ -53,14 +53,12 @@ public class PlayerProxy extends Proxy
 			this.isLoaded = true;
 			
 			this.pVo = new PlayerVo();
-			this.pVo.level = 0;
+			this.pVo.level = 50;
 			var pPo:PlayerPo = this.getPlayerPoByLevel(this.pVo.level);
 			this.pVo.maxExp = pPo.exp;
 			this.pVo.maxHp = pPo.hp;
 			this.pVo.curHp = this.pVo.maxHp;
 			this.pVo.curExp = 0;
-			this.pVo.curLevelNum = 1;
-			this.pVo.curStageNum = 1;
 			this.pVo.isFirstStep = true;
 			this.pVo.slotsDelay = 270;
 			this.pVo.weaponPo = this.equipProxy.getEquipPoById(1);

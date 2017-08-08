@@ -18,7 +18,7 @@ public class StageProxy extends Proxy
 	//是否加载完成
 	public var isLoaded:Boolean;
 	//当前关卡
-	public var curLevel:int = 1;
+	public var curLevel:int = 3;
 	//当前关卡点
 	public var curPoints:int = 1;
 	//总关卡数

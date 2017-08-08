@@ -215,6 +215,27 @@
                 "x": 0,
                 "y": 255,
                 "w": 70,
+                "h": 63,
+                "idx": 0
+            },
+            "spriteSourceSize": {
+                "x": 0,
+                "y": 0,
+                "w": 70,
+                "h": 63
+            },
+            "sourceSize": {
+                "w": 70,
+                "h": 63
+            },
+            "rotated": false,
+            "trimed": false
+        },
+        "se_icon11.png": {
+            "frame": {
+                "x": 72,
+                "y": 183,
+                "w": 70,
                 "h": 69,
                 "idx": 0
             },
@@ -231,31 +252,10 @@
             "rotated": false,
             "trimed": false
         },
-        "se_icon11.png": {
-            "frame": {
-                "x": 72,
-                "y": 183,
-                "w": 70,
-                "h": 70,
-                "idx": 0
-            },
-            "spriteSourceSize": {
-                "x": 0,
-                "y": 0,
-                "w": 70,
-                "h": 70
-            },
-            "sourceSize": {
-                "w": 70,
-                "h": 70
-            },
-            "rotated": false,
-            "trimed": false
-        },
         "se_icon12.png": {
             "frame": {
                 "x": 72,
-                "y": 255,
+                "y": 254,
                 "w": 70,
                 "h": 70,
                 "idx": 0
@@ -425,18 +425,18 @@
                 "x": 216,
                 "y": 266,
                 "w": 70,
-                "h": 63,
+                "h": 70,
                 "idx": 0
             },
             "spriteSourceSize": {
                 "x": 0,
                 "y": 0,
                 "w": 70,
-                "h": 63
+                "h": 70
             },
             "sourceSize": {
                 "w": 70,
-                "h": 63
+                "h": 70
             },
             "rotated": false,
             "trimed": false

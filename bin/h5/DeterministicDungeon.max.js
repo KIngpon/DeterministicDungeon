@@ -690,8 +690,6 @@ var Laya=window.Laya=(function(window,document){
 			this.curExp=0;
 			this.maxExp=0;
 			this.level=0;
-			this.curLevelNum=0;
-			this.curStageNum=0;
 			this.isFirstStep=false;
 			this.slotsDelay=0;
 			this.weaponPo=null;
@@ -1283,7 +1281,211 @@ var Laya=window.Laya=(function(window,document){
 			return "icon/enemy/"+icon+".png";
 		}
 
+		GameUtils.getEnemySmallIconById=function(id){
+			var eProxy=Facade.getInstance().retrieveProxy("EnemyProxy");
+			var pProxy=Facade.getInstance().retrieveProxy("PicProxy");
+			var ePo=eProxy.getEnemyPoById(id);
+			if (!ePo)return "";
+			var icon=pProxy.getSmallIconById(ePo.icon);
+			return "icon/enemy/"+icon+".png";
+		}
+
 		return GameUtils;
+	})()
+
+
+	//class utils.MathUtil
+	var MathUtil=(function(){
+		function MathUtil(){};
+		__class(MathUtil,'utils.MathUtil');
+		MathUtil.rds2dgs=function(radians){
+			return MathUtil.fixAngle(radians *180 / Math.PI);
+		}
+
+		MathUtil.dgs2rds=function(degrees){
+			return degrees *Math.PI / 180;
+		}
+
+		MathUtil.fixAngle=function(angle){
+			angle %=360;
+			if (angle < 0)return angle+360;
+			return angle;
+		}
+
+		MathUtil.fixNumber=function(num,min,range){
+			num %=range;
+			if (num < min)
+				return num+range;
+			return num;
+		}
+
+		MathUtil.fixHalfAngle=function(angle){
+			angle %=180;
+			if (angle < 0)
+				return angle+180;
+			return angle;
+		}
+
+		MathUtil.getFactorial=function(num){
+			if(num==0)return 1;
+			return num *MathUtil.getFactorial(num-1);
+		}
+
+		MathUtil.power=function(num,pow){
+			if(pow==0)return 1;
+			return num *MathUtil.power(num,pow-1);
+		}
+
+		MathUtil.round=function(num,interval){
+			(interval===void 0)&& (interval=.1);
+			return Math.round(num / interval)*interval;
+		}
+
+		MathUtil.floor=function(num,interval){
+			(interval===void 0)&& (interval=.1);
+			return Math.floor(num / interval)*interval;
+		}
+
+		MathUtil.ceil=function(num,interval){
+			(interval===void 0)&& (interval=.1);
+			return Math.ceil(num / interval)*interval;
+		}
+
+		MathUtil.getAbsolute=function(num){
+			return num < 0 ?-num :num;
+		}
+
+		MathUtil.getRemainedNum=function(mainNum,divided){
+			return mainNum-((mainNum / divided)>> 0)*divided;
+		}
+
+		MathUtil.isEven=function(num){
+			return Boolean(MathUtil.isEvenByDivided(num,2));
+		}
+
+		MathUtil.isEvenByDivided=function(num,divided){
+			return num & (divided-1);
+		}
+
+		MathUtil.getSlope=function(x1,y1,x2,y2){
+			var slope=(y1-y2)/ (x1-x2);
+			return slope;
+		}
+
+		MathUtil.threeSidesMathAngle=function(a,b,c){
+			var cosA=(c *c+b *b-a *a)/ (2 *b *c);
+			var A=Math.round(utils.MathUtil.rds2dgs(Math.acos(cosA)));
+			var cosB=(a *a+c *c-b *b)/ (2 *a *c);
+			var B=Math.round(utils.MathUtil.rds2dgs(Math.acos(cosB)));
+			var cosC=(a *a+b *b-c *c)/ (2 *a *b);
+			var C=Math.round(utils.MathUtil.rds2dgs(Math.acos(cosC)));
+			return {"A":A,"B":B,"C":C };
+		}
+
+		MathUtil.sineLaw=function(angle,line){
+			return line / Math.sin(angle)/ 2;
+		}
+
+		MathUtil.rotate=function(cx,cy,x,y,sin,cos,reverse){
+			var point=new Point();
+			var dx=x-cx;
+			var dy=y-cy;
+			if (reverse){
+				point.x=dx *cos+dy *sin+cx;
+				point.y=dy *cos-dx *sin+cy;
+			}
+			else{
+				point.x=dx *cos-dy *sin+cx;
+				point.y=dy *cos+dx *sin+cy;
+			}
+			return point;
+		}
+
+		MathUtil.triangleCentroid=function(a,b,c){
+			return new Point((a.x+b.x+c.x)/ 3,(a.y+b.y+c.y)/ 3);
+		}
+
+		MathUtil.triangleCircumscribedCircleCenter=function(a,b,c){
+			var axp=Math.pow(a.x,2);
+			var bxp=Math.pow(b.x,2);
+			var cxp=Math.pow(c.x,2);
+			var ayp=Math.pow(a.y,2);
+			var byp=Math.pow(b.y,2);
+			var cyp=Math.pow(c.y,2);
+			var x=((b.y-a.y)*(cyp-ayp+cxp-axp)-(c.y-a.y)*(byp-ayp+bxp-axp))/
+			(2 *(c.x-a.x)*(b.y-a.y)-2 *((b.x-a.x)*(c.y-a.y)));
+			var y=((b.x-a.x)*(cxp-axp+cyp-ayp)-(c.x-a.x)*(bxp-axp+byp-ayp))/
+			(2 *(c.y-a.y)*(b.x-a.x)-2 *((b.y-a.y)*(c.x-a.x)));
+			return new Point(x,y);
+		}
+
+		MathUtil.arithmeticSequenceIndexValue=function(sn,d){
+			var n=utils.MathUtil.arithmeticSequenceIndex(sn,d);
+			return (n+1)*d-(d-1);
+		}
+
+		MathUtil.arithmeticSequenceIndex=function(sn,d){
+			var hd=d *.5;
+			var a=hd;
+			var b=1-hd;
+			var c=-sn;
+			return (-b+Math.sqrt(b *b-(4 *a *c)))/ (2 *a);
+		}
+
+		MathUtil.distance=function(x1,y1,x2,y2){
+			return Math.sqrt((x2-x1)*(x2-x1)+(y2-y1)*(y2-y1));
+		}
+
+		MathUtil.isInsideTriangle=function(a,b,c,p){
+			var planeAB=(a.x-p.x)*(b.y-p.y)-(b.x-p.x)*(a.y-p.y);
+			var planeBC=(b.x-p.x)*(c.y-p.y)-(c.x-p.x)*(b.y-p.y);
+			var planeCA=(c.x-p.x)*(a.y-p.y)-(a.x-p.x)*(c.y-p.y);
+			return MathUtil.sign(planeAB)==MathUtil.sign(planeBC)&& MathUtil.sign(planeBC)==MathUtil.sign(planeCA);
+		}
+
+		MathUtil.sign=function(n){
+			return Math.abs(n)/ n;
+		}
+
+		MathUtil.triangleArea=function(a,b,c){
+			return (c.x *b.y-b.x *c.y)-(c.x *a.y-a.x *c.y)+(b.x *a.y-a.x *b.y);
+		}
+
+		MathUtil.isInsideSquare=function(a,b,c,d,p){
+			if (MathUtil.triangleArea(a,b,p)> 0 ||
+				MathUtil.triangleArea(b,c,p)> 0 ||
+			MathUtil.triangleArea(c,d,p)> 0 ||
+			MathUtil.triangleArea(d,a,p)> 0)
+			return false;
+			return true;
+		}
+
+		MathUtil.segmentsIntr=function(a,b,c,d){
+			var area_abc=(a.x-c.x)*(b.y-c.y)-(a.y-c.y)*(b.x-c.x);
+			var area_abd=(a.x-d.x)*(b.y-d.y)-(a.y-d.y)*(b.x-d.x);
+			if (area_abc *area_abd >=0){
+				return null;
+			};
+			var area_cda=(c.x-a.x)*(d.y-a.y)-(c.y-a.y)*(d.x-a.x);
+			var area_cdb=area_cda+area_abc-area_abd;
+			if (area_cda *area_cdb >=0){
+				return null;
+			};
+			var t=area_cda / (area_abd-area_abc);
+			var dx=t *(b.x-a.x);
+			var dy=t *(b.y-a.y);
+			return new Point(a.x+dx ,a.y+dy);
+		}
+
+		MathUtil.getAngleQuadrant=function(angle){
+			angle=utils.MathUtil.fixAngle(angle);
+			if (angle >=0 && angle < 90)return 1;
+			if (angle >=90 && angle < 180)return 2;
+			if (angle >=180 && angle < 270)return 3;
+			return 4;
+		}
+
+		return MathUtil;
 	})()
 
 
@@ -4433,9 +4635,9 @@ var Laya=window.Laya=(function(window,document){
 	*<code>MathUtil</code> 是一个数据处理工具类。
 	*/
 	//class laya.maths.MathUtil
-	var MathUtil=(function(){
+	var MathUtil1=(function(){
 		function MathUtil(){};
-		__class(MathUtil,'laya.maths.MathUtil');
+		__class(MathUtil,'laya.maths.MathUtil',null,'MathUtil1');
 		MathUtil.subtractVector3=function(l,r,o){
 			o[0]=l[0]-r[0];
 			o[1]=l[1]-r[1];
@@ -10360,7 +10562,7 @@ var Laya=window.Laya=(function(window,document){
 		*@param id
 		*@return smallIcon
 		*/
-		__proto.getBigIconById=function(id){
+		__proto.getSmallIconById=function(id){
 			var pPo=this.getPicPoById(id);
 			if (!pPo)return null;
 			return pPo.smallIcon;
@@ -10434,14 +10636,12 @@ var Laya=window.Laya=(function(window,document){
 				}
 				this.isLoaded=true;
 				this.pVo=new PlayerVo();
-				this.pVo.level=0;
+				this.pVo.level=50;
 				var pPo=this.getPlayerPoByLevel(this.pVo.level);
 				this.pVo.maxExp=pPo.exp;
 				this.pVo.maxHp=pPo.hp;
 				this.pVo.curHp=this.pVo.maxHp;
 				this.pVo.curExp=0;
-				this.pVo.curLevelNum=1;
-				this.pVo.curStageNum=1;
 				this.pVo.isFirstStep=true;
 				this.pVo.slotsDelay=270;
 				this.pVo.weaponPo=this.equipProxy.getEquipPoById(1);
@@ -10544,7 +10744,7 @@ var Laya=window.Laya=(function(window,document){
 	var StageProxy=(function(_super){
 		function StageProxy(){
 			this.isLoaded=false;
-			this.curLevel=1;
+			this.curLevel=3;
 			this.curPoints=1;
 			this._totalLevel=0;
 			this.stageAry=null;
@@ -10811,7 +11011,7 @@ var Laya=window.Laya=(function(window,document){
 				case "START_FIGHT":
 					this.initData();
 					if (this.playerVo.isFirstStep){
-						if (this.playerVo.curLevelNum==3){
+						if (this.stageProxy.curLevel==3){
 						}
 					}
 					else{
@@ -10930,6 +11130,7 @@ var Laya=window.Laya=(function(window,document){
 					this.gameStage.initEnemy(this.enemyCanSelectCount);
 					this.gameStage.initHpBar(this.enemyCanSelectCount);
 					this.gameStage.updateEnemyUI(this.enemyProxy.enemyVoList);
+					this.gameStage.updateEnemyHpBar(this.enemyProxy.enemyVoList);
 					this.gameStage.hpBarShow(true);
 					this.gameStage.enemyMove(Handler.create(this,this.initSlotsAtk));
 				}
@@ -10973,7 +11174,7 @@ var Laya=window.Laya=(function(window,document){
 			var enemy=this.gameStage.getEnemyByIndex(this.roundIndex);
 			var playerPo=this.playerProxy.getPlayerPoByLevel(this.playerVo.level);
 			console.log("this.slots.indexValue",this.slots.indexValue);
-			var hurt=this.slots.indexValue *playerPo.atk;
+			var hurt=MathUtil.round(this.slots.indexValue *playerPo.atk);
 			console.log("hurt",hurt);
 			this.gameStage.enemyHurt(this.roundIndex,hurt==0,Handler.create(this,this.enemyHurtComplete));
 			if (hurt==0){
@@ -11000,7 +11201,6 @@ var Laya=window.Laya=(function(window,document){
 				this.enemyProxy.removeEnemyVoById(eVo.id);
 				isDead=true;
 			}
-			this.gameStage.updateEnemyUI(this.enemyProxy.enemyVoList);
 			if (this.enemyProxy.getCurStageEnemyCount()==0){
 				this.gameStage.hpBarShow(false);
 				this.gameStage.playerMove(1136,3000,Handler.create(this,this.playerMoveOutComplete));
@@ -16835,6 +17035,7 @@ var Laya=window.Laya=(function(window,document){
 			this.nameTxt=null;
 			this.flashingTimer=null;
 			this.flashingIndex=0;
+			this.icon=null;
 			HpBar.__super.call(this);
 			this.curHp=0;
 			this.maxHp=1;
@@ -16853,11 +17054,13 @@ var Laya=window.Laya=(function(window,document){
 			this.barBg=new Image("bar/hpBarBg.png");
 			this.barImg=new Image("bar/hpBar.png");
 			this.deadIcon=new Image("bar/hpIconDeadIcon.png");
+			this.icon=new Image();
 			this.barImg.anchorX=1;
 			this.addChild(this.barBg);
 			this.addChild(this.barImg);
 			this.addChild(bgLight);
 			this.addChild(hpIcon);
+			this.addChild(this.icon);
 			this.addChild(this.deadIcon);
 			this.addChild(hpIconFrame);
 			hpIconFrame.x=86;
@@ -16865,6 +17068,8 @@ var Laya=window.Laya=(function(window,document){
 			this.deadIcon.x=91.2;
 			this.deadIcon.y=2.5;
 			this.deadIcon.visible=false;
+			this.icon.x=91.35;
+			this.icon.y=5.45;
 			this.barImg.x=this.barImg.width;
 			this.barImg.y=10;
 			this.barBg.y=10;
@@ -16926,6 +17131,23 @@ var Laya=window.Laya=(function(window,document){
 				this.flashingTimer.clear(this,this.flashingLoopHandler);
 				this.deadIcon.visible=true;
 			}
+		}
+
+		/**
+		*设置icon
+		*@param icon icon
+		*/
+		__proto.setIcon=function(icon){
+			if (!this.icon)return;
+			this.icon.skin=icon;
+		}
+
+		/**
+		*根据敌人的数据id设置icon
+		*@param no 数据id
+		*/
+		__proto.setIconByEnemyNo=function(no){
+			this.setIcon(GameUtils.getEnemySmallIconById(no));
 		}
 
 		return HpBar;
@@ -17477,6 +17699,7 @@ var Laya=window.Laya=(function(window,document){
 				var eVo=enemyVoList[i];
 				var hpBar=this.allHpBarAry[i];
 				hpBar.nameTxt.text=eVo.enemyPo.name;
+				hpBar.setIconByEnemyNo(eVo.no);
 			}
 		}
 
@@ -23985,7 +24208,7 @@ var Laya=window.Laya=(function(window,document){
 			this._animationNewFrames=null;
 			FrameAnimation.__super.call(this);
 			if (FrameAnimation._sortIndexFun==null){
-				FrameAnimation._sortIndexFun=MathUtil.sortByKey("index",false,true);
+				FrameAnimation._sortIndexFun=MathUtil1.sortByKey("index",false,true);
 			}
 		}
 
@@ -29323,7 +29546,7 @@ var Laya=window.Laya=(function(window,document){
 	})(Dialog)
 
 
-	Laya.__init([EventDispatcher,LoaderManager,Damage,NotificationCenter,Facade,Timer,Render,Browser,View,GraphicAnimation1,LocalStorage]);
+	Laya.__init([LoaderManager,EventDispatcher,Damage,NotificationCenter,Facade,Timer,Render,Browser,View,GraphicAnimation1,LocalStorage]);
 	new Main();
 
 })(window,document,Laya);

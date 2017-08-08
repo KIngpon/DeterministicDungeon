@@ -6,7 +6,7 @@
 	<stage id="4" name="石头" enemyIds="2,3,5,6,7" dropId="2" bossId="0" level="2" points="1"/>
 	<stage id="5" name="石头" enemyIds="2,3,5,6,7" dropId="2" bossId="0" level="2" points="2"/>
 	<stage id="6" name="石头" enemyIds="5,6,7" dropId="3" bossId="8" level="2" points="3"/>
-	<stage id="7" name="砖块" enemyIds="6,7,9,10,11" dropId="3" bossId="0" level="3" points="1"/>
-	<stage id="8" name="砖块" enemyIds="6,7,9,10,11" dropId="3" bossId="0" level="3" points="2"/>
+	<stage id="7" name="砖块" enemyIds="5,6,7,9,10,11" dropId="3" bossId="0" level="3" points="1"/>
+	<stage id="8" name="砖块" enemyIds="5,6,7,9,10,11" dropId="3" bossId="0" level="3" points="2"/>
 	<stage id="9" name="砖块" enemyIds="9,10,11" dropId="4" bossId="12" level="3" points="3"/>
 </stages>

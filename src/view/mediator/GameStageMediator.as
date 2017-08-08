@@ -16,6 +16,7 @@ import model.vo.EnemyVo;
 import model.vo.PlayerVo;
 import mvc.Mediator;
 import mvc.Notification;
+import utils.MathUtil;
 import utils.Random;
 import view.components.Damage;
 import view.components.SlotsPanel;
@@ -104,7 +105,7 @@ public class GameStageMediator extends Mediator
 				{
 					// 选择地形
 					// 选择宝箱位置
-					if (this.playerVo.curLevelNum == 3)
+					if (this.stageProxy.curLevel == 3)
 					{
 						// 选择boss位置
 					}
@@ -253,6 +254,7 @@ public class GameStageMediator extends Mediator
 				this.gameStage.initEnemy(this.enemyCanSelectCount);
 				this.gameStage.initHpBar(this.enemyCanSelectCount);
 				this.gameStage.updateEnemyUI(this.enemyProxy.enemyVoList);
+				this.gameStage.updateEnemyHpBar(this.enemyProxy.enemyVoList);
 				this.gameStage.hpBarShow(true);
 				this.gameStage.enemyMove(Handler.create(this, initSlotsAtk));
 			}
@@ -307,7 +309,7 @@ public class GameStageMediator extends Mediator
 		var playerPo:PlayerPo = this.playerProxy.getPlayerPoByLevel(this.playerVo.level);
 		//伤害
 		trace("this.slots.indexValue", this.slots.indexValue);
-		var hurt:Number = this.slots.indexValue * playerPo.atk;
+		var hurt:Number = MathUtil.round(this.slots.indexValue * playerPo.atk);
 		trace("hurt", hurt);
 		this.gameStage.enemyHurt(this.roundIndex, hurt == 0, Handler.create(this, enemyHurtComplete));
 		if (hurt == 0)
@@ -339,7 +341,7 @@ public class GameStageMediator extends Mediator
 			this.enemyProxy.removeEnemyVoById(eVo.id);
 			isDead = true;
 		}
-		this.gameStage.updateEnemyUI(this.enemyProxy.enemyVoList);
+		//this.gameStage.updateEnemyUI(this.enemyProxy.enemyVoList);
 		if (this.enemyProxy.getCurStageEnemyCount() == 0)
 		{
 			//all dead;

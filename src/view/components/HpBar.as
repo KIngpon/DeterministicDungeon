@@ -6,6 +6,8 @@ import laya.display.Text;
 import laya.ui.Image;
 import laya.ui.Label;
 import laya.utils.Timer;
+import model.po.EnemyPo;
+import utils.GameUtils;
 /**
  * ...血条
  * @author ...Kanon
@@ -25,6 +27,7 @@ public class HpBar extends Sprite
 	public var nameTxt:Label;
 	private var flashingTimer:Timer;
 	private var flashingIndex:int;
+	private var icon:Image;
 	public function HpBar() 
 	{
 		this.curHp = 0;
@@ -44,11 +47,13 @@ public class HpBar extends Sprite
 		this.barBg = new Image("bar/hpBarBg.png");
 		this.barImg = new Image("bar/hpBar.png");
 		this.deadIcon = new Image("bar/hpIconDeadIcon.png");
+		this.icon = new Image();
 		this.barImg.anchorX = 1;
 		this.addChild(this.barBg);
 		this.addChild(this.barImg);
 		this.addChild(bgLight);
 		this.addChild(hpIcon);
+		this.addChild(this.icon);
 		this.addChild(this.deadIcon);
 		this.addChild(hpIconFrame);
 		hpIconFrame.x = 86;
@@ -56,6 +61,8 @@ public class HpBar extends Sprite
 		this.deadIcon.x = 91.2;
 		this.deadIcon.y = 2.5;
 		this.deadIcon.visible = false;
+		this.icon.x = 91.35;
+		this.icon.y = 5.45;
 		
 		this.barImg.x = this.barImg.width;
 		this.barImg.y = 10;
@@ -128,6 +135,25 @@ public class HpBar extends Sprite
 			this.flashingTimer.clear(this, flashingLoopHandler);
 			this.deadIcon.visible = true;
 		}
+	}
+	
+	/**
+	 * 设置icon
+	 * @param	icon	icon
+	 */
+	public function setIcon(icon:String):void
+	{
+		if (!this.icon) return;
+		this.icon.skin = icon;
+	}
+	
+	/**
+	 * 根据敌人的数据id设置icon
+	 * @param	no		数据id
+	 */
+	public function setIconByEnemyNo(no:int):void
+	{
+		this.setIcon(GameUtils.getEnemySmallIconById(no));
 	}
 }
 }

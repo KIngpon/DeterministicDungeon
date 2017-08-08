@@ -203,6 +203,7 @@ public class GameStageLayer extends Sprite
 			var eVo:EnemyVo = enemyVoList[i];
 			var hpBar:HpBar = this.allHpBarAry[i];
 			hpBar.nameTxt.text = eVo.enemyPo.name;
+			hpBar.setIconByEnemyNo(eVo.no);
 		}
 	}
 	
