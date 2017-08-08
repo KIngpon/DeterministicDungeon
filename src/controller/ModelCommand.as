@@ -3,6 +3,7 @@ package controller
 import model.proxy.DropProxy;
 import model.proxy.EnemyProxy;
 import model.proxy.EquipProxy;
+import model.proxy.PicProxy;
 import model.proxy.PlayerProxy;
 import model.proxy.ResProxy;
 import model.proxy.StageProxy;
@@ -21,6 +22,7 @@ public class ModelCommand extends Command
 		this.facade.registerProxy(new PlayerProxy());
 		this.facade.registerProxy(new StageProxy());
 		this.facade.registerProxy(new DropProxy());
+		this.facade.registerProxy(new PicProxy());
 		this.facade.registerProxy(new ResProxy());
 	}
 }

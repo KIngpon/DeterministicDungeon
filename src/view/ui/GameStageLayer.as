@@ -126,14 +126,14 @@ public class GameStageLayer extends Sprite
 	public function initHpBar(num:int):void
 	{
 		this.removeAllHpBar();
-		var gap:Number = 70;
-		var startX:Number = 670;
+		var gap:Number = 15;
+		var startX:Number = 660;
 		if (num > GameConstant.ENEMY_NUM) num = GameConstant.ENEMY_NUM;
 		for (var i:int = 0; i < num; i++)
 		{
 			var hpBar:HpBar = new HpBar();
 			hpBar.x = startX + i * (hpBar.width + gap);
-			hpBar.y = 580;
+			hpBar.y = 565;
 			hpBar.pivotX = hpBar.width / 2;
 			hpBar.pivotY = hpBar.height / 2;
 			hpBar.scale(0, 0);
@@ -154,7 +154,7 @@ public class GameStageLayer extends Sprite
 		for (var i:int = 0; i < count; i++) 
 		{
 			var hpBar:HpBar = this.allHpBarAry[i];
-			if (flag) Tween.to(hpBar, { scaleX:1.5, scaleY:1.5 }, 200, Ease.circOut);
+			if (flag) Tween.to(hpBar, { scaleX:1, scaleY:1 }, 200, Ease.circOut);
 			else Tween.to(hpBar, { y:hpBar.y + 150 }, 350, Ease.circIn, null, 200 * (3 - i));
 		}
 	}

@@ -21,7 +21,7 @@ public class EnemyPo
 	//图片或动画名称
 	public var pic:String;
 	//icon
-	public var icon:String;
+	public var icon:int;
 	public function EnemyPo() 
 	{
 		

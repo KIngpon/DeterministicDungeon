@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<pics>
+	<pic id="100001" icon="e_icon1" smallIcon="se_icon1"/>
+	<pic id="100002" icon="e_icon2" smallIcon="se_icon2"/>
+	<pic id="100003" icon="e_icon3" smallIcon="se_icon3"/>
+	<pic id="100004" icon="0" smallIcon="se_icon4"/>
+	<pic id="100005" icon="e_icon4" smallIcon="se_icon5"/>
+	<pic id="100006" icon="e_icon5" smallIcon="se_icon6"/>
+	<pic id="100007" icon="e_icon6" smallIcon="se_icon7"/>
+	<pic id="100008" icon="0" smallIcon="se_icon8"/>
+	<pic id="100009" icon="e_icon8" smallIcon="se_icon9"/>
+	<pic id="100010" icon="e_icon9" smallIcon="se_icon10"/>
+	<pic id="100011" icon="e_icon10" smallIcon="se_icon11"/>
+	<pic id="100012" icon="0" smallIcon="se_icon12"/>
+</pics>

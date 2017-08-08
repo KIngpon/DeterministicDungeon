@@ -51,7 +51,7 @@ public class EnemyProxy extends Proxy
 				enemyPo.exp = childNode.getAttribute("exp");
 				enemyPo.type = childNode.getAttribute("type");
 				enemyPo.pic = String(childNode.getAttribute("pic"));
-				enemyPo.icon = String(childNode.getAttribute("icon"));
+				enemyPo.icon = childNode.getAttribute("icon");
 				this.enemyAry.push(enemyPo);
 			}
 			this.isLoaded = true;
