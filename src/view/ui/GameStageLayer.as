@@ -105,6 +105,26 @@ public class GameStageLayer extends Sprite
 		levelBg.x = 275;
 		levelBg.y = 590;
 		this.addChild(levelBg);
+		
+		var atkProp:Image = new Image("comp/atkProp.png");
+		atkProp.x = 406;
+		atkProp.y = 533;
+		this.addChild(atkProp);
+		
+		var hpProp:Image = new Image("comp/hpProp.png");
+		hpProp.x = 479;
+		hpProp.y = atkProp.y;
+		this.addChild(hpProp);
+		
+		var magicProp:Image = new Image("comp/magicProp.png");
+		magicProp.x = atkProp.x;
+		magicProp.y = 594;
+		this.addChild(magicProp);
+		
+		var defProp:Image = new Image("comp/defProp.png");
+		defProp.x = hpProp.x;
+		defProp.y = magicProp.y;
+		this.addChild(defProp);
 
 	}
 	

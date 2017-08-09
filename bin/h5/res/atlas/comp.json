@@ -1,8 +1,29 @@
 {
     "frames": {
-        "defIcon.png": {
+        "atkProp.png": {
             "frame": {
                 "x": 0,
+                "y": 0,
+                "w": 40,
+                "h": 41,
+                "idx": 0
+            },
+            "spriteSourceSize": {
+                "x": 0,
+                "y": 0,
+                "w": 40,
+                "h": 41
+            },
+            "sourceSize": {
+                "w": 40,
+                "h": 41
+            },
+            "rotated": false,
+            "trimed": false
+        },
+        "defIcon.png": {
+            "frame": {
+                "x": 42,
                 "y": 0,
                 "w": 46,
                 "h": 47,
@@ -21,9 +42,30 @@
             "rotated": false,
             "trimed": false
         },
+        "defProp.png": {
+            "frame": {
+                "x": 0,
+                "y": 43,
+                "w": 40,
+                "h": 42,
+                "idx": 0
+            },
+            "spriteSourceSize": {
+                "x": 0,
+                "y": 0,
+                "w": 40,
+                "h": 42
+            },
+            "sourceSize": {
+                "w": 40,
+                "h": 42
+            },
+            "rotated": false,
+            "trimed": false
+        },
         "equipIcon.png": {
             "frame": {
-                "x": 48,
+                "x": 90,
                 "y": 0,
                 "w": 44,
                 "h": 46,
@@ -44,7 +86,7 @@
         },
         "freezeTips.png": {
             "frame": {
-                "x": 94,
+                "x": 136,
                 "y": 0,
                 "w": 78,
                 "h": 67,
@@ -65,7 +107,7 @@
         },
         "hand.png": {
             "frame": {
-                "x": 174,
+                "x": 216,
                 "y": 0,
                 "w": 107,
                 "h": 152,
@@ -86,7 +128,7 @@
         },
         "helmetSlotsIcon.png": {
             "frame": {
-                "x": 0,
+                "x": 42,
                 "y": 49,
                 "w": 74,
                 "h": 57,
@@ -105,9 +147,30 @@
             "rotated": false,
             "trimed": false
         },
+        "hpProp.png": {
+            "frame": {
+                "x": 0,
+                "y": 87,
+                "w": 38,
+                "h": 45,
+                "idx": 0
+            },
+            "spriteSourceSize": {
+                "x": 0,
+                "y": 0,
+                "w": 38,
+                "h": 45
+            },
+            "sourceSize": {
+                "w": 38,
+                "h": 45
+            },
+            "rotated": false,
+            "trimed": false
+        },
         "image362.png": {
             "frame": {
-                "x": 76,
+                "x": 118,
                 "y": 69,
                 "w": 79,
                 "h": 68,
@@ -128,7 +191,7 @@
         },
         "magicIcon.png": {
             "frame": {
-                "x": 0,
+                "x": 40,
                 "y": 108,
                 "w": 41,
                 "h": 41,
@@ -147,10 +210,31 @@
             "rotated": false,
             "trimed": false
         },
+        "magicProp.png": {
+            "frame": {
+                "x": 83,
+                "y": 139,
+                "w": 39,
+                "h": 44,
+                "idx": 0
+            },
+            "spriteSourceSize": {
+                "x": 0,
+                "y": 0,
+                "w": 39,
+                "h": 44
+            },
+            "sourceSize": {
+                "w": 39,
+                "h": 44
+            },
+            "rotated": false,
+            "trimed": false
+        },
         "magicSlotsIcon.png": {
             "frame": {
-                "x": 43,
-                "y": 139,
+                "x": 0,
+                "y": 151,
                 "w": 52,
                 "h": 52,
                 "idx": 0
@@ -170,8 +254,8 @@
         },
         "num0.png": {
             "frame": {
-                "x": 283,
-                "y": 0,
+                "x": 124,
+                "y": 139,
                 "w": 79,
                 "h": 54,
                 "idx": 0
@@ -191,7 +275,7 @@
         },
         "num1.png": {
             "frame": {
-                "x": 364,
+                "x": 325,
                 "y": 0,
                 "w": 79,
                 "h": 54,
@@ -212,8 +296,8 @@
         },
         "num10.png": {
             "frame": {
-                "x": 283,
-                "y": 56,
+                "x": 406,
+                "y": 0,
                 "w": 79,
                 "h": 54,
                 "idx": 0
@@ -233,7 +317,7 @@
         },
         "num11.png": {
             "frame": {
-                "x": 364,
+                "x": 325,
                 "y": 56,
                 "w": 79,
                 "h": 54,
@@ -254,8 +338,8 @@
         },
         "num12.png": {
             "frame": {
-                "x": 283,
-                "y": 112,
+                "x": 406,
+                "y": 56,
                 "w": 79,
                 "h": 54,
                 "idx": 0
@@ -275,7 +359,7 @@
         },
         "num13.png": {
             "frame": {
-                "x": 364,
+                "x": 325,
                 "y": 112,
                 "w": 79,
                 "h": 54,
@@ -296,8 +380,8 @@
         },
         "num14.png": {
             "frame": {
-                "x": 97,
-                "y": 154,
+                "x": 406,
+                "y": 112,
                 "w": 79,
                 "h": 54,
                 "idx": 0
@@ -317,8 +401,8 @@
         },
         "num15.png": {
             "frame": {
-                "x": 0,
-                "y": 193,
+                "x": 205,
+                "y": 154,
                 "w": 79,
                 "h": 54,
                 "idx": 0
@@ -338,8 +422,8 @@
         },
         "num16.png": {
             "frame": {
-                "x": 178,
-                "y": 154,
+                "x": 54,
+                "y": 195,
                 "w": 79,
                 "h": 54,
                 "idx": 0
@@ -359,7 +443,7 @@
         },
         "num17.png": {
             "frame": {
-                "x": 259,
+                "x": 286,
                 "y": 168,
                 "w": 79,
                 "h": 54,
@@ -380,7 +464,7 @@
         },
         "num18.png": {
             "frame": {
-                "x": 81,
+                "x": 135,
                 "y": 210,
                 "w": 79,
                 "h": 54,
@@ -402,7 +486,7 @@
         "num19.png": {
             "frame": {
                 "x": 0,
-                "y": 249,
+                "y": 251,
                 "w": 79,
                 "h": 54,
                 "idx": 0
@@ -422,8 +506,8 @@
         },
         "num2.png": {
             "frame": {
-                "x": 162,
-                "y": 210,
+                "x": 367,
+                "y": 168,
                 "w": 79,
                 "h": 54,
                 "idx": 0
@@ -443,49 +527,7 @@
         },
         "num20.png": {
             "frame": {
-                "x": 340,
-                "y": 168,
-                "w": 79,
-                "h": 54,
-                "idx": 0
-            },
-            "spriteSourceSize": {
-                "x": 0,
-                "y": 0,
-                "w": 79,
-                "h": 54
-            },
-            "sourceSize": {
-                "w": 79,
-                "h": 54
-            },
-            "rotated": false,
-            "trimed": false
-        },
-        "num21.png": {
-            "frame": {
-                "x": 421,
-                "y": 168,
-                "w": 79,
-                "h": 54,
-                "idx": 0
-            },
-            "spriteSourceSize": {
-                "x": 0,
-                "y": 0,
-                "w": 79,
-                "h": 54
-            },
-            "sourceSize": {
-                "w": 79,
-                "h": 54
-            },
-            "rotated": false,
-            "trimed": false
-        },
-        "num3.png": {
-            "frame": {
-                "x": 243,
+                "x": 216,
                 "y": 224,
                 "w": 79,
                 "h": 54,
@@ -504,7 +546,7 @@
             "rotated": false,
             "trimed": false
         },
-        "num4.png": {
+        "num21.png": {
             "frame": {
                 "x": 81,
                 "y": 266,
@@ -525,10 +567,52 @@
             "rotated": false,
             "trimed": false
         },
-        "num5.png": {
+        "num3.png": {
             "frame": {
                 "x": 0,
-                "y": 305,
+                "y": 307,
+                "w": 79,
+                "h": 54,
+                "idx": 0
+            },
+            "spriteSourceSize": {
+                "x": 0,
+                "y": 0,
+                "w": 79,
+                "h": 54
+            },
+            "sourceSize": {
+                "w": 79,
+                "h": 54
+            },
+            "rotated": false,
+            "trimed": false
+        },
+        "num4.png": {
+            "frame": {
+                "x": 297,
+                "y": 224,
+                "w": 79,
+                "h": 54,
+                "idx": 0
+            },
+            "spriteSourceSize": {
+                "x": 0,
+                "y": 0,
+                "w": 79,
+                "h": 54
+            },
+            "sourceSize": {
+                "w": 79,
+                "h": 54
+            },
+            "rotated": false,
+            "trimed": false
+        },
+        "num5.png": {
+            "frame": {
+                "x": 378,
+                "y": 224,
                 "w": 79,
                 "h": 54,
                 "idx": 0
@@ -548,8 +632,8 @@
         },
         "num6.png": {
             "frame": {
-                "x": 162,
-                "y": 266,
+                "x": 0,
+                "y": 363,
                 "w": 79,
                 "h": 54,
                 "idx": 0
@@ -569,8 +653,8 @@
         },
         "num7.png": {
             "frame": {
-                "x": 324,
-                "y": 224,
+                "x": 0,
+                "y": 419,
                 "w": 79,
                 "h": 54,
                 "idx": 0
@@ -590,8 +674,8 @@
         },
         "num8.png": {
             "frame": {
-                "x": 405,
-                "y": 224,
+                "x": 0,
+                "y": 475,
                 "w": 79,
                 "h": 54,
                 "idx": 0
@@ -611,7 +695,7 @@
         },
         "num9.png": {
             "frame": {
-                "x": 243,
+                "x": 162,
                 "y": 280,
                 "w": 79,
                 "h": 54,
@@ -632,8 +716,8 @@
         },
         "roundArrow.png": {
             "frame": {
-                "x": 445,
-                "y": 0,
+                "x": 448,
+                "y": 168,
                 "w": 54,
                 "h": 44,
                 "idx": 0
@@ -653,8 +737,8 @@
         },
         "shieldSlotsIcon.png": {
             "frame": {
-                "x": 445,
-                "y": 46,
+                "x": 81,
+                "y": 322,
                 "w": 52,
                 "h": 53,
                 "idx": 0
@@ -675,7 +759,7 @@
         "slotsPanelTitleBg.png": {
             "frame": {
                 "x": 81,
-                "y": 336,
+                "y": 377,
                 "w": 316,
                 "h": 77,
                 "idx": 0
@@ -695,8 +779,8 @@
         },
         "slotsTitle.png": {
             "frame": {
-                "x": 0,
-                "y": 415,
+                "x": 243,
+                "y": 280,
                 "w": 188,
                 "h": 53,
                 "idx": 0
@@ -716,7 +800,7 @@
         },
         "totem1.png": {
             "frame": {
-                "x": 399,
+                "x": 433,
                 "y": 280,
                 "w": 67,
                 "h": 73,
@@ -758,8 +842,8 @@
         },
         "totem3.png": {
             "frame": {
-                "x": 190,
-                "y": 415,
+                "x": 399,
+                "y": 418,
                 "w": 95,
                 "h": 64,
                 "idx": 0
@@ -779,8 +863,8 @@
         },
         "totem4.png": {
             "frame": {
-                "x": 287,
-                "y": 415,
+                "x": 81,
+                "y": 456,
                 "w": 79,
                 "h": 73,
                 "idx": 0
@@ -800,8 +884,8 @@
         },
         "totem5.png": {
             "frame": {
-                "x": 368,
-                "y": 418,
+                "x": 162,
+                "y": 456,
                 "w": 93,
                 "h": 75,
                 "idx": 0
@@ -821,8 +905,8 @@
         },
         "weaponIcon.png": {
             "frame": {
-                "x": 468,
-                "y": 280,
+                "x": 459,
+                "y": 214,
                 "w": 37,
                 "h": 50,
                 "idx": 0
@@ -842,8 +926,8 @@
         },
         "weaponSlotsIcon.png": {
             "frame": {
-                "x": 445,
-                "y": 101,
+                "x": 257,
+                "y": 456,
                 "w": 43,
                 "h": 58,
                 "idx": 0

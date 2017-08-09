@@ -17730,6 +17730,22 @@ var Laya=window.Laya=(function(window,document){
 			levelBg.x=275;
 			levelBg.y=590;
 			this.addChild(levelBg);
+			var atkProp=new Image("comp/atkProp.png");
+			atkProp.x=406;
+			atkProp.y=533;
+			this.addChild(atkProp);
+			var hpProp=new Image("comp/hpProp.png");
+			hpProp.x=479;
+			hpProp.y=atkProp.y;
+			this.addChild(hpProp);
+			var magicProp=new Image("comp/magicProp.png");
+			magicProp.x=atkProp.x;
+			magicProp.y=594;
+			this.addChild(magicProp);
+			var defProp=new Image("comp/defProp.png");
+			defProp.x=hpProp.x;
+			defProp.y=magicProp.y;
+			this.addChild(defProp);
 		}
 
 		/**
