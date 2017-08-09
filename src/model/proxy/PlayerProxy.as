@@ -42,18 +42,18 @@ public class PlayerProxy extends Proxy
 			{
 				var childNode:XmlDom = elementList[i];
 				var playerPo:PlayerPo = new PlayerPo();
-				playerPo.atk = childNode.getAttribute("atk");
-				playerPo.hp = childNode.getAttribute("hp");
-				playerPo.def = childNode.getAttribute("def");
-				playerPo.exp = childNode.getAttribute("exp");
-				playerPo.magic = childNode.getAttribute("magic");
-				playerPo.level = childNode.getAttribute("level");
+				playerPo.atk = Number(childNode.getAttribute("atk"));
+				playerPo.hp = Number(childNode.getAttribute("hp"));
+				playerPo.def = Number(childNode.getAttribute("def"));
+				playerPo.exp = Number(childNode.getAttribute("exp"));
+				playerPo.magic = Number(childNode.getAttribute("magic"));
+				playerPo.level = Number(childNode.getAttribute("level"));
 				this.levelAry.push(playerPo);
 			}
 			this.isLoaded = true;
 			
 			this.pVo = new PlayerVo();
-			this.pVo.level = 50;
+			this.pVo.level = 1;
 			var pPo:PlayerPo = this.getPlayerPoByLevel(this.pVo.level);
 			this.pVo.maxExp = pPo.exp;
 			this.pVo.maxHp = pPo.hp;
@@ -62,7 +62,7 @@ public class PlayerProxy extends Proxy
 			this.pVo.isFirstStep = true;
 			this.pVo.slotsDelay = 270;
 			this.pVo.weaponPo = this.equipProxy.getEquipPoById(1);
-			trace(this.pVo.curHp, this.pVo.level, this.pVo.maxExp);
+			//trace(this.pVo.curHp, this.pVo.level, this.pVo.maxExp);
 		}));
 	}
 	
@@ -92,6 +92,37 @@ public class PlayerProxy extends Proxy
 	{
 		if (!this.pVo || ! this.pVo.weaponPo) return null;
 		return this.pVo.weaponPo.atk;
+	}
+	
+	/**
+	 * 增加经验
+	 * @param	exp		经验
+	 */
+	public function addExp(exp:int):void 
+	{
+		this.pVo.curExp += exp;
+		this.checkAddLevel();
+	}
+	
+	/**
+	 * 升级
+	 */
+	public function checkAddLevel():Boolean
+	{
+		//trace("-----判断是否增加等级----", this.pVo.curExp, "需要经验", this.pVo.maxExp);
+		if (this.pVo.curExp >= this.pVo.maxExp)
+		{
+			this.pVo.level++;
+			var pPo:PlayerPo = this.getPlayerPoByLevel(this.pVo.level);
+			this.pVo.curExp -= this.pVo.maxExp;
+			this.pVo.maxExp = pPo.exp;
+			this.pVo.curHp = pPo.hp;
+			this.pVo.maxHp = pPo.hp;
+			//trace("-----剩余经验----", this.pVo.curExp);
+			//trace("-----当前总经验----", this.pVo.maxExp);
+			//trace("-----当前等级----", this.pVo.level);
+			this.checkAddLevel();
+		}
 	}
 }
 }

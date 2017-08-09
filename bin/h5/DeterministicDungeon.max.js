@@ -1338,17 +1338,20 @@ var Laya=window.Laya=(function(window,document){
 
 		MathUtil.round=function(num,interval){
 			(interval===void 0)&& (interval=.1);
-			return Math.round(num / interval)*interval;
+			var intervalValue=1 / interval;
+			return Math.round(num / interval)/ intervalValue;
 		}
 
 		MathUtil.floor=function(num,interval){
 			(interval===void 0)&& (interval=.1);
-			return Math.floor(num / interval)*interval;
+			var intervalValue=1 / interval;
+			return Math.floor(num / interval)/ intervalValue;
 		}
 
 		MathUtil.ceil=function(num,interval){
 			(interval===void 0)&& (interval=.1);
-			return Math.ceil(num / interval)*interval;
+			var intervalValue=1 / interval;
+			return Math.ceil(num / interval)/ intervalValue;
 		}
 
 		MathUtil.getAbsolute=function(num){
@@ -10337,9 +10340,9 @@ var Laya=window.Laya=(function(window,document){
 					var enemyPo=new EnemyPo();
 					enemyPo.id=childNode.getAttribute("id");
 					enemyPo.name=String(childNode.getAttribute("name"));
-					enemyPo.hp=childNode.getAttribute("hp");
+					enemyPo.hp=Number(childNode.getAttribute("hp"));
 					enemyPo.atk=Number(childNode.getAttribute("atk"));
-					enemyPo.exp=childNode.getAttribute("exp");
+					enemyPo.exp=Number(childNode.getAttribute("exp"));
 					enemyPo.type=childNode.getAttribute("type");
 					enemyPo.pic=String(childNode.getAttribute("pic"));
 					enemyPo.icon=childNode.getAttribute("icon");
@@ -10626,17 +10629,17 @@ var Laya=window.Laya=(function(window,document){
 				for (var i=0;i < count;++i){
 					var childNode=elementList[i];
 					var playerPo=new PlayerPo();
-					playerPo.atk=childNode.getAttribute("atk");
-					playerPo.hp=childNode.getAttribute("hp");
-					playerPo.def=childNode.getAttribute("def");
-					playerPo.exp=childNode.getAttribute("exp");
-					playerPo.magic=childNode.getAttribute("magic");
-					playerPo.level=childNode.getAttribute("level");
+					playerPo.atk=Number(childNode.getAttribute("atk"));
+					playerPo.hp=Number(childNode.getAttribute("hp"));
+					playerPo.def=Number(childNode.getAttribute("def"));
+					playerPo.exp=Number(childNode.getAttribute("exp"));
+					playerPo.magic=Number(childNode.getAttribute("magic"));
+					playerPo.level=Number(childNode.getAttribute("level"));
 					this.levelAry.push(playerPo);
 				}
 				this.isLoaded=true;
 				this.pVo=new PlayerVo();
-				this.pVo.level=50;
+				this.pVo.level=1;
 				var pPo=this.getPlayerPoByLevel(this.pVo.level);
 				this.pVo.maxExp=pPo.exp;
 				this.pVo.maxHp=pPo.hp;
@@ -10645,7 +10648,6 @@ var Laya=window.Laya=(function(window,document){
 				this.pVo.isFirstStep=true;
 				this.pVo.slotsDelay=270;
 				this.pVo.weaponPo=this.equipProxy.getEquipPoById(1);
-				console.log(this.pVo.curHp,this.pVo.level,this.pVo.maxExp);
 			}));
 		}
 
@@ -10672,6 +10674,30 @@ var Laya=window.Laya=(function(window,document){
 		__proto.getPlayerAtk=function(){
 			if (!this.pVo || ! this.pVo.weaponPo)return null;
 			return this.pVo.weaponPo.atk;
+		}
+
+		/**
+		*增加经验
+		*@param exp 经验
+		*/
+		__proto.addExp=function(exp){
+			this.pVo.curExp+=exp;
+			this.checkAddLevel();
+		}
+
+		/**
+		*升级
+		*/
+		__proto.checkAddLevel=function(){
+			if (this.pVo.curExp >=this.pVo.maxExp){
+				this.pVo.level++;
+				var pPo=this.getPlayerPoByLevel(this.pVo.level);
+				this.pVo.curExp-=this.pVo.maxExp;
+				this.pVo.maxExp=pPo.exp;
+				this.pVo.curHp=pPo.hp;
+				this.pVo.maxHp=pPo.hp;
+				this.checkAddLevel();
+			}
 		}
 
 		PlayerProxy.NAME="PlayerProxy";
@@ -10744,7 +10770,7 @@ var Laya=window.Laya=(function(window,document){
 	var StageProxy=(function(_super){
 		function StageProxy(){
 			this.isLoaded=false;
-			this.curLevel=3;
+			this.curLevel=1;
 			this.curPoints=1;
 			this._totalLevel=0;
 			this.stageAry=null;
@@ -10775,7 +10801,7 @@ var Laya=window.Laya=(function(window,document){
 					stagePo.name=childNode.getAttribute("name");
 					stagePo.bossId=childNode.getAttribute("bossId");
 					stagePo.dropId=childNode.getAttribute("dropId");
-					stagePo.level=childNode.getAttribute("level");
+					stagePo.level=Number(childNode.getAttribute("level"));
 					stagePo.points=childNode.getAttribute("points");
 					stagePo.enemyIds=String(childNode.getAttribute("enemyIds")).split(",");
 					if (stagePo.level !=prevLevel){
@@ -10945,318 +10971,6 @@ var Laya=window.Laya=(function(window,document){
 		StageProxy.NAME="StageProxy";
 		return StageProxy;
 	})(Proxy)
-
-
-	/**
-	*...战斗系统中介
-	*战斗流程
-	*1.1.选择地形
-	*1.2.选择宝箱位置
-	*1.3.选择boss位置
-	*1.4.选择移动位置
-	*1.5。角色进入
-	*2.选择敌人数量
-	*3.选择敌人类型
-	*4.敌人进入
-	*5.选择攻击强度
-	*5.1攻击
-	*5.2buff攻击
-	*5.3判断升级
-	*6.选择掉落个数
-	*7.选择掉落类型
-	*8.角色出去
-	*8.1提示是否下一层
-	*@author ...Kanon
-	*/
-	//class view.mediator.GameStageMediator extends mvc.Mediator
-	var GameStageMediator=(function(_super){
-		function GameStageMediator(){
-			this.gameStage=null;
-			this.playerProxy=null;
-			this.stageProxy=null;
-			this.enemyProxy=null;
-			this.playerVo=null;
-			this.roundIndex=0;
-			this.slots=null;
-			this.isSelectEnemyCount=false;
-			this.isSelectEnemyType=false;
-			this.isSelectAtkIndex=false;
-			this.enemyCanSelectCount=0;
-			this.curEnemySelectCount=0;
-			this.curStagePo=null;
-			this.enemyPoList=null;
-			GameStageMediator.__super.call(this);
-			this.mediatorName="GameStageMediator";
-			this.playerProxy=this.retrieveProxy("PlayerProxy");
-			this.stageProxy=this.retrieveProxy("StageProxy");
-			this.enemyProxy=this.retrieveProxy("EnemyProxy");
-		}
-
-		__class(GameStageMediator,'view.mediator.GameStageMediator',_super);
-		var __proto=GameStageMediator.prototype;
-		__proto.listNotificationInterests=function(){
-			var vect=[];
-			vect.push("INIT_FIGHT_STAGE");
-			vect.push("START_FIGHT");
-			return vect;
-		}
-
-		__proto.handleNotification=function(notification){
-			switch (notification.notificationName){
-				case "INIT_FIGHT_STAGE":
-					this.initUI();
-					this.initEvent();
-					this.sendNotification("START_FIGHT",null);
-					break ;
-				case "START_FIGHT":
-					this.initData();
-					if (this.playerVo.isFirstStep){
-						if (this.stageProxy.curLevel==3){
-						}
-					}
-					else{
-					}
-					this.gameStage.initPlayer();
-					this.gameStage.updateStageBg(this.curStagePo,this.stageProxy);
-					this.gameStage.playerMove(250,1000,Handler.create(this,this.playerMoveComplete));
-					break ;
-				default :
-					break ;
-				}
-		}
-
-		/**
-		*初始化事件
-		*/
-		__proto.initEvent=function(){
-			if (GameConstant.DEBUG){
-				Laya.stage.on("click",this,this.clickHandler);
-				Laya.stage.on("keydown",this,this.onKeyDownHandler);
-			}
-			Laya.timer.loop(1 / 60 *1000,this,this.loopHandler);
-		}
-
-		/**
-		*初始化数据
-		*/
-		__proto.initData=function(){
-			this.isSelectEnemyCount=false;
-			this.isSelectEnemyType=false;
-			this.isSelectAtkIndex=false;
-			this.roundIndex=0;
-			this.curEnemySelectCount=0;
-			this.curStagePo=this.stageProxy.getCurStagePo();
-			this.playerVo=this.playerProxy.pVo;
-			this.enemyPoList=this.stageProxy.getCurStagePoEnemyPoList();
-			this.enemyProxy.clearStageEnemyList();
-		}
-
-		/**
-		*初始化UI
-		*/
-		__proto.initUI=function(){
-			if (!this.slots){
-				this.slots=new SlotsPanel();
-				this.slots.visible=false;
-				this.slots.selectedBtn.on("mousedown",this,this.selectedBtnMouseDown);
-				Layer.GAME_ALERT.addChild(this.slots);
-			}
-			if (!this.gameStage){
-				this.gameStage=new GameStageLayer();
-				Layer.GAME_STAGE.addChild(this.gameStage);
-			}
-		}
-
-		/**
-		*初始化选择敌人数量
-		*/
-		__proto.initSlotsSelectEnemyCount=function(){
-			this.slots.visible=true;
-			this.slots.selectedBtn.mouseEnabled=true;
-			this.slots.startNumSlotsByAry([0,1,2,3],this.playerVo.slotsDelay,0,-5);
-			this.slots.setTitle("选择敌人数量");
-		}
-
-		/**
-		*初始化攻击力滚动
-		*/
-		__proto.initSlotsAtk=function(){
-			this.isSelectAtkIndex=false;
-			this.slots.visible=true;
-			this.slots.selectedBtn.mouseEnabled=true;
-			this.slots.startNumSlotsByAry(this.playerProxy.getPlayerAtk(),this.playerVo.slotsDelay,0,-5);
-			this.slots.setTitle("攻击强度");
-		}
-
-		/**
-		*初始化选择敌人类型
-		*/
-		__proto.initSlotsSelectEnemyType=function(){
-			this.slots.visible=true;
-			this.slots.selectedBtn.mouseEnabled=true;
-			this.slots.startEnemySlots(this.enemyPoList,this.playerVo.slotsDelay);
-			this.slots.setTitle("放入"+this.curEnemySelectCount+"个敌人/"+this.enemyCanSelectCount);
-		}
-
-		/**
-		*点击选择按钮
-		*/
-		__proto.selectedBtnMouseDown=function(){
-			this.slots.stop();
-			this.slots.selectedBtn.mouseEnabled=false;
-			this.slots.flashing(Handler.create(this,this.flashingCompleteHandler));
-		}
-
-		/**
-		*闪烁结束
-		*/
-		__proto.flashingCompleteHandler=function(){
-			this.slots.visible=false;
-			if (!this.isSelectEnemyCount){
-				this.isSelectEnemyCount=true;
-				this.enemyCanSelectCount=this.slots.indexValue;
-				this.curEnemySelectCount++;
-				if (this.enemyCanSelectCount > 0)
-					this.initSlotsSelectEnemyType();
-				else
-				this.gameStage.playerMove(1136,3000,Handler.create(this,this.playerMoveOutComplete));
-			}
-			else if (!this.isSelectEnemyType){
-				var id=this.slots.getSelectId();
-				var ePo=this.enemyProxy.getEnemyPoById(id);
-				this.enemyProxy.createEnemyVo(ePo);
-				if (this.curEnemySelectCount==this.enemyCanSelectCount){
-					this.isSelectEnemyType=true;
-					this.gameStage.initEnemy(this.enemyCanSelectCount);
-					this.gameStage.initHpBar(this.enemyCanSelectCount);
-					this.gameStage.updateEnemyUI(this.enemyProxy.enemyVoList);
-					this.gameStage.updateEnemyHpBar(this.enemyProxy.enemyVoList);
-					this.gameStage.hpBarShow(true);
-					this.gameStage.enemyMove(Handler.create(this,this.initSlotsAtk));
-				}
-				else{
-					this.curEnemySelectCount++;
-					this.initSlotsSelectEnemyType();
-				}
-			}
-			else{
-				if (!this.isSelectAtkIndex){
-					this.isSelectAtkIndex=true;
-					this.gameStage.playerAtk(Handler.create(this,this.playerAtkComplete));
-				}
-			}
-		}
-
-		/**
-		*角色移动结束
-		*/
-		__proto.playerMoveComplete=function(){
-			this.initSlotsSelectEnemyCount();
-		}
-
-		__proto.playerMoveOutComplete=function(){
-			this.stageProxy.curPoints++;
-			if (this.stageProxy.curPoints > this.stageProxy.getCurStagePointsCount()){
-				this.stageProxy.curPoints=1;
-				this.stageProxy.curLevel++;
-				if (this.stageProxy.curLevel > this.stageProxy.totalLevel){
-					console.log("通关了");
-					return;
-				}
-			}
-			this.sendNotification("START_FIGHT");
-		}
-
-		/**
-		*角色攻击动作结束
-		*/
-		__proto.playerAtkComplete=function(){
-			var enemy=this.gameStage.getEnemyByIndex(this.roundIndex);
-			var playerPo=this.playerProxy.getPlayerPoByLevel(this.playerVo.level);
-			console.log("this.slots.indexValue",this.slots.indexValue);
-			var hurt=MathUtil.round(this.slots.indexValue *playerPo.atk);
-			console.log("hurt",hurt);
-			this.gameStage.enemyHurt(this.roundIndex,hurt==0,Handler.create(this,this.enemyHurtComplete));
-			if (hurt==0){
-				Damage.showDamageByStr("miss!",enemy.x,enemy.y-100,1.5);
-			}
-			else{
-				var eVo=this.enemyProxy.getEnemyVoByIndex(this.roundIndex);
-				eVo.hp-=hurt;
-				Damage.show(hurt,enemy.x,enemy.y-100,1.5);
-			}
-			this.gameStage.updateEnemyHpBar(this.enemyProxy.enemyVoList);
-		}
-
-		/**
-		*敌人受伤还动作结束
-		*/
-		__proto.enemyHurtComplete=function(){
-			var eVo=this.enemyProxy.getEnemyVoByIndex(this.roundIndex);
-			var enemy=this.gameStage.getEnemyByIndex(this.roundIndex);
-			var isDead=false;
-			if (eVo.hp <=0){
-				this.gameStage.removeEnemyByIndex(this.roundIndex);
-				this.gameStage.removeHpBarByIndex(this.roundIndex);
-				this.enemyProxy.removeEnemyVoById(eVo.id);
-				isDead=true;
-			}
-			if (this.enemyProxy.getCurStageEnemyCount()==0){
-				this.gameStage.hpBarShow(false);
-				this.gameStage.playerMove(1136,3000,Handler.create(this,this.playerMoveOutComplete));
-			}
-			else{
-				if (this.roundIndex > this.enemyProxy.getCurStageEnemyCount()-1)this.roundIndex=0;
-				this.gameStage.enemyAtk(this.roundIndex,Handler.create(this,this.enemyAtkComplete));
-			}
-			if (!isDead){
-				this.roundIndex++;
-				if (this.roundIndex > this.enemyProxy.getCurStageEnemyCount()-1)this.roundIndex=0;
-			}
-		}
-
-		/**
-		*敌人进攻结束
-		*/
-		__proto.enemyAtkComplete=function(){
-			this.gameStage.playerHurt(this.slots.indexValue==0,Handler.create(this,this.playerHurtComplete));
-			if (this.slots.indexValue==0)
-				Damage.showDamageByStr("miss!",this.gameStage.player.x,this.gameStage.player.y-100,1.5);
-			else
-			Damage.show(this.slots.indexValue,this.gameStage.player.x,this.gameStage.player.y-100,1.5);
-		}
-
-		/**
-		*角色受伤动作结束
-		*/
-		__proto.playerHurtComplete=function(){
-			this.initSlotsAtk();
-			this.gameStage.arrowImg.visible=false;
-		}
-
-		/**
-		*游戏循环
-		*/
-		__proto.loopHandler=function(){
-			Damage.update();
-		}
-
-		/**
-		*点击事件
-		*/
-		__proto.clickHandler=function(event){}
-		//Damage.show(100,event.stageX,event.stageY,1.5);
-		__proto.onKeyDownHandler=function(event){
-			if (!this.gameStage)return;
-			if (event.keyCode==65)this.gameStage.playerAtk(Handler.create(this,this.playerAtkComplete));
-			if (event.keyCode==68)this.gameStage.playerHurt();
-			if (event.keyCode==90)this.gameStage.enemyAtk(Random.randint(0,2));
-			if (event.keyCode==88)this.gameStage.enemyHurt(Random.randint(0,2));
-		}
-
-		GameStageMediator.NAME="GameStageMediator";
-		return GameStageMediator;
-	})(Mediator)
 
 
 	/**
@@ -11803,6 +11517,335 @@ var Laya=window.Laya=(function(window,document){
 		Node.MOUSEENABLE=0x2;
 		return Node;
 	})(EventDispatcher)
+
+
+	/**
+	*...战斗系统中介
+	*战斗流程
+	*1.1.选择地形
+	*1.2.选择宝箱位置
+	*1.3.选择boss位置
+	*1.4.选择移动位置
+	*1.5。角色进入
+	*2.选择敌人数量
+	*3.选择敌人类型
+	*4.敌人进入
+	*5.选择攻击强度
+	*5.1攻击
+	*5.2buff攻击
+	*5.3判断升级
+	*6.选择掉落个数
+	*7.选择掉落类型
+	*8.角色出去
+	*8.1提示是否下一层
+	*@author ...Kanon
+	*/
+	//class view.mediator.GameStageMediator extends mvc.Mediator
+	var GameStageMediator=(function(_super){
+		function GameStageMediator(){
+			this.gameStage=null;
+			this.playerProxy=null;
+			this.stageProxy=null;
+			this.enemyProxy=null;
+			this.playerVo=null;
+			this.roundIndex=0;
+			this.slots=null;
+			this.isSelectEnemyCount=false;
+			this.isSelectEnemyType=false;
+			this.isSelectAtkIndex=false;
+			this.enemyCanSelectCount=0;
+			this.curEnemySelectCount=0;
+			this.curStagePo=null;
+			this.enemyPoList=null;
+			GameStageMediator.__super.call(this);
+			this.mediatorName="GameStageMediator";
+			this.playerProxy=this.retrieveProxy("PlayerProxy");
+			this.stageProxy=this.retrieveProxy("StageProxy");
+			this.enemyProxy=this.retrieveProxy("EnemyProxy");
+		}
+
+		__class(GameStageMediator,'view.mediator.GameStageMediator',_super);
+		var __proto=GameStageMediator.prototype;
+		__proto.listNotificationInterests=function(){
+			var vect=[];
+			vect.push("INIT_FIGHT_STAGE");
+			vect.push("START_FIGHT");
+			return vect;
+		}
+
+		__proto.handleNotification=function(notification){
+			switch (notification.notificationName){
+				case "INIT_FIGHT_STAGE":
+					this.initUI();
+					this.initEvent();
+					this.sendNotification("START_FIGHT",null);
+					break ;
+				case "START_FIGHT":
+					this.initData();
+					if (this.playerVo.isFirstStep){
+						if (this.stageProxy.curLevel==3){
+						}
+					}
+					else{
+					}
+					this.gameStage.initPlayer(this.playerVo);
+					this.gameStage.updateStageBg(this.curStagePo,this.stageProxy);
+					this.gameStage.playerMove(250,1000,Handler.create(this,this.playerMoveComplete));
+					break ;
+				default :
+					break ;
+				}
+		}
+
+		/**
+		*初始化事件
+		*/
+		__proto.initEvent=function(){
+			if (GameConstant.DEBUG){
+				Laya.stage.on("click",this,this.clickHandler);
+				Laya.stage.on("keydown",this,this.onKeyDownHandler);
+			}
+			Laya.timer.loop(1 / 60 *1000,this,this.loopHandler);
+		}
+
+		/**
+		*初始化数据
+		*/
+		__proto.initData=function(){
+			this.isSelectEnemyCount=false;
+			this.isSelectEnemyType=false;
+			this.isSelectAtkIndex=false;
+			this.roundIndex=0;
+			this.curEnemySelectCount=0;
+			this.curStagePo=this.stageProxy.getCurStagePo();
+			this.playerVo=this.playerProxy.pVo;
+			this.enemyPoList=this.stageProxy.getCurStagePoEnemyPoList();
+			this.enemyProxy.clearStageEnemyList();
+		}
+
+		/**
+		*初始化UI
+		*/
+		__proto.initUI=function(){
+			if (!this.slots){
+				this.slots=new SlotsPanel();
+				this.slots.visible=false;
+				this.slots.selectedBtn.on("mousedown",this,this.selectedBtnMouseDown);
+				Layer.GAME_ALERT.addChild(this.slots);
+			}
+			if (!this.gameStage){
+				this.gameStage=new GameStageLayer();
+				Layer.GAME_STAGE.addChild(this.gameStage);
+			}
+		}
+
+		/**
+		*初始化选择敌人数量
+		*/
+		__proto.initSlotsSelectEnemyCount=function(){
+			this.slots.visible=true;
+			this.slots.selectedBtn.mouseEnabled=true;
+			this.slots.startNumSlotsByAry([0,1,2,3],this.playerVo.slotsDelay,0,-5);
+			this.slots.setTitle("选择敌人数量");
+		}
+
+		/**
+		*初始化攻击力滚动
+		*/
+		__proto.initSlotsAtk=function(){
+			this.isSelectAtkIndex=false;
+			this.slots.visible=true;
+			this.slots.selectedBtn.mouseEnabled=true;
+			this.slots.startNumSlotsByAry(this.playerProxy.getPlayerAtk(),this.playerVo.slotsDelay,0,-5);
+			this.slots.setTitle("攻击强度");
+		}
+
+		/**
+		*初始化选择敌人类型
+		*/
+		__proto.initSlotsSelectEnemyType=function(){
+			this.slots.visible=true;
+			this.slots.selectedBtn.mouseEnabled=true;
+			this.slots.startEnemySlots(this.enemyPoList,this.playerVo.slotsDelay);
+			this.slots.setTitle("放入"+this.curEnemySelectCount+"个敌人/"+this.enemyCanSelectCount);
+		}
+
+		/**
+		*点击选择按钮
+		*/
+		__proto.selectedBtnMouseDown=function(){
+			this.slots.stop();
+			this.slots.selectedBtn.mouseEnabled=false;
+			this.slots.flashing(Handler.create(this,this.flashingCompleteHandler));
+		}
+
+		/**
+		*闪烁结束
+		*/
+		__proto.flashingCompleteHandler=function(){
+			this.slots.visible=false;
+			if (!this.isSelectEnemyCount){
+				this.isSelectEnemyCount=true;
+				this.enemyCanSelectCount=this.slots.indexValue;
+				this.curEnemySelectCount++;
+				if (this.enemyCanSelectCount > 0)
+					this.initSlotsSelectEnemyType();
+				else
+				this.gameStage.playerMove(1136,3000,Handler.create(this,this.playerMoveOutComplete));
+			}
+			else if (!this.isSelectEnemyType){
+				var id=this.slots.getSelectId();
+				var ePo=this.enemyProxy.getEnemyPoById(id);
+				this.enemyProxy.createEnemyVo(ePo);
+				if (this.curEnemySelectCount==this.enemyCanSelectCount){
+					this.isSelectEnemyType=true;
+					this.gameStage.initEnemy(this.enemyCanSelectCount);
+					this.gameStage.initHpBar(this.enemyCanSelectCount);
+					this.gameStage.updateEnemyUI(this.enemyProxy.enemyVoList);
+					this.gameStage.updateEnemyHpBar(this.enemyProxy.enemyVoList);
+					this.gameStage.hpBarShow(true);
+					this.gameStage.enemyMove(Handler.create(this,this.initSlotsAtk));
+				}
+				else{
+					this.curEnemySelectCount++;
+					this.initSlotsSelectEnemyType();
+				}
+			}
+			else{
+				if (!this.isSelectAtkIndex){
+					this.isSelectAtkIndex=true;
+					this.gameStage.playerAtk(Handler.create(this,this.playerAtkComplete));
+				}
+			}
+		}
+
+		/**
+		*角色移动结束
+		*/
+		__proto.playerMoveComplete=function(){
+			this.initSlotsSelectEnemyCount();
+		}
+
+		__proto.playerMoveOutComplete=function(){
+			this.stageProxy.curPoints++;
+			if (this.stageProxy.curPoints > this.stageProxy.getCurStagePointsCount()){
+				this.stageProxy.curPoints=1;
+				this.stageProxy.curLevel++;
+				if (this.stageProxy.curLevel > this.stageProxy.totalLevel){
+					console.log("通关了");
+					return;
+				}
+			}
+			this.sendNotification("START_FIGHT");
+		}
+
+		/**
+		*角色攻击动作结束
+		*/
+		__proto.playerAtkComplete=function(){
+			var enemy=this.gameStage.getEnemyByIndex(this.roundIndex);
+			var playerPo=this.playerProxy.getPlayerPoByLevel(this.playerVo.level);
+			var hurt=MathUtil.round(this.slots.indexValue *playerPo.atk *30);
+			this.gameStage.enemyHurt(this.roundIndex,hurt==0,Handler.create(this,this.enemyHurtComplete));
+			if (hurt==0){
+				Damage.showDamageByStr("miss!",enemy.x,enemy.y-100,1.5);
+			}
+			else{
+				var eVo=this.enemyProxy.getEnemyVoByIndex(this.roundIndex);
+				eVo.hp-=hurt;
+				Damage.show(hurt,enemy.x,enemy.y-100,1.5);
+			}
+			this.gameStage.updateEnemyHpBar(this.enemyProxy.enemyVoList);
+		}
+
+		/**
+		*敌人受伤还动作结束
+		*/
+		__proto.enemyHurtComplete=function(){
+			var eVo=this.enemyProxy.getEnemyVoByIndex(this.roundIndex);
+			var enemy=this.gameStage.getEnemyByIndex(this.roundIndex);
+			var isDead=false;
+			if (eVo.hp <=0){
+				isDead=true;
+				this.gameStage.removeEnemyByIndex(this.roundIndex);
+				this.gameStage.removeHpBarByIndex(this.roundIndex);
+				this.enemyProxy.removeEnemyVoById(eVo.id);
+				var curLevel=this.playerVo.level;
+				console.log("curLevel",curLevel);
+				this.playerProxy.addExp(eVo.enemyPo.exp);
+				this.gameStage.playerExpBar.setValue(this.playerVo.curExp);
+				console.log("this.playerVo.level",this.playerVo.level);
+				if (curLevel < this.playerVo.level){
+					console.log("this.playerVo.curHp",this.playerVo.curHp);
+					console.log("this.playerVo.maxHp",this.playerVo.maxHp);
+					console.log("this.playerVo.curExp",this.playerVo.curExp);
+					console.log("this.playerVo.maxExp",this.playerVo.maxExp);
+					this.gameStage.playerHpBar.setValue(this.playerVo.curHp);
+					this.gameStage.playerHpBar.setMaxValue(this.playerVo.maxHp);
+					this.gameStage.playerExpBar.setValue(this.playerVo.curExp);
+					this.gameStage.playerExpBar.setMaxValue(this.playerVo.maxExp);
+				}
+			}
+			if (this.enemyProxy.getCurStageEnemyCount()==0){
+				this.gameStage.hpBarShow(false);
+				this.gameStage.playerMove(1136,3000,Handler.create(this,this.playerMoveOutComplete));
+			}
+			else{
+				if (this.roundIndex > this.enemyProxy.getCurStageEnemyCount()-1)this.roundIndex=0;
+				this.gameStage.enemyAtk(this.roundIndex,Handler.create(this,this.enemyAtkComplete));
+			}
+			if (!isDead){
+				this.roundIndex++;
+				if (this.roundIndex > this.enemyProxy.getCurStageEnemyCount()-1)this.roundIndex=0;
+			}
+		}
+
+		/**
+		*敌人进攻结束
+		*/
+		__proto.enemyAtkComplete=function(){
+			var eVo=this.enemyProxy.getEnemyVoByIndex(this.roundIndex);
+			var hurt=MathUtil.round(this.slots.indexValue *eVo.enemyPo.atk);
+			this.playerVo.curHp-=hurt;
+			this.gameStage.playerHpBar.setValue(this.playerVo.curHp);
+			this.gameStage.playerHurt(hurt==0,Handler.create(this,this.playerHurtComplete));
+			if (hurt==0)
+				Damage.showDamageByStr("miss!",this.gameStage.player.x,this.gameStage.player.y-100,1.5);
+			else
+			Damage.show(hurt,this.gameStage.player.x,this.gameStage.player.y-100,1.5);
+		}
+
+		/**
+		*角色受伤动作结束
+		*/
+		__proto.playerHurtComplete=function(){
+			this.initSlotsAtk();
+			this.gameStage.arrowImg.visible=false;
+		}
+
+		/**
+		*游戏循环
+		*/
+		__proto.loopHandler=function(){
+			Damage.update();
+		}
+
+		/**
+		*点击事件
+		*/
+		__proto.clickHandler=function(event){}
+		//Damage.show(MathUtil.round(1 *1.2),event.stageX,event.stageY,1.5);
+		__proto.onKeyDownHandler=function(event){
+			if (!this.gameStage)return;
+			if (event.keyCode==65)this.gameStage.playerAtk(Handler.create(this,this.playerAtkComplete));
+			if (event.keyCode==68)this.gameStage.playerHurt();
+			if (event.keyCode==90)this.gameStage.enemyAtk(Random.randint(0,2));
+			if (event.keyCode==88)this.gameStage.enemyHurt(Random.randint(0,2));
+		}
+
+		GameStageMediator.NAME="GameStageMediator";
+		return GameStageMediator;
+	})(Mediator)
 
 
 	/**
@@ -17055,7 +17098,6 @@ var Laya=window.Laya=(function(window,document){
 			this.barImg=new Image("bar/hpBar.png");
 			this.deadIcon=new Image("bar/hpIconDeadIcon.png");
 			this.icon=new Image();
-			this.barImg.anchorX=1;
 			this.addChild(this.barBg);
 			this.addChild(this.barImg);
 			this.addChild(bgLight);
@@ -17070,8 +17112,9 @@ var Laya=window.Laya=(function(window,document){
 			this.deadIcon.visible=false;
 			this.icon.x=91.35;
 			this.icon.y=5.45;
-			this.barImg.x=this.barImg.width;
-			this.barImg.y=10;
+			this.barImg.anchorX=1;
+			this.barImg.x=87;
+			this.barImg.y=11;
 			this.barBg.y=10;
 			bgLight.y=10;
 			this.width=hpIcon.width;
@@ -17151,6 +17194,87 @@ var Laya=window.Laya=(function(window,document){
 		}
 
 		return HpBar;
+	})(Sprite)
+
+
+	/**
+	*...角色进度条
+	*@author ...Kanon
+	*/
+	//class view.components.PlayerBar extends laya.display.Sprite
+	var PlayerBar=(function(_super){
+		function PlayerBar(){
+			this.bg=null;
+			this.bar=null;
+			this.maskBg=null;
+			this.maskWidth=NaN;
+			this.numTxt=null;
+			this.curValue=0;
+			this.maxValue=0;
+			PlayerBar.__super.call(this);
+			this.curValue=0;
+			this.maxValue=1;
+		}
+
+		__class(PlayerBar,'view.components.PlayerBar',_super);
+		var __proto=PlayerBar.prototype;
+		/**
+		*初始化UI
+		*@param bgName 底
+		*@param barName 条框
+		*/
+		__proto.initUI=function(bgName,barName){
+			if (!this.bg){
+				this.bg=new Image();
+				this.bg.x=32;
+				this.bg.y=16;
+				this.addChild(this.bg);
+			}
+			if (!this.maskBg){
+				this.maskBg=new Image("bar/barMask.png");
+				if (this.bg)this.bg.mask=this.maskBg
+					this.maskWidth=this.maskBg.width;
+			}
+			if(!this.numTxt){
+				this.numTxt=new Text();
+				this.numTxt.font=GameConstant.GAME_FONT_NAME;
+				this.numTxt.color="#FFFFFF";
+				this.numTxt.x=55;
+				this.numTxt.y=17;
+				this.numTxt.scale(.6,.6);
+				this.numTxt.text="0/0";
+				this.addChild(this.numTxt);
+			}
+			if (!this.bar){
+				this.bar=new Image();
+				this.addChild(this.bar);
+			}
+			this.bg.skin=bgName;
+			this.bar.skin=barName;
+		}
+
+		/**
+		*设置当前值
+		*@param value 当前值
+		*/
+		__proto.setValue=function(value){
+			if (value < 0)value=0;
+			this.curValue=value;
+			var p=Number(this.curValue)/ Number(this.maxValue);
+			if (this.maskBg)this.maskBg.width=p *this.maskWidth;
+			if (this.numTxt)this.numTxt.text=Math.round(this.curValue)+"/"+this.maxValue;
+		}
+
+		/**
+		*设置总值
+		*@param maxValue 总值
+		*/
+		__proto.setMaxValue=function(maxValue){
+			this.maxValue=maxValue;
+			if (this.numTxt)this.numTxt.text=Math.round(this.curValue)+"/"+this.maxValue;
+		}
+
+		return PlayerBar;
 	})(Sprite)
 
 
@@ -17552,6 +17676,8 @@ var Laya=window.Laya=(function(window,document){
 			this.fontBg=null;
 			this.bgBg=null;
 			this.uiBg=null;
+			this.playerHpBar=null;
+			this.playerExpBar=null;
 			GameStageLayer.__super.call(this);
 			this.initUI();
 		}
@@ -17576,7 +17702,7 @@ var Laya=window.Laya=(function(window,document){
 			this.addChild(this.uiBg);
 			this.uiBg.anchorX=.5;
 			this.uiBg.x=1136 / 2;
-			this.uiBg.scale(1.55,1.55);
+			this.uiBg.scale(1.53,1.53);
 			this.uiBg.y=510;
 			this.player=new Sprite();
 			this.player.width=70;
@@ -17592,6 +17718,16 @@ var Laya=window.Laya=(function(window,document){
 			Layer.GAME_UI.addChild(this.arrowImg);
 			this.arrowImg.visible=false;
 			this.arrowImgMove();
+			this.playerHpBar=new PlayerBar();
+			this.playerHpBar.initUI("bar/playerHp.png","bar/playerHpBar.png");
+			this.playerHpBar.x=4;
+			this.playerHpBar.y=520;
+			this.addChild(this.playerHpBar);
+			this.playerExpBar=new PlayerBar();
+			this.playerExpBar.initUI("bar/playerExp.png","bar/playerExpBar.png");
+			this.playerExpBar.x=this.playerHpBar.x;
+			this.playerExpBar.y=583;
+			this.addChild(this.playerExpBar);
 		}
 
 		/**
@@ -17605,11 +17741,15 @@ var Laya=window.Laya=(function(window,document){
 		/**
 		*初始化角色
 		*/
-		__proto.initPlayer=function(){
-			if (!this.player)return;
+		__proto.initPlayer=function(pVo){
+			if (!this.player || !pVo)return;
 			this.player.x=-this.player.width / 2;
 			this.player.y=450;
 			this.arrowImg.visible=false;
+			this.playerHpBar.setMaxValue(pVo.maxHp);
+			this.playerHpBar.setValue(pVo.curHp);
+			this.playerExpBar.setMaxValue(pVo.maxExp);
+			this.playerExpBar.setValue(pVo.curExp);
 		}
 
 		/**

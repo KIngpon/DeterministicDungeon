@@ -1,21 +1,42 @@
 {
     "frames": {
-        "hpBar.png": {
+        "barMask.png": {
             "frame": {
                 "x": 0,
                 "y": 0,
-                "w": 100,
+                "w": 177,
+                "h": 27,
+                "idx": 0
+            },
+            "spriteSourceSize": {
+                "x": 0,
+                "y": 0,
+                "w": 177,
+                "h": 27
+            },
+            "sourceSize": {
+                "w": 177,
+                "h": 27
+            },
+            "rotated": false,
+            "trimed": false
+        },
+        "hpBar.png": {
+            "frame": {
+                "x": 179,
+                "y": 0,
+                "w": 82,
                 "h": 52,
                 "idx": 0
             },
             "spriteSourceSize": {
                 "x": 0,
                 "y": 0,
-                "w": 100,
+                "w": 82,
                 "h": 52
             },
             "sourceSize": {
-                "w": 100,
+                "w": 82,
                 "h": 52
             },
             "rotated": false,
@@ -23,8 +44,8 @@
         },
         "hpBarBg.png": {
             "frame": {
-                "x": 102,
-                "y": 0,
+                "x": 0,
+                "y": 29,
                 "w": 100,
                 "h": 52,
                 "idx": 0
@@ -44,7 +65,7 @@
         },
         "hpBarLight.png": {
             "frame": {
-                "x": 0,
+                "x": 102,
                 "y": 54,
                 "w": 102,
                 "h": 51,
@@ -86,8 +107,8 @@
         },
         "hpIconDeadIcon.png": {
             "frame": {
-                "x": 166,
-                "y": 54,
+                "x": 263,
+                "y": 0,
                 "w": 70,
                 "h": 70,
                 "idx": 0
@@ -107,8 +128,8 @@
         },
         "hpIconFrame.png": {
             "frame": {
-                "x": 166,
-                "y": 126,
+                "x": 206,
+                "y": 72,
                 "w": 81,
                 "h": 81,
                 "idx": 0
@@ -122,6 +143,90 @@
             "sourceSize": {
                 "w": 81,
                 "h": 81
+            },
+            "rotated": false,
+            "trimed": false
+        },
+        "playerExp.png": {
+            "frame": {
+                "x": 0,
+                "y": 184,
+                "w": 182,
+                "h": 25,
+                "idx": 0
+            },
+            "spriteSourceSize": {
+                "x": 0,
+                "y": 0,
+                "w": 182,
+                "h": 25
+            },
+            "sourceSize": {
+                "w": 182,
+                "h": 25
+            },
+            "rotated": false,
+            "trimed": false
+        },
+        "playerExpBar.png": {
+            "frame": {
+                "x": 0,
+                "y": 211,
+                "w": 216,
+                "h": 56,
+                "idx": 0
+            },
+            "spriteSourceSize": {
+                "x": 0,
+                "y": 0,
+                "w": 216,
+                "h": 56
+            },
+            "sourceSize": {
+                "w": 216,
+                "h": 56
+            },
+            "rotated": false,
+            "trimed": false
+        },
+        "playerHp.png": {
+            "frame": {
+                "x": 0,
+                "y": 269,
+                "w": 182,
+                "h": 25,
+                "idx": 0
+            },
+            "spriteSourceSize": {
+                "x": 0,
+                "y": 0,
+                "w": 182,
+                "h": 25
+            },
+            "sourceSize": {
+                "w": 182,
+                "h": 25
+            },
+            "rotated": false,
+            "trimed": false
+        },
+        "playerHpBar.png": {
+            "frame": {
+                "x": 0,
+                "y": 296,
+                "w": 215,
+                "h": 64,
+                "idx": 0
+            },
+            "spriteSourceSize": {
+                "x": 0,
+                "y": 0,
+                "w": 215,
+                "h": 64
+            },
+            "sourceSize": {
+                "w": 215,
+                "h": 64
             },
             "rotated": false,
             "trimed": false

@@ -18,7 +18,7 @@ public class StageProxy extends Proxy
 	//是否加载完成
 	public var isLoaded:Boolean;
 	//当前关卡
-	public var curLevel:int = 3;
+	public var curLevel:int = 1;
 	//当前关卡点
 	public var curPoints:int = 1;
 	//总关卡数
@@ -54,7 +54,7 @@ public class StageProxy extends Proxy
 				stagePo.name = childNode.getAttribute("name");
 				stagePo.bossId = childNode.getAttribute("bossId");
 				stagePo.dropId = childNode.getAttribute("dropId");
-				stagePo.level = childNode.getAttribute("level");
+				stagePo.level = Number(childNode.getAttribute("level"));
 				stagePo.points = childNode.getAttribute("points");
 				stagePo.enemyIds = String(childNode.getAttribute("enemyIds")).split(",");
 				if (stagePo.level != prevLevel)

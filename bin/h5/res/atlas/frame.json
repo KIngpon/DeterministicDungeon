@@ -105,10 +105,52 @@
             "rotated": false,
             "trimed": false
         },
-        "magicSlotsBg.png": {
+        "levelBg.png": {
             "frame": {
                 "x": 410,
                 "y": 0,
+                "w": 75,
+                "h": 42,
+                "idx": 0
+            },
+            "spriteSourceSize": {
+                "x": 0,
+                "y": 0,
+                "w": 75,
+                "h": 42
+            },
+            "sourceSize": {
+                "w": 75,
+                "h": 42
+            },
+            "rotated": false,
+            "trimed": false
+        },
+        "line.png": {
+            "frame": {
+                "x": 0,
+                "y": 61,
+                "w": 177,
+                "h": 103,
+                "idx": 0
+            },
+            "spriteSourceSize": {
+                "x": 0,
+                "y": 0,
+                "w": 177,
+                "h": 103
+            },
+            "sourceSize": {
+                "w": 177,
+                "h": 103
+            },
+            "rotated": false,
+            "trimed": false
+        },
+        "magicSlotsBg.png": {
+            "frame": {
+                "x": 410,
+                "y": 44,
                 "w": 80,
                 "h": 59,
                 "idx": 0
@@ -128,7 +170,7 @@
         },
         "pokedexItemBg.png": {
             "frame": {
-                "x": 0,
+                "x": 179,
                 "y": 61,
                 "w": 86,
                 "h": 70,
@@ -149,8 +191,8 @@
         },
         "pokedexItemBg2.png": {
             "frame": {
-                "x": 0,
-                "y": 133,
+                "x": 267,
+                "y": 61,
                 "w": 94,
                 "h": 79,
                 "idx": 0
@@ -170,8 +212,8 @@
         },
         "shieldSlotsBg.png": {
             "frame": {
-                "x": 88,
-                "y": 61,
+                "x": 179,
+                "y": 133,
                 "w": 80,
                 "h": 59,
                 "idx": 0
@@ -192,7 +234,7 @@
         "slotsNumBg.png": {
             "frame": {
                 "x": 0,
-                "y": 214,
+                "y": 166,
                 "w": 80,
                 "h": 59,
                 "idx": 0
@@ -212,8 +254,8 @@
         },
         "slotsPanelBg.png": {
             "frame": {
-                "x": 170,
-                "y": 61,
+                "x": 82,
+                "y": 194,
                 "w": 300,
                 "h": 280,
                 "idx": 0
@@ -233,8 +275,8 @@
         },
         "slotsSelectedBg.png": {
             "frame": {
-                "x": 82,
-                "y": 214,
+                "x": 363,
+                "y": 105,
                 "w": 84,
                 "h": 63,
                 "idx": 0
@@ -254,8 +296,8 @@
         },
         "slotsUnselectedBg.png": {
             "frame": {
-                "x": 0,
-                "y": 279,
+                "x": 449,
+                "y": 105,
                 "w": 84,
                 "h": 63,
                 "idx": 0
@@ -275,8 +317,8 @@
         },
         "specialSlotsBg.png": {
             "frame": {
-                "x": 86,
-                "y": 279,
+                "x": 0,
+                "y": 227,
                 "w": 80,
                 "h": 59,
                 "idx": 0
@@ -296,8 +338,8 @@
         },
         "stageSlotsBg.png": {
             "frame": {
-                "x": 86,
-                "y": 343,
+                "x": 384,
+                "y": 170,
                 "w": 105,
                 "h": 74,
                 "idx": 0
@@ -317,8 +359,8 @@
         },
         "stageSlotsSelectedBg.png": {
             "frame": {
-                "x": 193,
-                "y": 343,
+                "x": 384,
+                "y": 246,
                 "w": 110,
                 "h": 78,
                 "idx": 0
@@ -339,7 +381,7 @@
         "textBg.png": {
             "frame": {
                 "x": 0,
-                "y": 423,
+                "y": 476,
                 "w": 506,
                 "h": 41,
                 "idx": 0
@@ -360,7 +402,7 @@
         "weaponItemBg.png": {
             "frame": {
                 "x": 0,
-                "y": 344,
+                "y": 288,
                 "w": 80,
                 "h": 59,
                 "idx": 0

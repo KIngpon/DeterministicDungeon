@@ -116,7 +116,7 @@ public class GameStageMediator extends Mediator
 					//角色移动
 				}
 				
-				this.gameStage.initPlayer();
+				this.gameStage.initPlayer(this.playerVo);
 				this.gameStage.updateStageBg(this.curStagePo, this.stageProxy);
 				this.gameStage.playerMove(250, 1000, Handler.create(this, playerMoveComplete));
 				break;
@@ -308,9 +308,9 @@ public class GameStageMediator extends Mediator
 		var enemy:Sprite = this.gameStage.getEnemyByIndex(this.roundIndex);
 		var playerPo:PlayerPo = this.playerProxy.getPlayerPoByLevel(this.playerVo.level);
 		//伤害
-		trace("this.slots.indexValue", this.slots.indexValue);
+		//trace("伤害", this.slots.indexValue,  playerPo.atk);
 		var hurt:Number = MathUtil.round(this.slots.indexValue * playerPo.atk);
-		trace("hurt", hurt);
+		//trace("hurt", hurt);
 		this.gameStage.enemyHurt(this.roundIndex, hurt == 0, Handler.create(this, enemyHurtComplete));
 		if (hurt == 0)
 		{
@@ -336,10 +336,23 @@ public class GameStageMediator extends Mediator
 		if (eVo.hp <= 0)
 		{
 			//TODO show dead;
+			isDead = true;
 			this.gameStage.removeEnemyByIndex(this.roundIndex);
 			this.gameStage.removeHpBarByIndex(this.roundIndex);
 			this.enemyProxy.removeEnemyVoById(eVo.id);
-			isDead = true;
+			var curLevel:int = this.playerVo.level;
+			this.playerProxy.addExp(eVo.enemyPo.exp);
+			this.gameStage.playerExpBar.setValue(this.playerVo.curExp);
+
+			if (curLevel < this.playerVo.level)
+			{
+				//TODO 升级效果
+				this.gameStage.playerHpBar.setValue(this.playerVo.curHp);
+				this.gameStage.playerHpBar.setMaxValue(this.playerVo.maxHp);
+				
+				this.gameStage.playerExpBar.setValue(this.playerVo.curExp);
+				this.gameStage.playerExpBar.setMaxValue(this.playerVo.maxExp);
+			}
 		}
 		//this.gameStage.updateEnemyUI(this.enemyProxy.enemyVoList);
 		if (this.enemyProxy.getCurStageEnemyCount() == 0)
@@ -367,11 +380,17 @@ public class GameStageMediator extends Mediator
 	private function enemyAtkComplete():void
 	{
 		//TODO 敌人攻击力随机
-		this.gameStage.playerHurt(this.slots.indexValue == 0, Handler.create(this, playerHurtComplete));
-		if (this.slots.indexValue == 0)
+		var eVo:EnemyVo = this.enemyProxy.getEnemyVoByIndex(this.roundIndex);
+		//trace("受伤害", this.slots.indexValue,  eVo.enemyPo.atk);
+		var hurt:Number = MathUtil.round(this.slots.indexValue * eVo.enemyPo.atk);
+		//trace("hurt", hurt);
+		this.playerVo.curHp -= hurt;
+		this.gameStage.playerHpBar.setValue(this.playerVo.curHp);
+		this.gameStage.playerHurt(hurt == 0, Handler.create(this, playerHurtComplete));
+		if (hurt == 0)
 			Damage.showDamageByStr("miss!", this.gameStage.player.x, this.gameStage.player.y - 100, 1.5);
 		else
-			Damage.show(this.slots.indexValue, this.gameStage.player.x, this.gameStage.player.y - 100, 1.5);
+			Damage.show(hurt, this.gameStage.player.x, this.gameStage.player.y - 100, 1.5);
 	}
 	
 	/**
@@ -398,7 +417,8 @@ public class GameStageMediator extends Mediator
 	 */
 	private function clickHandler(event:Event):void 
 	{
-		//Damage.show(100, event.stageX, event.stageY, 1.5);
+		//trace(1 * 1.2);
+		//Damage.show(MathUtil.round(1 * 1.2), event.stageX, event.stageY, 1.5);
 	}
 	
 	private function onKeyDownHandler(event:Event):void 

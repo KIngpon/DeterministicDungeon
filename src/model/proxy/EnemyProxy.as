@@ -46,9 +46,9 @@ public class EnemyProxy extends Proxy
 				var enemyPo:EnemyPo = new EnemyPo();
 				enemyPo.id = childNode.getAttribute("id");
 				enemyPo.name = String(childNode.getAttribute("name"));
-				enemyPo.hp = childNode.getAttribute("hp");
+				enemyPo.hp = Number(childNode.getAttribute("hp"));
 				enemyPo.atk = Number(childNode.getAttribute("atk"));
-				enemyPo.exp = childNode.getAttribute("exp");
+				enemyPo.exp = Number(childNode.getAttribute("exp"));
 				enemyPo.type = childNode.getAttribute("type");
 				enemyPo.pic = String(childNode.getAttribute("pic"));
 				enemyPo.icon = childNode.getAttribute("icon");

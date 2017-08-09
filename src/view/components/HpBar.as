@@ -40,7 +40,6 @@ public class HpBar extends Sprite
 	 */
 	private function initUI():void
 	{
-		//var frame:Image = new Image("bar/hpBarFrameBg.png");
 		var bgLight:Image = new Image("bar/hpBarLight.png");
 		var hpIcon:Image = new Image("bar/hpIcon.png");
 		var hpIconFrame:Image = new Image("bar/hpIconFrame.png");
@@ -48,7 +47,6 @@ public class HpBar extends Sprite
 		this.barImg = new Image("bar/hpBar.png");
 		this.deadIcon = new Image("bar/hpIconDeadIcon.png");
 		this.icon = new Image();
-		this.barImg.anchorX = 1;
 		this.addChild(this.barBg);
 		this.addChild(this.barImg);
 		this.addChild(bgLight);
@@ -64,8 +62,10 @@ public class HpBar extends Sprite
 		this.icon.x = 91.35;
 		this.icon.y = 5.45;
 		
-		this.barImg.x = this.barImg.width;
-		this.barImg.y = 10;
+		this.barImg.anchorX = 1;
+		this.barImg.x = 87;
+		this.barImg.y = 11;
+		
 		this.barBg.y = 10;
 		bgLight.y = 10;
 		
@@ -83,8 +83,6 @@ public class HpBar extends Sprite
 		this.nameTxt.x = hpIcon.x + hpIcon.width;
 		this.nameTxt.y = hpIconFrame.y + hpIconFrame.height;
 		this.addChild(this.nameTxt);
-		
-		
 	}
 	
 	/**

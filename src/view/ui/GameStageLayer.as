@@ -10,7 +10,9 @@ import laya.utils.Tween;
 import model.po.StagePo;
 import model.proxy.StageProxy;
 import model.vo.EnemyVo;
+import model.vo.PlayerVo;
 import view.components.HpBar;
+import view.components.PlayerBar;
 
 /**
  * ...战斗场景
@@ -32,6 +34,10 @@ public class GameStageLayer extends Sprite
 	private var bgBg:Image;
 	//ui的背景
 	private var uiBg:Image;
+	//人物血条
+	public var playerHpBar:PlayerBar;
+	//人物经验条
+	public var playerExpBar:PlayerBar;
 	public function GameStageLayer()
 	{
 		this.initUI();
@@ -56,7 +62,7 @@ public class GameStageLayer extends Sprite
 		this.addChild(this.uiBg);
 		this.uiBg.anchorX = .5;
 		this.uiBg.x = GameConstant.GAME_WIDTH / 2;
-		this.uiBg.scale(1.55, 1.55);
+		this.uiBg.scale(1.53, 1.53);
 		this.uiBg.y = 510;
 		
 		this.player = new Sprite();
@@ -74,6 +80,20 @@ public class GameStageLayer extends Sprite
 		Layer.GAME_UI.addChild(this.arrowImg);
 		this.arrowImg.visible = false;
 		this.arrowImgMove();
+		
+		//血条
+		this.playerHpBar = new PlayerBar();
+		this.playerHpBar.initUI("bar/playerHp.png", "bar/playerHpBar.png");
+		this.playerHpBar.x = 4;
+		this.playerHpBar.y = 520;
+		this.addChild(this.playerHpBar);
+		
+		//经验条
+		this.playerExpBar = new PlayerBar();
+		this.playerExpBar.initUI("bar/playerExp.png", "bar/playerExpBar.png");
+		this.playerExpBar.x = this.playerHpBar.x;
+		this.playerExpBar.y = 583;
+		this.addChild(this.playerExpBar);
 	}
 	
 	/**
@@ -88,12 +108,17 @@ public class GameStageLayer extends Sprite
 	/**
 	 * 初始化角色
 	 */
-	public function initPlayer():void
+	public function initPlayer(pVo:PlayerVo):void
 	{
-		if (!this.player) return;
+		if (!this.player || !pVo) return;
 		this.player.x = -this.player.width / 2;
 		this.player.y = GameConstant.ROLE_POS_Y;
 		this.arrowImg.visible = false;
+		
+		this.playerHpBar.setMaxValue(pVo.maxHp);
+		this.playerHpBar.setValue(pVo.curHp);
+		this.playerExpBar.setMaxValue(pVo.maxExp);
+		this.playerExpBar.setValue(pVo.curExp);
 	}
 	
 	/**
