@@ -11745,7 +11745,7 @@ var Laya=window.Laya=(function(window,document){
 		__proto.playerAtkComplete=function(){
 			var enemy=this.gameStage.getEnemyByIndex(this.roundIndex);
 			var playerPo=this.playerProxy.getPlayerPoByLevel(this.playerVo.level);
-			var hurt=MathUtil.round(this.slots.indexValue *playerPo.atk *30);
+			var hurt=MathUtil.round(this.slots.indexValue *playerPo.atk);
 			this.gameStage.enemyHurt(this.roundIndex,hurt==0,Handler.create(this,this.enemyHurtComplete));
 			if (hurt==0){
 				Damage.showDamageByStr("miss!",enemy.x,enemy.y-100,1.5);
@@ -11771,15 +11771,9 @@ var Laya=window.Laya=(function(window,document){
 				this.gameStage.removeHpBarByIndex(this.roundIndex);
 				this.enemyProxy.removeEnemyVoById(eVo.id);
 				var curLevel=this.playerVo.level;
-				console.log("curLevel",curLevel);
 				this.playerProxy.addExp(eVo.enemyPo.exp);
 				this.gameStage.playerExpBar.setValue(this.playerVo.curExp);
-				console.log("this.playerVo.level",this.playerVo.level);
 				if (curLevel < this.playerVo.level){
-					console.log("this.playerVo.curHp",this.playerVo.curHp);
-					console.log("this.playerVo.maxHp",this.playerVo.maxHp);
-					console.log("this.playerVo.curExp",this.playerVo.curExp);
-					console.log("this.playerVo.maxExp",this.playerVo.maxExp);
 					this.gameStage.playerHpBar.setValue(this.playerVo.curHp);
 					this.gameStage.playerHpBar.setMaxValue(this.playerVo.maxHp);
 					this.gameStage.playerExpBar.setValue(this.playerVo.curExp);
@@ -17728,6 +17722,14 @@ var Laya=window.Laya=(function(window,document){
 			this.playerExpBar.x=this.playerHpBar.x;
 			this.playerExpBar.y=583;
 			this.addChild(this.playerExpBar);
+			var lineBg=new Image("frame/line.png");
+			lineBg.x=225;
+			lineBg.y=530;
+			this.addChild(lineBg);
+			var levelBg=new Image("frame/levelBg.png");
+			levelBg.x=275;
+			levelBg.y=590;
+			this.addChild(levelBg);
 		}
 
 		/**

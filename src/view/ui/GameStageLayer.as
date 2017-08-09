@@ -94,6 +94,18 @@ public class GameStageLayer extends Sprite
 		this.playerExpBar.x = this.playerHpBar.x;
 		this.playerExpBar.y = 583;
 		this.addChild(this.playerExpBar);
+		
+		var lineBg:Image = new Image("frame/line.png");
+		lineBg.x = 225;
+		lineBg.y = 530;
+		this.addChild(lineBg);
+		
+		
+		var levelBg:Image = new Image("frame/levelBg.png");
+		levelBg.x = 275;
+		levelBg.y = 590;
+		this.addChild(levelBg);
+
 	}
 	
 	/**
