@@ -213,7 +213,6 @@ public class GameStageLayer extends Sprite
 		this.nameTxt.y = levelBg.y - 68;
 		this.nameTxt.text = "玩家名字"
 		this.addChild(this.nameTxt);
-
 	}
 	
 	/**

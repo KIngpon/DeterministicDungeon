@@ -1,6 +1,10 @@
 package view.components 
 {
 import laya.display.Sprite;
+import laya.display.Text;
+import laya.utils.Ease;
+import laya.utils.Handler;
+import laya.utils.Tween;
 import utils.Random;
 import view.ui.Layer;
 /**
@@ -54,6 +58,32 @@ public class Damage
 	}
 	
 	/**
+	 * 飘字
+	 * @param	str		内容
+	 * @param	x		x位置
+	 * @param	y		y位置
+	 * @param	scale	缩放
+	 * @param	d		运行时间
+	 */
+	public static function floatStr(str:String, x:Number, y:Number, scale:int = 1, d:int = 1200):void
+	{
+		var txt:Text = new Text();
+		txt.font = GameConstant.GAME_FONT_NAME;
+		txt.text = str;
+		Layer.GAME_DAMAGE.addChild(txt);
+		txt.x = x;
+		txt.y = y;
+		txt.scale(scale, scale);
+		Tween.to(txt, { y: txt.y - 70 }, d, Ease.expoOut, Handler.create(this, function():void
+		{
+			Tween.to(txt, { alpha: 0 }, 300, Ease.expoOut, Handler.create(this, function():void
+			{
+				txt.removeSelf();
+			}));
+		}));
+	}
+	
+	/**
 	 * 更新
 	 */
 	public static function update():void
@@ -99,17 +129,9 @@ class DamageNum extends Sprite
 	public function setDamageByStr(str:String):void
 	{
 		var numTxt:Text = new Text();
-		numTxt.font = GameConstant.GAME_FONT_NAME;
-		var colorMatrix:Array = [1, 0, 0, 0, 0, //R
-								 0, 0, 0, 0, 0, //G
-								 0, 0, 0, 0, 0, //B
-								 0, 0, 0, 1, 0, //A
-								];
+		numTxt.font = GameConstant.GAME_RED_FONT_NAME;
 		numTxt.text = str;
 		this.addChild(numTxt);
-		//创建颜色滤镜
-		var fliter:ColorFilter = new ColorFilter(colorMatrix)
-		this.filters = [fliter];
 	}
 	
 	/**
@@ -120,27 +142,15 @@ class DamageNum extends Sprite
 	public function setDamageByNum(num:int, flag:Boolean):void
 	{
 		var numTxt:Text = new Text();
-		numTxt.font = GameConstant.GAME_FONT_NAME;
+		numTxt.font = GameConstant.GAME_RED_FONT_NAME;
 		var str:String = "-";
-		var colorMatrix:Array = [1, 0, 0, 0, 0, //R
-								 0, 0, 0, 0, 0, //G
-								 0, 0, 0, 0, 0, //B
-								 0, 0, 0, 1, 0, //A
-								];
 		if (flag) 
 		{
+			numTxt.font = GameConstant.GAME_FONT_NAME
 			str = "+";
-			colorMatrix= [0, 0, 0, 0, 0, //R
-						  1, 0, 0, 0, 0, //G
-						  0, 0, 0, 0, 0, //B
-						  0, 0, 0, 1, 0, //A
-						 ];
 		}
 		numTxt.text = str + num.toString();
 		this.addChild(numTxt);
-		//创建颜色滤镜
-		var fliter:ColorFilter = new ColorFilter(colorMatrix)
-		this.filters = [fliter];
 	}
 	
 	public function update():void

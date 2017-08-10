@@ -46,6 +46,7 @@ public class ResProxy extends Proxy
 	{
 		this.fontCount = 0;
 		this.fontList.push([GameConstant.GAME_FONT_NAME, "font/GameFont.fnt"]);
+		this.fontList.push([GameConstant.GAME_RED_FONT_NAME, "font/GameFontRed.fnt"]);
 		//this.fontList.push([GameConstant.GAME_SMALL_FONT_NAME, "font/GameSmallFont.fnt"]);
 		var count:int = this.fontList.length;
 		for (var i:int = 0; i < count; i++) 

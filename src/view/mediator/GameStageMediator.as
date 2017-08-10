@@ -6,6 +6,7 @@ import laya.display.Sprite;
 import laya.events.Event;
 import laya.events.Keyboard;
 import laya.utils.Handler;
+import laya.utils.Tween;
 import model.po.EnemyPo;
 import model.po.PlayerPo;
 import model.po.StagePo;
@@ -334,6 +335,7 @@ public class GameStageMediator extends Mediator
 		var eVo:EnemyVo = this.enemyProxy.getEnemyVoByIndex(this.roundIndex);
 		var enemy:Sprite = this.gameStage.getEnemyByIndex(this.roundIndex);
 		var isDead:Boolean = false;
+		var isLevelUp:Boolean = false;
 		if (eVo.hp <= 0)
 		{
 			//TODO show dead;
@@ -344,9 +346,10 @@ public class GameStageMediator extends Mediator
 			var curLevel:int = this.playerVo.level;
 			this.playerProxy.addExp(eVo.enemyPo.exp);
 			this.gameStage.playerExpBar.setValue(this.playerVo.curExp);
-
+			Damage.floatStr("+" + eVo.enemyPo.exp + "EXP", enemy.x, enemy.y - 100, 1.5);
 			if (curLevel < this.playerVo.level)
 			{
+				isLevelUp = true;
 				//TODO 升级效果
 				this.gameStage.playerHpBar.setValue(this.playerVo.curHp);
 				this.gameStage.playerHpBar.setMaxValue(this.playerVo.maxHp);
@@ -354,9 +357,24 @@ public class GameStageMediator extends Mediator
 				this.gameStage.playerExpBar.setValue(this.playerVo.curExp);
 				this.gameStage.playerExpBar.setMaxValue(this.playerVo.maxExp);
 				this.gameStage.setPlayerProp(this.playerVo);
+				
+				Damage.floatStr("LEVEL UP!", this.gameStage.player.x, this.gameStage.player.y - 100, 1.5, 800);
+				
+				Tween.to(this.gameStage.player, {x:this.gameStage.player.x}, 1, null, Handler.create(this, function():void
+				{
+					this.enemyHurt(isDead);
+				}), 1200);
 			}
 		}
-		//this.gameStage.updateEnemyUI(this.enemyProxy.enemyVoList);
+		if(!isLevelUp) this.enemyHurt(isDead);
+	}
+	
+	/**
+	 * 敌人受伤
+	 * @param	isDead	是否死亡
+	 */
+	private function enemyHurt(isDead:Boolean):void
+	{
 		if (this.enemyProxy.getCurStageEnemyCount() == 0)
 		{
 			//all dead;
@@ -420,7 +438,10 @@ public class GameStageMediator extends Mediator
 	private function clickHandler(event:Event):void 
 	{
 		//trace(1 * 1.2);
-		//Damage.show(MathUtil.round(1 * 1.2), event.stageX, event.stageY, 1.5);
+		//Damage.floatStr("+10EXP", event.stageX, event.stageY, 1.5);
+		//Damage.floatStr("LEVEL UP!", this.gameStage.player.x, this.gameStage.player.y - 100, 1.5, 800);
+		//Damage.floatStr("+10EXP", event.stageX, event.stageY, 1.5);
+
 	}
 	
 	private function onKeyDownHandler(event:Event):void 

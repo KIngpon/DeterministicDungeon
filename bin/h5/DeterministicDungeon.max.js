@@ -405,6 +405,7 @@ var Laya=window.Laya=(function(window,document){
 		GameConstant.DEBUG=true;
 		GameConstant.SLOTS_NUM_MAX=9;
 		GameConstant.GAME_FONT_NAME="gameFont";
+		GameConstant.GAME_RED_FONT_NAME="gameRedFont";
 		GameConstant.ENEMY_ICON="icon/enemy/";
 		return GameConstant;
 	})()
@@ -455,6 +456,7 @@ var Laya=window.Laya=(function(window,document){
 	*[随机的0个敌人直接胜利]
 	*自由选择敌人
 	*敌人扣血死亡胜利流程
+	*数据存储
 	*屏幕震动
 	*道具表
 	*装备icon
@@ -1641,6 +1643,23 @@ var Laya=window.Laya=(function(window,document){
 			Damage.damageAry.push(spt);
 		}
 
+		Damage.floatStr=function(str,x,y,scale,d){
+			(scale===void 0)&& (scale=1);
+			(d===void 0)&& (d=1200);
+			var txt=new Text();
+			txt.font=GameConstant.GAME_FONT_NAME;
+			txt.text=str;
+			Layer.GAME_DAMAGE.addChild(txt);
+			txt.x=x;
+			txt.y=y;
+			txt.scale(scale,scale);
+			Tween.to(txt,{y:txt.y-70 },d,Ease.expoOut,Handler.create(this,function(){
+				Tween.to(txt,{alpha:0 },300,Ease.expoOut,Handler.create(this,function(){
+					txt.removeSelf();
+				}));
+			}));
+		}
+
 		Damage.update=function(){
 			for (var i=0;i < Damage.damageAry.length;i++){
 				var spt=Damage.damageAry[i];
@@ -1673,15 +1692,9 @@ var Laya=window.Laya=(function(window,document){
 				*/
 				__proto.setDamageByStr=function(str){
 					var numTxt=new Text();
-					numTxt.font=GameConstant.GAME_FONT_NAME;
-					var colorMatrix=[1,0,0,0,0,
-					0,0,0,0,0,
-					0,0,0,0,0,
-					0,0,0,1,0,];
+					numTxt.font=GameConstant.GAME_RED_FONT_NAME;
 					numTxt.text=str;
 					this.addChild(numTxt);
-					var fliter=new ColorFilter(colorMatrix)
-					this.filters=[fliter];
 				}
 				/**
 				*根据数字显示伤害
@@ -1690,23 +1703,14 @@ var Laya=window.Laya=(function(window,document){
 				*/
 				__proto.setDamageByNum=function(num,flag){
 					var numTxt=new Text();
-					numTxt.font=GameConstant.GAME_FONT_NAME;
+					numTxt.font=GameConstant.GAME_RED_FONT_NAME;
 					var str="-";
-					var colorMatrix=[1,0,0,0,0,
-					0,0,0,0,0,
-					0,0,0,0,0,
-					0,0,0,1,0,];
 					if (flag){
+						numTxt.font=GameConstant.GAME_FONT_NAME
 						str="+";
-						colorMatrix=[0,0,0,0,0,
-						1,0,0,0,0,
-						0,0,0,0,0,
-						0,0,0,1,0,];
 					}
 					numTxt.text=str+num.toString();
 					this.addChild(numTxt);
-					var fliter=new ColorFilter(colorMatrix)
-					this.filters=[fliter];
 				}
 				__proto.update=function(){
 					this.x+=this.vx;
@@ -10678,7 +10682,7 @@ var Laya=window.Laya=(function(window,document){
 				this.pVo.maxExp=pPo.exp;
 				this.pVo.maxHp=pPo.hp;
 				this.pVo.curHp=this.pVo.maxHp;
-				this.pVo.curExp=0;
+				this.pVo.curExp=24;
 				this.pVo.isFirstStep=true;
 				this.pVo.slotsDelay=270;
 				this.pVo.weaponPo=this.equipProxy.getEquipPoById(1);
@@ -10800,6 +10804,7 @@ var Laya=window.Laya=(function(window,document){
 		__proto.initFont=function(){
 			this.fontCount=0;
 			this.fontList.push([GameConstant.GAME_FONT_NAME,"font/GameFont.fnt"]);
+			this.fontList.push([GameConstant.GAME_RED_FONT_NAME,"font/GameFontRed.fnt"]);
 			var count=this.fontList.length;
 			for (var i=0;i < count;i++){
 				var bmpFont=new BitmapFont();
@@ -11836,6 +11841,7 @@ var Laya=window.Laya=(function(window,document){
 			var eVo=this.enemyProxy.getEnemyVoByIndex(this.roundIndex);
 			var enemy=this.gameStage.getEnemyByIndex(this.roundIndex);
 			var isDead=false;
+			var isLevelUp=false;
 			if (eVo.hp <=0){
 				isDead=true;
 				this.gameStage.removeEnemyByIndex(this.roundIndex);
@@ -11844,14 +11850,28 @@ var Laya=window.Laya=(function(window,document){
 				var curLevel=this.playerVo.level;
 				this.playerProxy.addExp(eVo.enemyPo.exp);
 				this.gameStage.playerExpBar.setValue(this.playerVo.curExp);
+				Damage.floatStr("+"+eVo.enemyPo.exp+"EXP",enemy.x,enemy.y-100,1.5);
 				if (curLevel < this.playerVo.level){
+					isLevelUp=true;
 					this.gameStage.playerHpBar.setValue(this.playerVo.curHp);
 					this.gameStage.playerHpBar.setMaxValue(this.playerVo.maxHp);
 					this.gameStage.playerExpBar.setValue(this.playerVo.curExp);
 					this.gameStage.playerExpBar.setMaxValue(this.playerVo.maxExp);
 					this.gameStage.setPlayerProp(this.playerVo);
+					Damage.floatStr("LEVEL UP!",this.gameStage.player.x,this.gameStage.player.y-100,1.5,800);
+					Tween.to(this.gameStage.player,{x:this.gameStage.player.x},1,null,Handler.create(this,function(){
+						this.enemyHurt(isDead);
+					}),1200);
 				}
 			}
+			if(!isLevelUp)this.enemyHurt(isDead);
+		}
+
+		/**
+		*敌人受伤
+		*@param isDead 是否死亡
+		*/
+		__proto.enemyHurt=function(isDead){
 			if (this.enemyProxy.getCurStageEnemyCount()==0){
 				this.gameStage.hpBarShow(false);
 				this.gameStage.playerMove(1136,3000,Handler.create(this,this.playerMoveOutComplete));
@@ -11900,7 +11920,7 @@ var Laya=window.Laya=(function(window,document){
 		*点击事件
 		*/
 		__proto.clickHandler=function(event){}
-		//Damage.show(MathUtil.round(1 *1.2),event.stageX,event.stageY,1.5);
+		//Damage.floatStr("+10EXP",event.stageX,event.stageY,1.5);
 		__proto.onKeyDownHandler=function(event){
 			if (!this.gameStage)return;
 			if (event.keyCode==65)this.gameStage.playerAtk(Handler.create(this,this.playerAtkComplete));
@@ -17874,7 +17894,7 @@ var Laya=window.Laya=(function(window,document){
 			levelTitleTxt.font="Microsoft YaHei";
 			levelTitleTxt.fontSize=25;
 			levelTitleTxt.strokeColor="#000000";
-			levelTitleTxt.stroke=4;
+			levelTitleTxt.stroke=3;
 			levelTitleTxt.align="center";
 			levelTitleTxt.width=100;
 			levelTitleTxt.height=50;
@@ -17888,7 +17908,7 @@ var Laya=window.Laya=(function(window,document){
 			this.nameTxt.font="Microsoft YaHei";
 			this.nameTxt.fontSize=25;
 			this.nameTxt.strokeColor="#000000";
-			this.nameTxt.stroke=4;
+			this.nameTxt.stroke=3;
 			this.nameTxt.color="#FFFFFF";
 			this.nameTxt.align="center";
 			this.nameTxt.width=300;
