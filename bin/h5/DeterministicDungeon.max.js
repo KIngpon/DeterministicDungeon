@@ -17327,7 +17327,7 @@ var Laya=window.Laya=(function(window,document){
 				this.numTxt.color="#FFFFFF";
 				this.numTxt.fontSize=15;
 				this.numTxt.x=55;
-				this.numTxt.y=17;
+				this.numTxt.y=this.maskBg.y+18;
 				this.numTxt.scale(.6,.6);
 				this.numTxt.text="0/0";
 				this.addChild(this.numTxt);
