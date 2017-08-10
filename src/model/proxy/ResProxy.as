@@ -14,7 +14,9 @@ import mvc.Proxy;
 public class ResProxy extends Proxy 
 {
 	private var resList:Array = [];
+	private var fontList:Array = [];
 	private var resCount:int = 0;
+	private var fontCount:int = 0;
 	public static const NAME:String = "ResProxy";
 	private var gameBitmapFont:BitmapFont;
 	public function ResProxy() 
@@ -24,6 +26,7 @@ public class ResProxy extends Proxy
 	
 	override public function initData():void 
 	{
+		this.resCount = 0;
 		this.resList.push("res/atlas/btn.json");
 		this.resList.push("res/atlas/comp.json");
 		this.resList.push("res/atlas/frame.json");
@@ -41,19 +44,30 @@ public class ResProxy extends Proxy
 	 */
 	private function initFont():void
 	{
-		this.gameBitmapFont = new BitmapFont();
-		//这里不需要扩展名，外部保证fnt与png文件同名
-		this.gameBitmapFont.loadFont("font/GameFont.fnt", Handler.create(this, loadFontComplete));
+		this.fontCount = 0;
+		this.fontList.push([GameConstant.GAME_FONT_NAME, "font/GameFont.fnt"]);
+		//this.fontList.push([GameConstant.GAME_SMALL_FONT_NAME, "font/GameSmallFont.fnt"]);
+		var count:int = this.fontList.length;
+		for (var i:int = 0; i < count; i++) 
+		{
+			var bmpFont:BitmapFont = new BitmapFont();
+			//这里不需要扩展名，外部保证fnt与png文件同名
+			bmpFont.loadFont(this.fontList[i][1], Handler.create(this, loadFontComplete, [bmpFont]));
+			Text.registerBitmapFont(this.fontList[i][0], bmpFont);
+		}
 	}
 	
 	/**
 	 * 加载字体结束
 	 */
-	private function loadFontComplete():void
+	private function loadFontComplete(bmpFont:BitmapFont):void
 	{
-		this.gameBitmapFont.setSpaceWidth(10);
-		Text.registerBitmapFont(GameConstant.GAME_FONT_NAME, this.gameBitmapFont);
-		this.sendNotification(MsgConstant.INIT_FIGHT_STAGE);
+		bmpFont.setSpaceWidth(10);
+		this.fontCount++;
+		if (this.fontCount >= this.fontList.length)
+		{
+			this.sendNotification(MsgConstant.INIT_FIGHT_STAGE);
+		}
 	}
 	
 	private function loadCompleteHandler():void

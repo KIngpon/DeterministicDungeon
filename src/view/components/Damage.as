@@ -100,7 +100,6 @@ class DamageNum extends Sprite
 	{
 		var numTxt:Text = new Text();
 		numTxt.font = GameConstant.GAME_FONT_NAME;
-		var color:String = "#ff0000";
 		var colorMatrix:Array = [1, 0, 0, 0, 0, //R
 								 0, 0, 0, 0, 0, //G
 								 0, 0, 0, 0, 0, //B

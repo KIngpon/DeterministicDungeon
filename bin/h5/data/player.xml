@@ -1,54 +1,24 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <players>
-	<player level="0" hp="25" atk="1" def="1" magic="1" exp="20"/>
-	<player level="1" hp="28" atk="1.1" def="1.1" magic="1.1" exp="25"/>
-	<player level="2" hp="30" atk="1.15" def="1.15" magic="1.15" exp="30"/>
-	<player level="3" hp="35" atk="1.2" def="1.2" magic="1.2" exp="35"/>
-	<player level="4" hp="40" atk="1.25" def="1.25" magic="1.25" exp="40"/>
-	<player level="5" hp="45" atk="1.3" def="1.3" magic="1.3" exp="45"/>
-	<player level="6" hp="50" atk="1.3" def="1.3" magic="1.3" exp="55"/>
-	<player level="7" hp="55" atk="1.35" def="1.35" magic="1.35" exp="70"/>
-	<player level="8" hp="60" atk="1.4" def="1.4" magic="1.4" exp="90"/>
-	<player level="9" hp="65" atk="1.45" def="1.45" magic="1.45" exp="115"/>
-	<player level="10" hp="70" atk="1.5" def="1.5" magic="1.5" exp="145"/>
-	<player level="11" hp="75" atk="1.55" def="1.55" magic="1.55" exp="180"/>
-	<player level="12" hp="80" atk="1.6" def="1.6" magic="1.6" exp="240"/>
-	<player level="13" hp="85" atk="1.65" def="1.65" magic="1.65" exp="285"/>
-	<player level="14" hp="90" atk="1.7" def="1.7" magic="1.7" exp="355"/>
-	<player level="15" hp="95" atk="1.8" def="1.8" magic="1.8" exp="435"/>
-	<player level="16" hp="100" atk="1.9" def="1.9" magic="1.9" exp="525"/>
-	<player level="17" hp="105" atk="2" def="2" magic="2" exp="625"/>
-	<player level="18" hp="110" atk="2.15" def="2.15" magic="2.15" exp="735"/>
-	<player level="19" hp="115" atk="2.3" def="2.3" magic="2.3" exp="845"/>
-	<player level="20" hp="120" atk="2.45" def="2.45" magic="2.45" exp="965"/>
-	<player level="21" hp="125" atk="2.6" def="2.6" magic="2.6" exp="1085"/>
-	<player level="22" hp="130" atk="2.8" def="2.8" magic="2.8" exp="1205"/>
-	<player level="23" hp="135" atk="3" def="3" magic="3" exp="1330"/>
-	<player level="24" hp="140" atk="3.2" def="3.2" magic="3.2" exp="1455"/>
-	<player level="25" hp="145" atk="3.35" def="3.35" magic="3.35" exp="1600"/>
-	<player level="26" hp="150" atk="3.5" def="3.5" magic="3.5" exp="1745"/>
-	<player level="27" hp="155" atk="3.8" def="3.8" magic="3.8" exp="1890"/>
-	<player level="28" hp="160" atk="4" def="4" magic="4" exp="2035"/>
-	<player level="29" hp="165" atk="4.3" def="4.3" magic="4.3" exp="2190"/>
-	<player level="30" hp="170" atk="4.6" def="4.6" magic="4.6" exp="2350"/>
-	<player level="31" hp="175" atk="4.85" def="4.85" magic="4.85" exp="2510"/>
-	<player level="32" hp="180" atk="5.2" def="5.2" magic="5.2" exp="2690"/>
-	<player level="33" hp="185" atk="5.55" def="5.55" magic="5.55" exp="2870"/>
-	<player level="34" hp="190" atk="5.9" def="5.9" magic="5.9" exp="3055"/>
-	<player level="35" hp="195" atk="6.3" def="6.3" magic="6.3" exp="3245"/>
-	<player level="36" hp="200" atk="6.7" def="6.7" magic="6.7" exp="3435"/>
-	<player level="37" hp="205" atk="7.1" def="7.1" magic="7.1" exp="3625"/>
-	<player level="38" hp="210" atk="7.5" def="7.5" magic="7.5" exp="3815"/>
-	<player level="39" hp="215" atk="7.9" def="7.9" magic="7.9" exp="4010"/>
-	<player level="40" hp="220" atk="8.3" def="8.3" magic="8.3" exp="4205"/>
-	<player level="41" hp="225" atk="8.75" def="8.75" magic="8.75" exp="4400"/>
-	<player level="42" hp="230" atk="9.2" def="9.2" magic="9.2" exp="4600"/>
-	<player level="43" hp="235" atk="9.65" def="9.65" magic="9.65" exp="4800"/>
-	<player level="44" hp="240" atk="10.1" def="10.1" magic="10.1" exp="5000"/>
-	<player level="45" hp="245" atk="10.55" def="10.55" magic="10.55" exp="5200"/>
-	<player level="46" hp="250" atk="11" def="11" magic="11" exp="5450"/>
-	<player level="47" hp="255" atk="11.5" def="11.5" magic="11.5" exp="5700"/>
-	<player level="48" hp="260" atk="12" def="12" magic="12" exp="6000"/>
-	<player level="49" hp="265" atk="13" def="13" magic="13" exp="6500"/>
-	<player level="50" hp="270" atk="14" def="14" magic="14" exp="7000"/>
+	<player level="0" hp="25" exp="20"/>
+	<player level="1" hp="28" exp="25"/>
+	<player level="2" hp="30" exp="30"/>
+	<player level="3" hp="35" exp="35"/>
+	<player level="4" hp="40" exp="40"/>
+	<player level="5" hp="45" exp="45"/>
+	<player level="6" hp="50" exp="55"/>
+	<player level="7" hp="55" exp="70"/>
+	<player level="8" hp="60" exp="90"/>
+	<player level="9" hp="65" exp="115"/>
+	<player level="10" hp="70" exp="145"/>
+	<player level="11" hp="75" exp="180"/>
+	<player level="12" hp="80" exp="240"/>
+	<player level="13" hp="85" exp="285"/>
+	<player level="14" hp="90" exp="355"/>
+	<player level="15" hp="95" exp="435"/>
+	<player level="16" hp="100" exp="525"/>
+	<player level="17" hp="105" exp="625"/>
+	<player level="18" hp="110" exp="735"/>
+	<player level="19" hp="115" exp="845"/>
+	<player level="20" hp="120" exp="965"/>
 </players>

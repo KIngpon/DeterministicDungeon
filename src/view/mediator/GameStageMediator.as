@@ -117,6 +117,7 @@ public class GameStageMediator extends Mediator
 				}
 				
 				this.gameStage.initPlayer(this.playerVo);
+				this.gameStage.setPlayerProp(this.playerVo);
 				this.gameStage.updateStageBg(this.curStagePo, this.stageProxy);
 				this.gameStage.playerMove(250, 1000, Handler.create(this, playerMoveComplete));
 				break;
@@ -309,8 +310,8 @@ public class GameStageMediator extends Mediator
 		var playerPo:PlayerPo = this.playerProxy.getPlayerPoByLevel(this.playerVo.level);
 		//伤害
 		//trace("伤害", this.slots.indexValue,  playerPo.atk);
-		var hurt:Number = MathUtil.round(this.slots.indexValue * playerPo.atk);
-		//trace("hurt", hurt);
+		var hurt:Number = MathUtil.round(this.slots.indexValue * this.playerProxy.getAktByLevel());
+		trace("hurt", hurt);
 		this.gameStage.enemyHurt(this.roundIndex, hurt == 0, Handler.create(this, enemyHurtComplete));
 		if (hurt == 0)
 		{
@@ -352,6 +353,7 @@ public class GameStageMediator extends Mediator
 				
 				this.gameStage.playerExpBar.setValue(this.playerVo.curExp);
 				this.gameStage.playerExpBar.setMaxValue(this.playerVo.maxExp);
+				this.gameStage.setPlayerProp(this.playerVo);
 			}
 		}
 		//this.gameStage.updateEnemyUI(this.enemyProxy.enemyVoList);

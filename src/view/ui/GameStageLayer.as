@@ -2,8 +2,9 @@ package view.ui
 {
 import config.GameConstant;
 import laya.display.Sprite;
+import laya.display.Stage;
+import laya.display.Text;
 import laya.ui.Image;
-import laya.ui.Label;
 import laya.utils.Ease;
 import laya.utils.Handler;
 import laya.utils.Tween;
@@ -38,6 +39,13 @@ public class GameStageLayer extends Sprite
 	public var playerHpBar:PlayerBar;
 	//人物经验条
 	public var playerExpBar:PlayerBar;
+	//属性文本
+	private var atkTxt:Text;
+	private var defTxt:Text;
+	private var magicTxt:Text;
+	private var hpTxt:Text;
+	private var levelTxt:Text;
+	private var nameTxt:Text;
 	public function GameStageLayer()
 	{
 		this.initUI();
@@ -112,7 +120,7 @@ public class GameStageLayer extends Sprite
 		this.addChild(atkProp);
 		
 		var hpProp:Image = new Image("comp/hpProp.png");
-		hpProp.x = 479;
+		hpProp.x = 482;
 		hpProp.y = atkProp.y;
 		this.addChild(hpProp);
 		
@@ -125,6 +133,86 @@ public class GameStageLayer extends Sprite
 		defProp.x = hpProp.x;
 		defProp.y = magicProp.y;
 		this.addChild(defProp);
+		
+		this.atkTxt = new Text();
+		this.atkTxt.font = GameConstant.GAME_FONT_NAME;
+		this.atkTxt.text = "0";
+		this.atkTxt.align = Stage.ALIGN_CENTER;
+		this.atkTxt.width = 100;
+		this.atkTxt.pivotX = this.atkTxt.width / 2;
+		this.atkTxt.x = atkProp.x + this.atkTxt.width / 2 + 6;
+		this.atkTxt.y = atkProp.y;
+		this.addChild(this.atkTxt);
+		
+		this.hpTxt = new Text();
+		this.hpTxt.font = GameConstant.GAME_FONT_NAME;
+		this.hpTxt.text = "0";
+		this.hpTxt.align = Stage.ALIGN_CENTER;
+		this.hpTxt.width = 100;
+		this.hpTxt.pivotX = this.hpTxt.width / 2;
+		this.hpTxt.x = hpProp.x + this.hpTxt.width / 2 + 6;
+		this.hpTxt.y = hpProp.y;
+		this.addChild(this.hpTxt);
+		
+		this.magicTxt = new Text();
+		this.magicTxt.font = GameConstant.GAME_FONT_NAME;
+		this.magicTxt.text = "0";
+		this.magicTxt.align = Stage.ALIGN_CENTER;
+		this.magicTxt.width = 100;
+		this.magicTxt.pivotX = this.magicTxt.width / 2;
+		this.magicTxt.x = magicProp.x + this.magicTxt.width / 2 + 6;
+		this.magicTxt.y = magicProp.y;
+		this.addChild(this.magicTxt);
+		
+		this.defTxt = new Text();
+		this.defTxt.font = GameConstant.GAME_FONT_NAME;
+		this.defTxt.text = "0";
+		this.defTxt.align = Stage.ALIGN_CENTER;
+		this.defTxt.width = 100;
+		this.defTxt.pivotX = this.defTxt.width / 2;
+		this.defTxt.x = defProp.x + this.defTxt.width / 2 + 6;
+		this.defTxt.y = magicProp.y;
+		this.addChild(this.defTxt);
+		
+		this.levelTxt = new Text();
+		this.levelTxt.font = GameConstant.GAME_FONT_NAME;
+		this.levelTxt.text = "0";
+		this.levelTxt.align = Stage.ALIGN_CENTER;
+		this.levelTxt.width = 100;
+		this.levelTxt.pivotX = this.levelTxt.width / 2;
+		this.levelTxt.x = levelBg.x + levelBg.width / 2;
+		this.levelTxt.y = levelBg.y + 2;
+		this.addChild(this.levelTxt);
+		
+		var levelTitleTxt:Text = new Text();
+		levelTitleTxt.font = "Microsoft YaHei";
+		levelTitleTxt.fontSize = 25;
+		levelTitleTxt.strokeColor = "#000000";
+		levelTitleTxt.stroke = 3;
+		levelTitleTxt.align = Stage.ALIGN_CENTER;
+		levelTitleTxt.width = 100;
+		levelTitleTxt.height = 50;
+		levelTitleTxt.pivotX = levelTitleTxt.width / 2;
+		levelTitleTxt.x = levelBg.x + levelBg.width / 2;
+		levelTitleTxt.y = levelBg.y - 36;
+		levelTitleTxt.color = "#F9A100";
+		levelTitleTxt.text = "等级"
+		this.addChild(levelTitleTxt);
+		
+		this.nameTxt = new Text();
+		this.nameTxt.font = "Microsoft YaHei";
+		this.nameTxt.fontSize = 25;
+		this.nameTxt.strokeColor = "#000000";
+		this.nameTxt.stroke = 3;
+		this.nameTxt.color = "#FFFFFF";
+		this.nameTxt.align = Stage.ALIGN_CENTER;
+		this.nameTxt.width = 300;
+		this.nameTxt.height = 60;
+		this.nameTxt.pivotX = this.nameTxt.width / 2;
+		this.nameTxt.x = levelBg.x + levelBg.width / 2;
+		this.nameTxt.y = levelBg.y - 68;
+		this.nameTxt.text = "玩家名字"
+		this.addChild(this.nameTxt);
 
 	}
 	
@@ -198,6 +286,20 @@ public class GameStageLayer extends Sprite
 			this.hpBarAry.push(hpBar);
 			this.allHpBarAry.push(hpBar);
 		}
+	}
+	
+	/**
+	 * 设置玩家属性
+	 * @param	pPo		属性数据
+	 */
+	public function setPlayerProp(pVo:PlayerVo):void
+	{
+		if (!pVo) return;
+		this.hpTxt.text = pVo.getBaseHp().toString();
+		this.defTxt.text = pVo.getBaseDef().toString();
+		this.magicTxt.text = pVo.getBaseMagic().toString();
+		this.atkTxt.text = pVo.getBaseAtk().toString();
+		this.levelTxt.text = pVo.level;
 	}
 	
 	/**

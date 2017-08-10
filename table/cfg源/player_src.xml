@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <players>
-	<player level="" hp="" atk="" def="" magic="" exp=""/>
-	<player level="" hp="" atk="" def="" magic="" exp=""/>
+	<player level="" hp="" exp=""/>
+	<player level="" hp="" exp=""/>
 </players>

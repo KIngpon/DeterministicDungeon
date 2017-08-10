@@ -58,6 +58,7 @@ public class PlayerBar extends Sprite
 			this.numTxt = new Text();
 			this.numTxt.font = GameConstant.GAME_FONT_NAME;
 			this.numTxt.color = "#FFFFFF";	
+			this.numTxt.fontSize = 15;
 			this.numTxt.x = 55;
 			this.numTxt.y = 17;
 			this.numTxt.scale(.6, .6);

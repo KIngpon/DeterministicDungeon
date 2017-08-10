@@ -592,9 +592,6 @@ var Laya=window.Laya=(function(window,document){
 	var PlayerPo=(function(){
 		function PlayerPo(){
 			this.hp=0;
-			this.atk=NaN;
-			this.def=NaN;
-			this.magic=NaN;
 			this.exp=0;
 			this.level=0;
 		}
@@ -693,9 +690,46 @@ var Laya=window.Laya=(function(window,document){
 			this.isFirstStep=false;
 			this.slotsDelay=0;
 			this.weaponPo=null;
+			this.atkAddBuff=0;
+			this.defAddBuff=0;
+			this.magicAddBuff=0;
+			this.hpAddBuff=0;
 		}
 
 		__class(PlayerVo,'model.vo.PlayerVo');
+		var __proto=PlayerVo.prototype;
+		/**
+		*获取血量基础值
+		*@return 攻击力
+		*/
+		__proto.getBaseHp=function(){
+			return this.level+this.hpAddBuff;
+		}
+
+		/**
+		*获取攻击基础值
+		*@return 攻击力
+		*/
+		__proto.getBaseAtk=function(){
+			return this.level+this.atkAddBuff;
+		}
+
+		/**
+		*获取防御基础值
+		*@return 防御
+		*/
+		__proto.getBaseDef=function(){
+			return this.level+this.defAddBuff;
+		}
+
+		/**
+		*获取魔法基础值
+		*@return 魔法
+		*/
+		__proto.getBaseMagic=function(){
+			return this.level+this.magicAddBuff;
+		}
+
 		return PlayerVo;
 	})()
 
@@ -1640,7 +1674,6 @@ var Laya=window.Laya=(function(window,document){
 				__proto.setDamageByStr=function(str){
 					var numTxt=new Text();
 					numTxt.font=GameConstant.GAME_FONT_NAME;
-					var color="#ff0000";
 					var colorMatrix=[1,0,0,0,0,
 					0,0,0,0,0,
 					0,0,0,0,0,
@@ -10609,6 +10642,7 @@ var Laya=window.Laya=(function(window,document){
 			this.levelAry=null;
 			this.pVo=null;
 			this.equipProxy=null;
+			this.maxLevel=0;
 			PlayerProxy.__super.call(this);
 			this.proxyName="PlayerProxy";
 			this.equipProxy=this.retrieveProxy("EquipProxy");
@@ -10622,6 +10656,7 @@ var Laya=window.Laya=(function(window,document){
 		__proto.initData=function(){
 			this.levelAry=[];
 			this.isLoaded=false;
+			this.maxLevel=0;
 			Laya.loader.load("data/player.xml",Handler.create(this,function(data){
 				var xml=Laya.loader.getRes("data/player.xml");
 				var elementList=xml.getElementsByTagName("player");
@@ -10629,17 +10664,16 @@ var Laya=window.Laya=(function(window,document){
 				for (var i=0;i < count;++i){
 					var childNode=elementList[i];
 					var playerPo=new PlayerPo();
-					playerPo.atk=Number(childNode.getAttribute("atk"));
-					playerPo.hp=Number(childNode.getAttribute("hp"));
-					playerPo.def=Number(childNode.getAttribute("def"));
-					playerPo.exp=Number(childNode.getAttribute("exp"));
-					playerPo.magic=Number(childNode.getAttribute("magic"));
 					playerPo.level=Number(childNode.getAttribute("level"));
+					playerPo.hp=Number(childNode.getAttribute("hp"));
+					playerPo.exp=Number(childNode.getAttribute("exp"));
 					this.levelAry.push(playerPo);
+					if (this.maxLevel < playerPo.level)
+						this.maxLevel=playerPo.level;
 				}
 				this.isLoaded=true;
 				this.pVo=new PlayerVo();
-				this.pVo.level=1;
+				this.pVo.level=0;
 				var pPo=this.getPlayerPoByLevel(this.pVo.level);
 				this.pVo.maxExp=pPo.exp;
 				this.pVo.maxHp=pPo.hp;
@@ -10700,6 +10734,30 @@ var Laya=window.Laya=(function(window,document){
 			}
 		}
 
+		/**
+		*根据等级获取攻击力加成
+		*@return 攻击力
+		*/
+		__proto.getAktByLevel=function(){
+			return MathUtil.ceil(this.pVo.getBaseAtk()/ this.maxLevel)+1;
+		}
+
+		/**
+		*根据等级获取防御力加成
+		*@return 防御力
+		*/
+		__proto.getDefByLevel=function(){
+			return MathUtil.ceil(this.pVo.getBaseDef()/ this.maxLevel)+1;
+		}
+
+		/**
+		*根据等级获取魔法加成
+		*@return 魔法
+		*/
+		__proto.getMagicByLevel=function(){
+			return MathUtil.ceil(this.pVo.getBaseMagic()/ this.maxLevel)+1;
+		}
+
 		PlayerProxy.NAME="PlayerProxy";
 		return PlayerProxy;
 	})(Proxy)
@@ -10713,7 +10771,9 @@ var Laya=window.Laya=(function(window,document){
 	var ResProxy=(function(_super){
 		function ResProxy(){
 			this.resList=[];
+			this.fontList=[];
 			this.resCount=0;
+			this.fontCount=0;
 			this.gameBitmapFont=null;
 			ResProxy.__super.call(this);
 			this.proxyName="ResProxy";
@@ -10722,6 +10782,7 @@ var Laya=window.Laya=(function(window,document){
 		__class(ResProxy,'model.proxy.ResProxy',_super);
 		var __proto=ResProxy.prototype;
 		__proto.initData=function(){
+			this.resCount=0;
 			this.resList.push("res/atlas/btn.json");
 			this.resList.push("res/atlas/comp.json");
 			this.resList.push("res/atlas/frame.json");
@@ -10737,17 +10798,25 @@ var Laya=window.Laya=(function(window,document){
 		*初始化字体
 		*/
 		__proto.initFont=function(){
-			this.gameBitmapFont=new BitmapFont();
-			this.gameBitmapFont.loadFont("font/GameFont.fnt",Handler.create(this,this.loadFontComplete));
+			this.fontCount=0;
+			this.fontList.push([GameConstant.GAME_FONT_NAME,"font/GameFont.fnt"]);
+			var count=this.fontList.length;
+			for (var i=0;i < count;i++){
+				var bmpFont=new BitmapFont();
+				bmpFont.loadFont(this.fontList[i][1],Handler.create(this,this.loadFontComplete,[bmpFont]));
+				Text.registerBitmapFont(this.fontList[i][0],bmpFont);
+			}
 		}
 
 		/**
 		*加载字体结束
 		*/
-		__proto.loadFontComplete=function(){
-			this.gameBitmapFont.setSpaceWidth(10);
-			Text.registerBitmapFont(GameConstant.GAME_FONT_NAME,this.gameBitmapFont);
-			this.sendNotification("INIT_FIGHT_STAGE");
+		__proto.loadFontComplete=function(bmpFont){
+			bmpFont.setSpaceWidth(10);
+			this.fontCount++;
+			if (this.fontCount >=this.fontList.length){
+				this.sendNotification("INIT_FIGHT_STAGE");
+			}
 		}
 
 		__proto.loadCompleteHandler=function(){
@@ -11589,6 +11658,7 @@ var Laya=window.Laya=(function(window,document){
 					else{
 					}
 					this.gameStage.initPlayer(this.playerVo);
+					this.gameStage.setPlayerProp(this.playerVo);
 					this.gameStage.updateStageBg(this.curStagePo,this.stageProxy);
 					this.gameStage.playerMove(250,1000,Handler.create(this,this.playerMoveComplete));
 					break ;
@@ -11745,7 +11815,8 @@ var Laya=window.Laya=(function(window,document){
 		__proto.playerAtkComplete=function(){
 			var enemy=this.gameStage.getEnemyByIndex(this.roundIndex);
 			var playerPo=this.playerProxy.getPlayerPoByLevel(this.playerVo.level);
-			var hurt=MathUtil.round(this.slots.indexValue *playerPo.atk);
+			var hurt=MathUtil.round(this.slots.indexValue *this.playerProxy.getAktByLevel());
+			console.log("hurt",hurt);
 			this.gameStage.enemyHurt(this.roundIndex,hurt==0,Handler.create(this,this.enemyHurtComplete));
 			if (hurt==0){
 				Damage.showDamageByStr("miss!",enemy.x,enemy.y-100,1.5);
@@ -11778,6 +11849,7 @@ var Laya=window.Laya=(function(window,document){
 					this.gameStage.playerHpBar.setMaxValue(this.playerVo.maxHp);
 					this.gameStage.playerExpBar.setValue(this.playerVo.curExp);
 					this.gameStage.playerExpBar.setMaxValue(this.playerVo.maxExp);
+					this.gameStage.setPlayerProp(this.playerVo);
 				}
 			}
 			if (this.enemyProxy.getCurStageEnemyCount()==0){
@@ -17233,6 +17305,7 @@ var Laya=window.Laya=(function(window,document){
 				this.numTxt=new Text();
 				this.numTxt.font=GameConstant.GAME_FONT_NAME;
 				this.numTxt.color="#FFFFFF";
+				this.numTxt.fontSize=15;
 				this.numTxt.x=55;
 				this.numTxt.y=17;
 				this.numTxt.scale(.6,.6);
@@ -17672,6 +17745,12 @@ var Laya=window.Laya=(function(window,document){
 			this.uiBg=null;
 			this.playerHpBar=null;
 			this.playerExpBar=null;
+			this.atkTxt=null;
+			this.defTxt=null;
+			this.magicTxt=null;
+			this.hpTxt=null;
+			this.levelTxt=null;
+			this.nameTxt=null;
 			GameStageLayer.__super.call(this);
 			this.initUI();
 		}
@@ -17735,7 +17814,7 @@ var Laya=window.Laya=(function(window,document){
 			atkProp.y=533;
 			this.addChild(atkProp);
 			var hpProp=new Image("comp/hpProp.png");
-			hpProp.x=479;
+			hpProp.x=482;
 			hpProp.y=atkProp.y;
 			this.addChild(hpProp);
 			var magicProp=new Image("comp/magicProp.png");
@@ -17746,6 +17825,79 @@ var Laya=window.Laya=(function(window,document){
 			defProp.x=hpProp.x;
 			defProp.y=magicProp.y;
 			this.addChild(defProp);
+			this.atkTxt=new Text();
+			this.atkTxt.font=GameConstant.GAME_FONT_NAME;
+			this.atkTxt.text="0";
+			this.atkTxt.align="center";
+			this.atkTxt.width=100;
+			this.atkTxt.pivotX=this.atkTxt.width / 2;
+			this.atkTxt.x=atkProp.x+this.atkTxt.width / 2+6;
+			this.atkTxt.y=atkProp.y;
+			this.addChild(this.atkTxt);
+			this.hpTxt=new Text();
+			this.hpTxt.font=GameConstant.GAME_FONT_NAME;
+			this.hpTxt.text="0";
+			this.hpTxt.align="center";
+			this.hpTxt.width=100;
+			this.hpTxt.pivotX=this.hpTxt.width / 2;
+			this.hpTxt.x=hpProp.x+this.hpTxt.width / 2+6;
+			this.hpTxt.y=hpProp.y;
+			this.addChild(this.hpTxt);
+			this.magicTxt=new Text();
+			this.magicTxt.font=GameConstant.GAME_FONT_NAME;
+			this.magicTxt.text="0";
+			this.magicTxt.align="center";
+			this.magicTxt.width=100;
+			this.magicTxt.pivotX=this.magicTxt.width / 2;
+			this.magicTxt.x=magicProp.x+this.magicTxt.width / 2+6;
+			this.magicTxt.y=magicProp.y;
+			this.addChild(this.magicTxt);
+			this.defTxt=new Text();
+			this.defTxt.font=GameConstant.GAME_FONT_NAME;
+			this.defTxt.text="0";
+			this.defTxt.align="center";
+			this.defTxt.width=100;
+			this.defTxt.pivotX=this.defTxt.width / 2;
+			this.defTxt.x=defProp.x+this.defTxt.width / 2+6;
+			this.defTxt.y=magicProp.y;
+			this.addChild(this.defTxt);
+			this.levelTxt=new Text();
+			this.levelTxt.font=GameConstant.GAME_FONT_NAME;
+			this.levelTxt.text="0";
+			this.levelTxt.align="center";
+			this.levelTxt.width=100;
+			this.levelTxt.pivotX=this.levelTxt.width / 2;
+			this.levelTxt.x=levelBg.x+levelBg.width / 2;
+			this.levelTxt.y=levelBg.y+2;
+			this.addChild(this.levelTxt);
+			var levelTitleTxt=new Text();
+			levelTitleTxt.font="Microsoft YaHei";
+			levelTitleTxt.fontSize=25;
+			levelTitleTxt.strokeColor="#000000";
+			levelTitleTxt.stroke=4;
+			levelTitleTxt.align="center";
+			levelTitleTxt.width=100;
+			levelTitleTxt.height=50;
+			levelTitleTxt.pivotX=levelTitleTxt.width / 2;
+			levelTitleTxt.x=levelBg.x+levelBg.width / 2;
+			levelTitleTxt.y=levelBg.y-36;
+			levelTitleTxt.color="#F9A100";
+			levelTitleTxt.text="等级"
+			this.addChild(levelTitleTxt);
+			this.nameTxt=new Text();
+			this.nameTxt.font="Microsoft YaHei";
+			this.nameTxt.fontSize=25;
+			this.nameTxt.strokeColor="#000000";
+			this.nameTxt.stroke=4;
+			this.nameTxt.color="#FFFFFF";
+			this.nameTxt.align="center";
+			this.nameTxt.width=300;
+			this.nameTxt.height=60;
+			this.nameTxt.pivotX=this.nameTxt.width / 2;
+			this.nameTxt.x=levelBg.x+levelBg.width / 2;
+			this.nameTxt.y=levelBg.y-68;
+			this.nameTxt.text="玩家名字"
+			this.addChild(this.nameTxt);
 		}
 
 		/**
@@ -17811,6 +17963,19 @@ var Laya=window.Laya=(function(window,document){
 				this.hpBarAry.push(hpBar);
 				this.allHpBarAry.push(hpBar);
 			}
+		}
+
+		/**
+		*设置玩家属性
+		*@param pPo 属性数据
+		*/
+		__proto.setPlayerProp=function(pVo){
+			if (!pVo)return;
+			this.hpTxt.text=pVo.getBaseHp().toString();
+			this.defTxt.text=pVo.getBaseDef().toString();
+			this.magicTxt.text=pVo.getBaseMagic().toString();
+			this.atkTxt.text=pVo.getBaseAtk().toString();
+			this.levelTxt.text=pVo.level;
 		}
 
 		/**

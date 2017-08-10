@@ -4,6 +4,7 @@ import laya.utils.Handler;
 import model.po.PlayerPo;
 import model.vo.PlayerVo;
 import mvc.Proxy;
+import utils.MathUtil;
 
 /**
  * ...玩家静态数据
@@ -20,6 +21,8 @@ public class PlayerProxy extends Proxy
 	public var pVo:PlayerVo;
 	//武器数据代理
 	private var equipProxy:EquipProxy;
+	//最高等级
+	private var maxLevel:int;
 	public function PlayerProxy() 
 	{
 		this.proxyName = NAME;
@@ -33,6 +36,7 @@ public class PlayerProxy extends Proxy
 	{
 		this.levelAry = [];
 		this.isLoaded = false;
+		this.maxLevel = 0;
 		Laya.loader.load("data/player.xml", Handler.create(this, function(data:*):void
 		{
             var xml:XmlDom = Laya.loader.getRes("data/player.xml");
@@ -42,18 +46,20 @@ public class PlayerProxy extends Proxy
 			{
 				var childNode:XmlDom = elementList[i];
 				var playerPo:PlayerPo = new PlayerPo();
-				playerPo.atk = Number(childNode.getAttribute("atk"));
-				playerPo.hp = Number(childNode.getAttribute("hp"));
-				playerPo.def = Number(childNode.getAttribute("def"));
-				playerPo.exp = Number(childNode.getAttribute("exp"));
-				playerPo.magic = Number(childNode.getAttribute("magic"));
+				//playerPo.atk = Number(childNode.getAttribute("atk"));
+				//playerPo.def = Number(childNode.getAttribute("def"));
+				//playerPo.magic = Number(childNode.getAttribute("magic"));
 				playerPo.level = Number(childNode.getAttribute("level"));
+				playerPo.hp = Number(childNode.getAttribute("hp"));
+				playerPo.exp = Number(childNode.getAttribute("exp"));
 				this.levelAry.push(playerPo);
+				if (this.maxLevel < playerPo.level)
+					this.maxLevel = playerPo.level;
+				//trace("level:", playerPo.level, "atk:", MathUtil.ceil(playerPo.level / 20) + 1);
 			}
 			this.isLoaded = true;
-			
 			this.pVo = new PlayerVo();
-			this.pVo.level = 1;
+			this.pVo.level = 0;
 			var pPo:PlayerPo = this.getPlayerPoByLevel(this.pVo.level);
 			this.pVo.maxExp = pPo.exp;
 			this.pVo.maxHp = pPo.hp;
@@ -62,7 +68,6 @@ public class PlayerProxy extends Proxy
 			this.pVo.isFirstStep = true;
 			this.pVo.slotsDelay = 270;
 			this.pVo.weaponPo = this.equipProxy.getEquipPoById(1);
-			//trace(this.pVo.curHp, this.pVo.level, this.pVo.maxExp);
 		}));
 	}
 	
@@ -107,7 +112,7 @@ public class PlayerProxy extends Proxy
 	/**
 	 * 升级
 	 */
-	public function checkAddLevel():Boolean
+	public function checkAddLevel():void
 	{
 		//trace("-----判断是否增加等级----", this.pVo.curExp, "需要经验", this.pVo.maxExp);
 		if (this.pVo.curExp >= this.pVo.maxExp)
@@ -124,5 +129,34 @@ public class PlayerProxy extends Proxy
 			this.checkAddLevel();
 		}
 	}
+	
+	/**
+	 * 根据等级获取攻击力加成
+	 * @return	攻击力
+	 */
+	public function getAktByLevel():Number
+	{
+		return MathUtil.ceil(this.pVo.getBaseAtk() / this.maxLevel) + 1;
+	}
+	
+	/**
+	 * 根据等级获取防御力加成
+	 * @return	防御力
+	 */
+	public function getDefByLevel():Number
+	{
+		return MathUtil.ceil(this.pVo.getBaseDef() / this.maxLevel) + 1;
+	}
+	
+	
+	/**
+	 * 根据等级获取魔法加成
+	 * @return	魔法
+	 */
+	public function getMagicByLevel():Number
+	{
+		return MathUtil.ceil(this.pVo.getBaseMagic() / this.maxLevel) + 1;
+	}
+
 }
 }
