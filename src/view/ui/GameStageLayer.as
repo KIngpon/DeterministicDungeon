@@ -298,7 +298,7 @@ public class GameStageLayer extends Sprite
 		this.defTxt.text = pVo.getBaseDef().toString();
 		this.magicTxt.text = pVo.getBaseMagic().toString();
 		this.atkTxt.text = pVo.getBaseAtk().toString();
-		this.levelTxt.text = pVo.level;
+		this.levelTxt.text = pVo.level.toString();
 	}
 	
 	/**

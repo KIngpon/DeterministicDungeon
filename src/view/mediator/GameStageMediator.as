@@ -25,6 +25,7 @@ import view.components.Shake;
 import view.components.SlotsPanel;
 import view.ui.GameStageLayer;
 import view.ui.Layer;
+import view.ui.SelectStageLayer;
 
 /**
  * ...战斗系统中介
@@ -50,7 +51,9 @@ import view.ui.Layer;
 public class GameStageMediator extends Mediator 
 {
 	public static const NAME:String = "GameStageMediator";
+	//ui
 	private var gameStage:GameStageLayer;
+	private var selectStageLayer:SelectStageLayer;
 	//角色数据代理
 	private var playerProxy:PlayerProxy;
 	//关卡数据
@@ -122,7 +125,7 @@ public class GameStageMediator extends Mediator
 				this.gameStage.initPlayer(this.playerVo);
 				this.gameStage.setPlayerProp(this.playerVo);
 				this.gameStage.updateStageBg(this.curStagePo, this.stageProxy);
-				this.gameStage.playerMove(250, 1000, Handler.create(this, playerMoveComplete));
+				//this.gameStage.playerMove(250, 1000, Handler.create(this, playerMoveComplete));
 				break;
 			default:
 				break;
@@ -176,6 +179,18 @@ public class GameStageMediator extends Mediator
 			this.gameStage = new GameStageLayer();
 			Layer.GAME_STAGE.addChild(this.gameStage);
 		}
+		
+		if (!this.selectStageLayer)
+		{
+			this.selectStageLayer = new SelectStageLayer();
+			this.selectStageLayer.selectedBtn.on(Event.MOUSE_DOWN, this, selectedStageBtnMouseDown);
+			Layer.GAME_STAGE.addChild(selectStageLayer);
+		}
+	}
+	
+	private function selectedStageBtnMouseDown():void 
+	{
+		this.selectStageLayer.nextStep();
 	}
 	
 	/**

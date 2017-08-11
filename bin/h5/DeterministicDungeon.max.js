@@ -1643,23 +1643,6 @@ var Laya=window.Laya=(function(window,document){
 			Damage.damageAry.push(spt);
 		}
 
-		Damage.floatStr=function(str,x,y,scale,d){
-			(scale===void 0)&& (scale=1);
-			(d===void 0)&& (d=1200);
-			var txt=new Text();
-			txt.font=GameConstant.GAME_FONT_NAME;
-			txt.text=str;
-			Layer.GAME_DAMAGE.addChild(txt);
-			txt.x=x;
-			txt.y=y;
-			txt.scale(scale,scale);
-			Tween.to(txt,{y:txt.y-70 },d,Ease.expoOut,Handler.create(this,function(){
-				Tween.to(txt,{alpha:0 },300,Ease.expoOut,Handler.create(this,function(){
-					txt.removeSelf();
-				}));
-			}));
-		}
-
 		Damage.update=function(){
 			for (var i=0;i < Damage.damageAry.length;i++){
 				var spt=Damage.damageAry[i];
@@ -11750,6 +11733,7 @@ var Laya=window.Laya=(function(window,document){
 	var GameStageMediator=(function(_super){
 		function GameStageMediator(){
 			this.gameStage=null;
+			this.selectStageLayer=null;
 			this.playerProxy=null;
 			this.stageProxy=null;
 			this.enemyProxy=null;
@@ -11797,7 +11781,6 @@ var Laya=window.Laya=(function(window,document){
 					this.gameStage.initPlayer(this.playerVo);
 					this.gameStage.setPlayerProp(this.playerVo);
 					this.gameStage.updateStageBg(this.curStagePo,this.stageProxy);
-					this.gameStage.playerMove(250,1000,Handler.create(this,this.playerMoveComplete));
 					break ;
 				default :
 					break ;
@@ -11844,6 +11827,15 @@ var Laya=window.Laya=(function(window,document){
 				this.gameStage=new GameStageLayer();
 				Layer.GAME_STAGE.addChild(this.gameStage);
 			}
+			if (!this.selectStageLayer){
+				this.selectStageLayer=new SelectStageLayer();
+				this.selectStageLayer.selectedBtn.on("mousedown",this,this.selectedStageBtnMouseDown);
+				Layer.GAME_STAGE.addChild(this.selectStageLayer);
+			}
+		}
+
+		__proto.selectedStageBtnMouseDown=function(){
+			this.selectStageLayer.nextStep();
 		}
 
 		/**
@@ -18133,7 +18125,7 @@ var Laya=window.Laya=(function(window,document){
 			this.defTxt.text=pVo.getBaseDef().toString();
 			this.magicTxt.text=pVo.getBaseMagic().toString();
 			this.atkTxt.text=pVo.getBaseAtk().toString();
-			this.levelTxt.text=pVo.level;
+			this.levelTxt.text=pVo.level.toString();
 		}
 
 		/**
@@ -18365,6 +18357,182 @@ var Laya=window.Laya=(function(window,document){
 		}
 
 		return GameStageLayer;
+	})(Sprite)
+
+
+	/**
+	*...选择地图
+	*@author ...Kanon
+	*/
+	//class view.ui.SelectStageLayer extends laya.display.Sprite
+	var SelectStageLayer=(function(_super){
+		function SelectStageLayer(){
+			this.handImg=null;
+			this.selectedBtn=null;
+			this.skipBtn=null;
+			this.panel=null;
+			this.upStage=null;
+			this.downStage=null;
+			this.rewardBox=null;
+			this.flashingTimer=null;
+			this._$3_timer=null;
+			this.curSelectIndex=0;
+			this.step=0;
+			this.totalNum=9;
+			this.selectAry=null;
+			SelectStageLayer.__super.call(this);
+			this.panel=new SelectStageLayerUI();
+			this.addChild(this.panel);
+			this.handImg=this.panel.handImg;
+			this.selectedBtn=this.panel.selectBtn;
+			this.skipBtn=this.panel.skipBtn;
+			this.handMoveComplete2();
+			this.step=0;
+			this.curSelectIndex=2;
+			this.selectAry=[];
+			this.initUI();
+			this.start();
+		}
+
+		__class(SelectStageLayer,'view.ui.SelectStageLayer',_super);
+		var __proto=SelectStageLayer.prototype;
+		__proto.handMoveComplete1=function(){
+			Tween.to(this.handImg,{y:this.handImg.y+10},250,Ease.linearNone,Handler.create(this,this.handMoveComplete2));
+		}
+
+		__proto.handMoveComplete2=function(){
+			Tween.to(this.handImg,{y:this.handImg.y-10},250,Ease.linearNone,Handler.create(this,this.handMoveComplete1));
+		}
+
+		/**
+		*设置标题
+		*@param str 内容
+		*/
+		__proto.setTitle=function(str){
+			if (!this.panel)return;
+			this.panel.stageNumTxt.text=str;
+		}
+
+		/**
+		*设置描述
+		*@param str 内容
+		*/
+		__proto.setDes=function(str){
+			if (!this.panel)return;
+			this.panel.selectDesTxt.text=str;
+		}
+
+		/**
+		*初始化UI
+		*/
+		__proto.initUI=function(){
+			this.upStage=this.panel.upStage;
+			this.downStage=this.panel.downStage;
+			this.rewardBox=this.panel.rewardBox;
+			this.upStage.pivotX=this.upStage.width / 2;
+			this.upStage.pivotY=this.upStage.height / 2;
+			this.downStage.pivotX=this.downStage.width / 2;
+			this.downStage.pivotY=this.downStage.height / 2;
+			this.rewardBox.pivotX=this.rewardBox.width / 2;
+			this.rewardBox.pivotY=this.rewardBox.height / 2;
+			this.upStage.visible=false;
+			this.downStage.visible=false;
+			this.rewardBox.visible=false;
+			for (var i=1;i <=this.totalNum;i++){
+				var stageIcon=this.panel.mapSpt.getChildByName("r"+i);
+				var leftSpt=stageIcon.getChildByName("leftSpt");
+				var rightSpt=stageIcon.getChildByName("rightSpt");
+				var upSpt=stageIcon.getChildByName("upSpt");
+				var downSpt=stageIcon.getChildByName("downSpt");
+				var selectImg=stageIcon.getChildByName("selectImg");
+				leftSpt.visible=false;
+				rightSpt.visible=false;
+				upSpt.visible=false;
+				downSpt.visible=false;
+				selectImg.visible=false;
+			}
+		}
+
+		__proto.start=function(){
+			if (!this._$3_timer)this._$3_timer=new Timer();
+			this.timer.clear(this,this.loopHandler);
+			this.timer.loop(80,this,this.loopHandler);
+			if (!this.flashingTimer)this.flashingTimer=new Timer();
+		}
+
+		/**
+		*更新当前选择框位置
+		*/
+		__proto.updateSelectImg=function(){
+			var stageIcon=this.panel.mapSpt.getChildByName("r"+this.curSelectIndex);
+			if (!stageIcon)return;
+			if (this.step==0){
+				var leftSpt=stageIcon.getChildByName("leftSpt");
+				var rightSpt=stageIcon.getChildByName("rightSpt");
+				var upSpt=stageIcon.getChildByName("upSpt");
+				var downSpt=stageIcon.getChildByName("downSpt");
+				var selectImg=stageIcon.getChildByName("selectImg");
+				selectImg.visible=true;
+				if (this.curSelectIndex <=3){
+					rightSpt.visible=!rightSpt.visible;
+					if (this.curSelectIndex < 3)downSpt.visible=!rightSpt.visible;
+					if (this.curSelectIndex > 1)upSpt.visible=!rightSpt.visible;
+				}
+				else if (this.curSelectIndex >=4 && this.curSelectIndex <=6){
+				}
+				else{
+				}
+			}
+			else if (this.step==1){
+				this.upStage.x=stageIcon.x+stageIcon.width / 2;
+				this.upStage.y=stageIcon.y+stageIcon.height / 2;
+				this.upStage.visible=true;
+			}
+			else if (this.step==2){
+				this.downStage.x=stageIcon.x+stageIcon.width / 2;
+				this.downStage.y=stageIcon.y+stageIcon.height / 2;
+				this.downStage.visible=true;
+			}
+			else if (this.step==3){
+				this.rewardBox.x=stageIcon.x+stageIcon.width / 2;
+				this.rewardBox.y=stageIcon.y+stageIcon.height / 2;
+				this.rewardBox.visible=true;
+			}
+		}
+
+		/**
+		*下一步
+		*/
+		__proto.nextStep=function(){
+			if (this.step==0){
+				this.resetAllSelectImg();
+				if (this.curSelectIndex > this.totalNum)
+					this.step++;
+				else
+				this.curSelectIndex++;
+			}
+		}
+
+		/**
+		*重置所有选中
+		*/
+		__proto.resetAllSelectImg=function(){
+			for (var i=1;i <=this.totalNum;i++){
+				var stageIcon=this.panel.mapSpt.getChildByName("r"+i);
+				var selectImg=stageIcon.getChildByName("selectImg");
+				selectImg.visible=false;
+			}
+		}
+
+		__proto.loopHandler=function(){
+			if (this.step > 0){
+				this.curSelectIndex++;
+				if (this.curSelectIndex > this.totalNum)this.curSelectIndex=1;
+			}
+			this.updateSelectImg();
+		}
+
+		return SelectStageLayer;
 	})(Sprite)
 
 
@@ -28276,103 +28444,6 @@ var Laya=window.Laya=(function(window,document){
 
 
 	/**
-	*使用 <code>VSlider</code> 控件，用户可以通过在滑块轨道的终点之间移动滑块来选择值。
-	*<p> <code>VSlider</code> 控件采用垂直方向。滑块轨道从下往上扩展，而标签位于轨道的左右两侧。</p>
-	*
-	*@example <caption>以下示例代码，创建了一个 <code>VSlider</code> 实例。</caption>
-	*package
-	*{
-		*import laya.ui.HSlider;
-		*import laya.ui.VSlider;
-		*import laya.utils.Handler;
-		*public class VSlider_Example
-		*{
-			*private var vSlider:VSlider;
-			*public function VSlider_Example()
-			*{
-				*Laya.init(640,800);//设置游戏画布宽高。
-				*Laya.stage.bgColor="#efefef";//设置画布的背景颜色。
-				*Laya.loader.load(["resource/ui/vslider.png","resource/ui/vslider$bar.png"],Handler.create(this,onLoadComplete));//加载资源。
-				*}
-			*private function onLoadComplete():void
-			*{
-				*vSlider=new VSlider();//创建一个 VSlider 类的实例对象 vSlider 。
-				*vSlider.skin="resource/ui/vslider.png";//设置 vSlider 的皮肤。
-				*vSlider.min=0;//设置 vSlider 最低位置值。
-				*vSlider.max=10;//设置 vSlider 最高位置值。
-				*vSlider.value=2;//设置 vSlider 当前位置值。
-				*vSlider.tick=1;//设置 vSlider 刻度值。
-				*vSlider.x=100;//设置 vSlider 对象的属性 x 的值，用于控制 vSlider 对象的显示位置。
-				*vSlider.y=100;//设置 vSlider 对象的属性 y 的值，用于控制 vSlider 对象的显示位置。
-				*vSlider.changeHandler=new Handler(this,onChange);//设置 vSlider 位置变化处理器。
-				*Laya.stage.addChild(vSlider);//把 vSlider 添加到显示列表。
-				*}
-			*private function onChange(value:Number):void
-			*{
-				*trace("滑块的位置： value="+value);
-				*}
-			*}
-		*}
-	*@example
-	*Laya.init(640,800);//设置游戏画布宽高
-	*Laya.stage.bgColor="#efefef";//设置画布的背景颜色
-	*var vSlider;
-	*Laya.loader.load(["resource/ui/vslider.png","resource/ui/vslider$bar.png"],laya.utils.Handler.create(this,onLoadComplete));//加载资源。
-	*function onLoadComplete(){
-		*vSlider=new laya.ui.VSlider();//创建一个 VSlider 类的实例对象 vSlider 。
-		*vSlider.skin="resource/ui/vslider.png";//设置 vSlider 的皮肤。
-		*vSlider.min=0;//设置 vSlider 最低位置值。
-		*vSlider.max=10;//设置 vSlider 最高位置值。
-		*vSlider.value=2;//设置 vSlider 当前位置值。
-		*vSlider.tick=1;//设置 vSlider 刻度值。
-		*vSlider.x=100;//设置 vSlider 对象的属性 x 的值，用于控制 vSlider 对象的显示位置。
-		*vSlider.y=100;//设置 vSlider 对象的属性 y 的值，用于控制 vSlider 对象的显示位置。
-		*vSlider.changeHandler=new laya.utils.Handler(this,onChange);//设置 vSlider 位置变化处理器。
-		*Laya.stage.addChild(vSlider);//把 vSlider 添加到显示列表。
-		*}
-	*function onChange(value){
-		*console.log("滑块的位置： value="+value);
-		*}
-	*@example
-	*import HSlider=laya.ui.HSlider;
-	*import VSlider=laya.ui.VSlider;
-	*import Handler=laya.utils.Handler;
-	*class VSlider_Example {
-		*private vSlider:VSlider;
-		*constructor(){
-			*Laya.init(640,800);//设置游戏画布宽高。
-			*Laya.stage.bgColor="#efefef";//设置画布的背景颜色。
-			*Laya.loader.load(["resource/ui/vslider.png","resource/ui/vslider$bar.png"],Handler.create(this,this.onLoadComplete));//加载资源。
-			*}
-		*private onLoadComplete():void {
-			*this.vSlider=new VSlider();//创建一个 VSlider 类的实例对象 vSlider 。
-			*this.vSlider.skin="resource/ui/vslider.png";//设置 vSlider 的皮肤。
-			*this.vSlider.min=0;//设置 vSlider 最低位置值。
-			*this.vSlider.max=10;//设置 vSlider 最高位置值。
-			*this.vSlider.value=2;//设置 vSlider 当前位置值。
-			*this.vSlider.tick=1;//设置 vSlider 刻度值。
-			*this.vSlider.x=100;//设置 vSlider 对象的属性 x 的值，用于控制 vSlider 对象的显示位置。
-			*this.vSlider.y=100;//设置 vSlider 对象的属性 y 的值，用于控制 vSlider 对象的显示位置。
-			*this.vSlider.changeHandler=new Handler(this,this.onChange);//设置 vSlider 位置变化处理器。
-			*Laya.stage.addChild(this.vSlider);//把 vSlider 添加到显示列表。
-			*}
-		*private onChange(value:number):void {
-			*console.log("滑块的位置： value="+value);
-			*}
-		*}
-	*@see laya.ui.Slider
-	*/
-	//class laya.ui.VSlider extends laya.ui.Slider
-	var VSlider=(function(_super){
-		function VSlider(){VSlider.__super.call(this);;
-		};
-
-		__class(VSlider,'laya.ui.VSlider',_super);
-		return VSlider;
-	})(Slider)
-
-
-	/**
 	*<code>TextInput</code> 类用于创建显示对象以显示和输入文本。
 	*
 	*@example <caption>以下示例代码，创建了一个 <code>TextInput</code> 实例。</caption>
@@ -28693,6 +28764,103 @@ var Laya=window.Laya=(function(window,document){
 
 		return TextInput;
 	})(Label)
+
+
+	/**
+	*使用 <code>VSlider</code> 控件，用户可以通过在滑块轨道的终点之间移动滑块来选择值。
+	*<p> <code>VSlider</code> 控件采用垂直方向。滑块轨道从下往上扩展，而标签位于轨道的左右两侧。</p>
+	*
+	*@example <caption>以下示例代码，创建了一个 <code>VSlider</code> 实例。</caption>
+	*package
+	*{
+		*import laya.ui.HSlider;
+		*import laya.ui.VSlider;
+		*import laya.utils.Handler;
+		*public class VSlider_Example
+		*{
+			*private var vSlider:VSlider;
+			*public function VSlider_Example()
+			*{
+				*Laya.init(640,800);//设置游戏画布宽高。
+				*Laya.stage.bgColor="#efefef";//设置画布的背景颜色。
+				*Laya.loader.load(["resource/ui/vslider.png","resource/ui/vslider$bar.png"],Handler.create(this,onLoadComplete));//加载资源。
+				*}
+			*private function onLoadComplete():void
+			*{
+				*vSlider=new VSlider();//创建一个 VSlider 类的实例对象 vSlider 。
+				*vSlider.skin="resource/ui/vslider.png";//设置 vSlider 的皮肤。
+				*vSlider.min=0;//设置 vSlider 最低位置值。
+				*vSlider.max=10;//设置 vSlider 最高位置值。
+				*vSlider.value=2;//设置 vSlider 当前位置值。
+				*vSlider.tick=1;//设置 vSlider 刻度值。
+				*vSlider.x=100;//设置 vSlider 对象的属性 x 的值，用于控制 vSlider 对象的显示位置。
+				*vSlider.y=100;//设置 vSlider 对象的属性 y 的值，用于控制 vSlider 对象的显示位置。
+				*vSlider.changeHandler=new Handler(this,onChange);//设置 vSlider 位置变化处理器。
+				*Laya.stage.addChild(vSlider);//把 vSlider 添加到显示列表。
+				*}
+			*private function onChange(value:Number):void
+			*{
+				*trace("滑块的位置： value="+value);
+				*}
+			*}
+		*}
+	*@example
+	*Laya.init(640,800);//设置游戏画布宽高
+	*Laya.stage.bgColor="#efefef";//设置画布的背景颜色
+	*var vSlider;
+	*Laya.loader.load(["resource/ui/vslider.png","resource/ui/vslider$bar.png"],laya.utils.Handler.create(this,onLoadComplete));//加载资源。
+	*function onLoadComplete(){
+		*vSlider=new laya.ui.VSlider();//创建一个 VSlider 类的实例对象 vSlider 。
+		*vSlider.skin="resource/ui/vslider.png";//设置 vSlider 的皮肤。
+		*vSlider.min=0;//设置 vSlider 最低位置值。
+		*vSlider.max=10;//设置 vSlider 最高位置值。
+		*vSlider.value=2;//设置 vSlider 当前位置值。
+		*vSlider.tick=1;//设置 vSlider 刻度值。
+		*vSlider.x=100;//设置 vSlider 对象的属性 x 的值，用于控制 vSlider 对象的显示位置。
+		*vSlider.y=100;//设置 vSlider 对象的属性 y 的值，用于控制 vSlider 对象的显示位置。
+		*vSlider.changeHandler=new laya.utils.Handler(this,onChange);//设置 vSlider 位置变化处理器。
+		*Laya.stage.addChild(vSlider);//把 vSlider 添加到显示列表。
+		*}
+	*function onChange(value){
+		*console.log("滑块的位置： value="+value);
+		*}
+	*@example
+	*import HSlider=laya.ui.HSlider;
+	*import VSlider=laya.ui.VSlider;
+	*import Handler=laya.utils.Handler;
+	*class VSlider_Example {
+		*private vSlider:VSlider;
+		*constructor(){
+			*Laya.init(640,800);//设置游戏画布宽高。
+			*Laya.stage.bgColor="#efefef";//设置画布的背景颜色。
+			*Laya.loader.load(["resource/ui/vslider.png","resource/ui/vslider$bar.png"],Handler.create(this,this.onLoadComplete));//加载资源。
+			*}
+		*private onLoadComplete():void {
+			*this.vSlider=new VSlider();//创建一个 VSlider 类的实例对象 vSlider 。
+			*this.vSlider.skin="resource/ui/vslider.png";//设置 vSlider 的皮肤。
+			*this.vSlider.min=0;//设置 vSlider 最低位置值。
+			*this.vSlider.max=10;//设置 vSlider 最高位置值。
+			*this.vSlider.value=2;//设置 vSlider 当前位置值。
+			*this.vSlider.tick=1;//设置 vSlider 刻度值。
+			*this.vSlider.x=100;//设置 vSlider 对象的属性 x 的值，用于控制 vSlider 对象的显示位置。
+			*this.vSlider.y=100;//设置 vSlider 对象的属性 y 的值，用于控制 vSlider 对象的显示位置。
+			*this.vSlider.changeHandler=new Handler(this,this.onChange);//设置 vSlider 位置变化处理器。
+			*Laya.stage.addChild(this.vSlider);//把 vSlider 添加到显示列表。
+			*}
+		*private onChange(value:number):void {
+			*console.log("滑块的位置： value="+value);
+			*}
+		*}
+	*@see laya.ui.Slider
+	*/
+	//class laya.ui.VSlider extends laya.ui.Slider
+	var VSlider=(function(_super){
+		function VSlider(){VSlider.__super.call(this);;
+		};
+
+		__class(VSlider,'laya.ui.VSlider',_super);
+		return VSlider;
+	})(Slider)
 
 
 	/**
@@ -29179,6 +29347,36 @@ var Laya=window.Laya=(function(window,document){
 
 		return GraphicAnimation;
 	})(FrameAnimation)
+
+
+	//class ui.GameStage.SelectStageLayerUI extends laya.ui.View
+	var SelectStageLayerUI=(function(_super){
+		function SelectStageLayerUI(){
+			this.bgSpt=null;
+			this.selectBtn=null;
+			this.handImg=null;
+			this.mapSpt=null;
+			this.downStage=null;
+			this.upStage=null;
+			this.rewardBox=null;
+			this.skipBtn=null;
+			this.stageNumTxt=null;
+			this.selectDesTxt=null;
+			SelectStageLayerUI.__super.call(this);
+		}
+
+		__class(SelectStageLayerUI,'ui.GameStage.SelectStageLayerUI',_super);
+		var __proto=SelectStageLayerUI.prototype;
+		__proto.createChildren=function(){
+			laya.ui.Component.prototype.createChildren.call(this);
+			this.createView(SelectStageLayerUI.uiView);
+		}
+
+		__static(SelectStageLayerUI,
+		['uiView',function(){return this.uiView={"type":"View","props":{"width":1136,"name":"selectImg","height":640},"child":[{"type":"Rect","props":{"y":0,"x":0,"width":1136,"lineWidth":1,"height":640,"fillColor":"#000000"}},{"type":"Sprite","props":{"y":66,"x":133,"width":885,"var":"bgSpt","height":529}},{"type":"Rect","props":{"y":162,"x":229,"width":640,"lineWidth":1,"height":394,"fillColor":"#333333"}},{"type":"Button","props":{"y":504,"x":960,"var":"selectBtn","stateNum":"3","skin":"btn/selectBtn.png","anchorY":1,"anchorX":0.5}},{"type":"Image","props":{"y":264,"x":919,"var":"handImg","skin":"comp/hand.png"}},{"type":"Sprite","props":{"y":207,"x":291,"width":518,"var":"mapSpt","height":322},"child":[{"type":"Sprite","props":{"y":33,"x":85,"name":"r1"},"child":[{"type":"Rect","props":{"width":110,"lineWidth":1,"height":78,"fillColor":"#000000"}},{"type":"Image","props":{"y":0,"x":0,"width":110,"skin":"frame/stageSlotsSelectedBg.png","name":"selectImg","height":78}},{"type":"Sprite","props":{"y":30,"x":-15,"name":"leftSpt"},"child":[{"type":"Rect","props":{"width":20,"lineWidth":1,"height":20,"fillColor":"#000000"}}]},{"type":"Sprite","props":{"y":-13,"x":45,"name":"upSpt"},"child":[{"type":"Rect","props":{"width":20,"lineWidth":1,"height":20,"fillColor":"#000000"}}]},{"type":"Sprite","props":{"y":71,"x":45,"name":"downSpt"},"child":[{"type":"Rect","props":{"width":20,"lineWidth":1,"height":20,"fillColor":"#000000"}}]},{"type":"Sprite","props":{"y":30,"x":105,"name":"rightSpt"},"child":[{"type":"Rect","props":{"width":20,"lineWidth":1,"height":20,"fillColor":"#000000"}}]}]},{"type":"Sprite","props":{"y":33,"x":205,"name":"r4"},"child":[{"type":"Rect","props":{"width":110,"lineWidth":1,"height":78,"fillColor":"#000000"}},{"type":"Image","props":{"y":0,"x":0,"width":110,"skin":"frame/stageSlotsSelectedBg.png","name":"selectImg","height":78}},{"type":"Sprite","props":{"y":30,"x":-15,"name":"leftSpt"},"child":[{"type":"Rect","props":{"width":20,"lineWidth":1,"height":20,"fillColor":"#000000"}}]},{"type":"Sprite","props":{"y":-13,"x":45,"name":"upSpt"},"child":[{"type":"Rect","props":{"width":20,"lineWidth":1,"height":20,"fillColor":"#000000"}}]},{"type":"Sprite","props":{"y":71,"x":45,"name":"downSpt"},"child":[{"type":"Rect","props":{"width":20,"lineWidth":1,"height":20,"fillColor":"#000000"}}]},{"type":"Sprite","props":{"y":30,"x":105,"name":"rightSpt"},"child":[{"type":"Rect","props":{"width":20,"lineWidth":1,"height":20,"fillColor":"#000000"}}]}]},{"type":"Sprite","props":{"y":33,"x":325,"name":"r7"},"child":[{"type":"Rect","props":{"width":110,"lineWidth":1,"height":78,"fillColor":"#000000"}},{"type":"Image","props":{"y":0,"x":0,"width":110,"skin":"frame/stageSlotsSelectedBg.png","name":"selectImg","height":78}},{"type":"Sprite","props":{"y":30,"x":-15,"name":"leftSpt"},"child":[{"type":"Rect","props":{"width":20,"lineWidth":1,"height":20,"fillColor":"#000000"}}]},{"type":"Sprite","props":{"y":-13,"x":45,"name":"upSpt"},"child":[{"type":"Rect","props":{"width":20,"lineWidth":1,"height":20,"fillColor":"#000000"}}]},{"type":"Sprite","props":{"y":71,"x":45,"name":"downSpt"},"child":[{"type":"Rect","props":{"width":20,"lineWidth":1,"height":20,"fillColor":"#000000"}}]},{"type":"Sprite","props":{"y":30,"x":105,"name":"rightSpt"},"child":[{"type":"Rect","props":{"width":20,"lineWidth":1,"height":20,"fillColor":"#000000"}}]}]},{"type":"Sprite","props":{"y":121,"x":85,"name":"r2"},"child":[{"type":"Rect","props":{"width":110,"lineWidth":1,"height":78,"fillColor":"#000000"}},{"type":"Image","props":{"y":0,"x":0,"width":110,"skin":"frame/stageSlotsSelectedBg.png","name":"selectImg","height":78}},{"type":"Sprite","props":{"y":30,"x":-15,"name":"leftSpt"},"child":[{"type":"Rect","props":{"width":20,"lineWidth":1,"height":20,"fillColor":"#000000"}}]},{"type":"Sprite","props":{"y":-13,"x":45,"name":"upSpt"},"child":[{"type":"Rect","props":{"width":20,"lineWidth":1,"height":20,"fillColor":"#000000"}}]},{"type":"Sprite","props":{"y":71,"x":45,"name":"downSpt"},"child":[{"type":"Rect","props":{"width":20,"lineWidth":1,"height":20,"fillColor":"#000000"}}]},{"type":"Sprite","props":{"y":30,"x":105,"name":"rightSpt"},"child":[{"type":"Rect","props":{"width":20,"lineWidth":1,"height":20,"fillColor":"#000000"}}]}]},{"type":"Sprite","props":{"y":121,"x":205,"name":"r5"},"child":[{"type":"Rect","props":{"width":110,"lineWidth":1,"height":78,"fillColor":"#000000"}},{"type":"Image","props":{"y":0,"x":0,"width":110,"skin":"frame/stageSlotsSelectedBg.png","name":"selectImg","height":78}},{"type":"Sprite","props":{"y":30,"x":-15,"name":"leftSpt"},"child":[{"type":"Rect","props":{"width":20,"lineWidth":1,"height":20,"fillColor":"#000000"}}]},{"type":"Sprite","props":{"y":-13,"x":45,"name":"upSpt"},"child":[{"type":"Rect","props":{"width":20,"lineWidth":1,"height":20,"fillColor":"#000000"}}]},{"type":"Sprite","props":{"y":71,"x":45,"name":"downSpt"},"child":[{"type":"Rect","props":{"width":20,"lineWidth":1,"height":20,"fillColor":"#000000"}}]},{"type":"Sprite","props":{"y":30,"x":105,"name":"rightSpt"},"child":[{"type":"Rect","props":{"width":20,"lineWidth":1,"height":20,"fillColor":"#000000"}}]}]},{"type":"Sprite","props":{"y":121,"x":325,"name":"r8"},"child":[{"type":"Rect","props":{"width":110,"lineWidth":1,"height":78,"fillColor":"#000000"}},{"type":"Image","props":{"y":0,"x":0,"width":110,"skin":"frame/stageSlotsSelectedBg.png","name":"selectImg","height":78}},{"type":"Sprite","props":{"y":30,"x":-15,"name":"leftSpt"},"child":[{"type":"Rect","props":{"width":20,"lineWidth":1,"height":20,"fillColor":"#000000"}}]},{"type":"Sprite","props":{"y":-13,"x":45,"name":"upSpt"},"child":[{"type":"Rect","props":{"width":20,"lineWidth":1,"height":20,"fillColor":"#000000"}}]},{"type":"Sprite","props":{"y":71,"x":45,"name":"downSpt"},"child":[{"type":"Rect","props":{"width":20,"lineWidth":1,"height":20,"fillColor":"#000000"}}]},{"type":"Sprite","props":{"y":30,"x":105,"name":"rightSpt"},"child":[{"type":"Rect","props":{"width":20,"lineWidth":1,"height":20,"fillColor":"#000000"}}]}]},{"type":"Sprite","props":{"y":209,"x":85,"name":"r3"},"child":[{"type":"Rect","props":{"width":110,"lineWidth":1,"height":78,"fillColor":"#000000"}},{"type":"Image","props":{"y":0,"x":0,"width":110,"skin":"frame/stageSlotsSelectedBg.png","name":"selectImg","height":78}},{"type":"Sprite","props":{"y":30,"x":-15,"name":"leftSpt"},"child":[{"type":"Rect","props":{"width":20,"lineWidth":1,"height":20,"fillColor":"#000000"}}]},{"type":"Sprite","props":{"y":-13,"x":45,"name":"upSpt"},"child":[{"type":"Rect","props":{"width":20,"lineWidth":1,"height":20,"fillColor":"#000000"}}]},{"type":"Sprite","props":{"y":71,"x":45,"name":"downSpt"},"child":[{"type":"Rect","props":{"width":20,"lineWidth":1,"height":20,"fillColor":"#000000"}}]},{"type":"Sprite","props":{"y":30,"x":105,"name":"rightSpt"},"child":[{"type":"Rect","props":{"width":20,"lineWidth":1,"height":20,"fillColor":"#000000"}}]}]},{"type":"Sprite","props":{"y":209,"x":205,"name":"r6"},"child":[{"type":"Rect","props":{"width":110,"lineWidth":1,"height":78,"fillColor":"#000000"}},{"type":"Image","props":{"y":0,"x":0,"width":110,"skin":"frame/stageSlotsSelectedBg.png","name":"selectImg","height":78}},{"type":"Sprite","props":{"y":30,"x":-15,"name":"leftSpt"},"child":[{"type":"Rect","props":{"width":20,"lineWidth":1,"height":20,"fillColor":"#000000"}}]},{"type":"Sprite","props":{"y":-13,"x":45,"name":"upSpt"},"child":[{"type":"Rect","props":{"width":20,"lineWidth":1,"height":20,"fillColor":"#000000"}}]},{"type":"Sprite","props":{"y":71,"x":45,"name":"downSpt"},"child":[{"type":"Rect","props":{"width":20,"lineWidth":1,"height":20,"fillColor":"#000000"}}]},{"type":"Sprite","props":{"y":30,"x":105,"name":"rightSpt"},"child":[{"type":"Rect","props":{"width":20,"lineWidth":1,"height":20,"fillColor":"#000000"}}]}]},{"type":"Sprite","props":{"y":209,"x":325,"name":"r9"},"child":[{"type":"Rect","props":{"width":110,"lineWidth":1,"height":78,"fillColor":"#000000"}},{"type":"Image","props":{"y":0,"x":0,"width":110,"skin":"frame/stageSlotsSelectedBg.png","name":"selectImg","height":78}},{"type":"Sprite","props":{"y":30,"x":-15,"name":"leftSpt"},"child":[{"type":"Rect","props":{"width":20,"lineWidth":1,"height":20,"fillColor":"#000000"}}]},{"type":"Sprite","props":{"y":-13,"x":45,"name":"upSpt"},"child":[{"type":"Rect","props":{"width":20,"lineWidth":1,"height":20,"fillColor":"#000000"}}]},{"type":"Sprite","props":{"y":71,"x":45,"name":"downSpt"},"child":[{"type":"Rect","props":{"width":20,"lineWidth":1,"height":20,"fillColor":"#000000"}}]},{"type":"Sprite","props":{"y":30,"x":105,"name":"rightSpt"},"child":[{"type":"Rect","props":{"width":20,"lineWidth":1,"height":20,"fillColor":"#000000"}}]}]},{"type":"Image","props":{"y":107,"x":-62,"var":"downStage","skin":"comp/downStage.png"}},{"type":"Image","props":{"y":27,"x":-70,"var":"upStage","skin":"comp/upStage.png"}},{"type":"Image","props":{"y":177,"x":-71,"var":"rewardBox","skin":"comp/rewardBox.png"}}]},{"type":"Image","props":{"y":112,"x":549,"skin":"comp/selectStageTitle.png","anchorX":0.5}},{"type":"Image","props":{"y":181,"x":483,"skin":"frame/stageNumBg.png"}},{"type":"Button","props":{"y":523,"x":906,"var":"skipBtn","stateNum":"1","skin":"btn/jumpBtn.png"}},{"type":"Image","props":{"y":526,"x":920,"skin":"btn/jumpWord.png","mouseEnabled":false}},{"type":"Label","props":{"y":180,"x":369,"width":364,"var":"stageNumTxt","valign":"top","text":"泥土 1-1","strokeColor":"#000000","stroke":0,"height":37,"fontSize":20,"font":"Microsoft YaHei","color":"#ffffff","align":"center"}},{"type":"Label","props":{"y":515,"x":370,"width":364,"var":"selectDesTxt","text":"选择房间通道","strokeColor":"#080808","stroke":3,"height":37,"fontSize":22,"font":"Microsoft YaHei","color":"#ffffff","align":"center"}}]};}
+		]);
+		return SelectStageLayerUI;
+	})(View)
 
 
 	/**
@@ -30021,13 +30219,13 @@ var Laya=window.Laya=(function(window,document){
 		}
 
 		__static(SlotsPanelUI,
-		['uiView',function(){return this.uiView={"type":"Dialog","props":{"width":1024,"height":640,"alpha":100},"child":[{"type":"Image","props":{"y":325,"x":512,"skin":"frame/slotsPanelBg.png","anchorY":0.5,"anchorX":0.5}},{"type":"Image","props":{"y":188,"x":512,"skin":"comp/slotsPanelTitleBg.png","anchorY":0.5,"anchorX":0.5}},{"type":"Image","props":{"y":142,"x":512,"skin":"comp/slotsTitle.png","anchorX":0.5}},{"type":"Label","props":{"y":205,"x":512,"width":219,"var":"titleTxt","text":"房间敌人数量","overflow":"visible","height":25,"fontSize":20,"font":"Microsoft YaHei","color":"#033297","bold":true,"anchorY":0.5,"anchorX":0.5,"align":"center"}},{"type":"Button","props":{"y":463,"x":758,"var":"selectBtn","stateNum":"3","skin":"btn/selectBtn.png","anchorY":1,"anchorX":0.5}},{"type":"Sprite","props":{"y":231,"x":373,"width":279,"var":"bgSpt","height":224},"child":[{"type":"Image","props":{"y":7,"x":0,"width":84,"name":"bg1","height":63}},{"type":"Image","props":{"y":7,"x":97,"width":84,"name":"bg2","height":63}},{"type":"Image","props":{"y":7,"x":193,"width":84,"name":"bg3","height":63}},{"type":"Image","props":{"y":80,"x":0,"width":84,"name":"bg4","height":63}},{"type":"Image","props":{"y":80,"x":97,"width":84,"name":"bg5","height":63}},{"type":"Image","props":{"y":80,"x":193,"width":84,"name":"bg6","height":63}},{"type":"Image","props":{"y":152,"x":0,"width":84,"name":"bg7","height":63}},{"type":"Image","props":{"y":152,"x":97,"width":84,"name":"bg8","height":63}},{"type":"Image","props":{"y":152,"x":193,"width":84,"name":"bg9","height":63}}]},{"type":"Sprite","props":{"y":231,"x":373,"width":279,"var":"contentSpt","height":224},"child":[{"type":"Sprite","props":{"y":7,"x":0,"width":84,"name":"m1","height":63}},{"type":"Sprite","props":{"y":7,"x":97,"width":84,"name":"m2","height":63}},{"type":"Sprite","props":{"y":7,"x":193,"width":84,"name":"m3","height":63}},{"type":"Sprite","props":{"y":80,"x":0,"width":84,"name":"m4","height":63}},{"type":"Sprite","props":{"y":80,"x":97,"width":84,"name":"m5","height":63}},{"type":"Sprite","props":{"y":80,"x":193,"width":84,"name":"m6","height":63}},{"type":"Sprite","props":{"y":152,"x":0,"width":84,"name":"m7","height":63}},{"type":"Sprite","props":{"y":152,"x":97,"width":84,"name":"m8","height":63}},{"type":"Sprite","props":{"y":152,"x":193,"width":84,"name":"m9","height":63}}]},{"type":"Sprite","props":{"y":231,"x":373,"width":279,"var":"frameSpt","height":224},"child":[{"type":"Image","props":{"y":7,"x":0,"width":84,"pivotX":0.5,"name":"frame1","height":63}},{"type":"Image","props":{"y":7,"x":97,"width":84,"name":"frame2","height":63}},{"type":"Image","props":{"y":7,"x":193,"width":84,"name":"frame3","height":63}},{"type":"Image","props":{"y":80,"x":0,"width":84,"name":"frame4","height":63}},{"type":"Image","props":{"y":80,"x":97,"width":84,"name":"frame5","height":63}},{"type":"Image","props":{"y":80,"x":193,"width":84,"name":"frame6","height":63}},{"type":"Image","props":{"y":152,"x":0,"width":84,"name":"frame7","height":63}},{"type":"Image","props":{"y":152,"x":97,"width":84,"name":"frame8","height":63}},{"type":"Image","props":{"y":152,"x":193,"width":84,"name":"frame9","height":63}},{"type":"Image","props":{"y":7,"var":"selectedImg","skin":"frame/slotsSelectedBg.png"}}]},{"type":"Image","props":{"y":229,"x":717,"var":"handImg","skin":"comp/hand.png"}}]};}
+		['uiView',function(){return this.uiView={"type":"Dialog","props":{"width":1136,"height":640,"alpha":100},"child":[{"type":"Image","props":{"y":325,"x":512,"skin":"frame/slotsPanelBg.png","anchorY":0.5,"anchorX":0.5}},{"type":"Image","props":{"y":188,"x":512,"skin":"comp/slotsPanelTitleBg.png","anchorY":0.5,"anchorX":0.5}},{"type":"Image","props":{"y":142,"x":512,"skin":"comp/slotsTitle.png","anchorX":0.5}},{"type":"Label","props":{"y":205,"x":512,"width":219,"var":"titleTxt","text":"房间敌人数量","overflow":"visible","height":25,"fontSize":20,"font":"Microsoft YaHei","color":"#033297","bold":true,"anchorY":0.5,"anchorX":0.5,"align":"center"}},{"type":"Button","props":{"y":463,"x":758,"var":"selectBtn","stateNum":"3","skin":"btn/selectBtn.png","anchorY":1,"anchorX":0.5}},{"type":"Sprite","props":{"y":231,"x":373,"width":279,"var":"bgSpt","height":224},"child":[{"type":"Image","props":{"y":7,"x":0,"width":84,"name":"bg1","height":63}},{"type":"Image","props":{"y":7,"x":97,"width":84,"name":"bg2","height":63}},{"type":"Image","props":{"y":7,"x":193,"width":84,"name":"bg3","height":63}},{"type":"Image","props":{"y":80,"x":0,"width":84,"name":"bg4","height":63}},{"type":"Image","props":{"y":80,"x":97,"width":84,"name":"bg5","height":63}},{"type":"Image","props":{"y":80,"x":193,"width":84,"name":"bg6","height":63}},{"type":"Image","props":{"y":152,"x":0,"width":84,"name":"bg7","height":63}},{"type":"Image","props":{"y":152,"x":97,"width":84,"name":"bg8","height":63}},{"type":"Image","props":{"y":152,"x":193,"width":84,"name":"bg9","height":63}}]},{"type":"Sprite","props":{"y":231,"x":373,"width":279,"var":"contentSpt","height":224},"child":[{"type":"Sprite","props":{"y":7,"x":0,"width":84,"name":"m1","height":63}},{"type":"Sprite","props":{"y":7,"x":97,"width":84,"name":"m2","height":63}},{"type":"Sprite","props":{"y":7,"x":193,"width":84,"name":"m3","height":63}},{"type":"Sprite","props":{"y":80,"x":0,"width":84,"name":"m4","height":63}},{"type":"Sprite","props":{"y":80,"x":97,"width":84,"name":"m5","height":63}},{"type":"Sprite","props":{"y":80,"x":193,"width":84,"name":"m6","height":63}},{"type":"Sprite","props":{"y":152,"x":0,"width":84,"name":"m7","height":63}},{"type":"Sprite","props":{"y":152,"x":97,"width":84,"name":"m8","height":63}},{"type":"Sprite","props":{"y":152,"x":193,"width":84,"name":"m9","height":63}}]},{"type":"Sprite","props":{"y":231,"x":373,"width":279,"var":"frameSpt","height":224},"child":[{"type":"Image","props":{"y":7,"x":0,"width":84,"pivotX":0.5,"name":"frame1","height":63}},{"type":"Image","props":{"y":7,"x":97,"width":84,"name":"frame2","height":63}},{"type":"Image","props":{"y":7,"x":193,"width":84,"name":"frame3","height":63}},{"type":"Image","props":{"y":80,"x":0,"width":84,"name":"frame4","height":63}},{"type":"Image","props":{"y":80,"x":97,"width":84,"name":"frame5","height":63}},{"type":"Image","props":{"y":80,"x":193,"width":84,"name":"frame6","height":63}},{"type":"Image","props":{"y":152,"x":0,"width":84,"name":"frame7","height":63}},{"type":"Image","props":{"y":152,"x":97,"width":84,"name":"frame8","height":63}},{"type":"Image","props":{"y":152,"x":193,"width":84,"name":"frame9","height":63}},{"type":"Image","props":{"y":7,"var":"selectedImg","skin":"frame/slotsSelectedBg.png"}}]},{"type":"Image","props":{"y":229,"x":717,"var":"handImg","skin":"comp/hand.png"}}]};}
 		]);
 		return SlotsPanelUI;
 	})(Dialog)
 
 
-	Laya.__init([LoaderManager,EventDispatcher,FloatTips,Damage,NotificationCenter,Facade,Timer,Render,Browser,View,GraphicAnimation1,LocalStorage]);
+	Laya.__init([EventDispatcher,LoaderManager,FloatTips,Damage,NotificationCenter,Facade,Timer,Render,Browser,View,GraphicAnimation1,LocalStorage]);
 	new Main();
 
 })(window,document,Laya);

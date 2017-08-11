@@ -46,16 +46,12 @@ public class PlayerProxy extends Proxy
 			{
 				var childNode:XmlDom = elementList[i];
 				var playerPo:PlayerPo = new PlayerPo();
-				//playerPo.atk = Number(childNode.getAttribute("atk"));
-				//playerPo.def = Number(childNode.getAttribute("def"));
-				//playerPo.magic = Number(childNode.getAttribute("magic"));
 				playerPo.level = Number(childNode.getAttribute("level"));
 				playerPo.hp = Number(childNode.getAttribute("hp"));
 				playerPo.exp = Number(childNode.getAttribute("exp"));
 				this.levelAry.push(playerPo);
 				if (this.maxLevel < playerPo.level)
 					this.maxLevel = playerPo.level;
-				//trace("level:", playerPo.level, "atk:", MathUtil.ceil(playerPo.level / 20) + 1);
 			}
 			this.isLoaded = true;
 			this.pVo = new PlayerVo();

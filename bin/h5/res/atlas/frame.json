@@ -357,10 +357,31 @@
             "rotated": false,
             "trimed": false
         },
-        "stageSlotsBg.png": {
+        "stageNumBg.png": {
             "frame": {
                 "x": 384,
                 "y": 276,
+                "w": 137,
+                "h": 27,
+                "idx": 0
+            },
+            "spriteSourceSize": {
+                "x": 0,
+                "y": 0,
+                "w": 137,
+                "h": 27
+            },
+            "sourceSize": {
+                "w": 137,
+                "h": 27
+            },
+            "rotated": false,
+            "trimed": false
+        },
+        "stageSlotsBg.png": {
+            "frame": {
+                "x": 384,
+                "y": 305,
                 "w": 105,
                 "h": 74,
                 "idx": 0
@@ -381,7 +402,7 @@
         "stageSlotsSelectedBg.png": {
             "frame": {
                 "x": 384,
-                "y": 352,
+                "y": 381,
                 "w": 110,
                 "h": 78,
                 "idx": 0

@@ -58,32 +58,6 @@ public class Damage
 	}
 	
 	/**
-	 * 飘字
-	 * @param	str		内容
-	 * @param	x		x位置
-	 * @param	y		y位置
-	 * @param	scale	缩放
-	 * @param	d		运行时间
-	 */
-	public static function floatStr(str:String, x:Number, y:Number, scale:int = 1, d:int = 1200):void
-	{
-		var txt:Text = new Text();
-		txt.font = GameConstant.GAME_FONT_NAME;
-		txt.text = str;
-		Layer.GAME_DAMAGE.addChild(txt);
-		txt.x = x;
-		txt.y = y;
-		txt.scale(scale, scale);
-		Tween.to(txt, { y: txt.y - 70 }, d, Ease.expoOut, Handler.create(this, function():void
-		{
-			Tween.to(txt, { alpha: 0 }, 300, Ease.expoOut, Handler.create(this, function():void
-			{
-				txt.removeSelf();
-			}));
-		}));
-	}
-	
-	/**
 	 * 更新
 	 */
 	public static function update():void

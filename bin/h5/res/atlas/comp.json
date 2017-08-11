@@ -21,10 +21,73 @@
             "rotated": false,
             "trimed": false
         },
-        "defIcon.png": {
+        "bossBox.png": {
+            "frame": {
+                "x": 0,
+                "y": 43,
+                "w": 81,
+                "h": 63,
+                "idx": 0
+            },
+            "spriteSourceSize": {
+                "x": 0,
+                "y": 0,
+                "w": 81,
+                "h": 63
+            },
+            "sourceSize": {
+                "w": 81,
+                "h": 63
+            },
+            "rotated": false,
+            "trimed": false
+        },
+        "bossBoxLock.png": {
             "frame": {
                 "x": 42,
                 "y": 0,
+                "w": 37,
+                "h": 34,
+                "idx": 0
+            },
+            "spriteSourceSize": {
+                "x": 0,
+                "y": 0,
+                "w": 37,
+                "h": 34
+            },
+            "sourceSize": {
+                "w": 37,
+                "h": 34
+            },
+            "rotated": false,
+            "trimed": false
+        },
+        "bossIcon.png": {
+            "frame": {
+                "x": 0,
+                "y": 108,
+                "w": 65,
+                "h": 69,
+                "idx": 0
+            },
+            "spriteSourceSize": {
+                "x": 0,
+                "y": 0,
+                "w": 65,
+                "h": 69
+            },
+            "sourceSize": {
+                "w": 65,
+                "h": 69
+            },
+            "rotated": false,
+            "trimed": false
+        },
+        "defIcon.png": {
+            "frame": {
+                "x": 0,
+                "y": 179,
                 "w": 46,
                 "h": 47,
                 "idx": 0
@@ -45,7 +108,7 @@
         "defProp.png": {
             "frame": {
                 "x": 0,
-                "y": 43,
+                "y": 228,
                 "w": 40,
                 "h": 42,
                 "idx": 0
@@ -63,10 +126,31 @@
             "rotated": false,
             "trimed": false
         },
+        "downStage.png": {
+            "frame": {
+                "x": 0,
+                "y": 272,
+                "w": 60,
+                "h": 52,
+                "idx": 0
+            },
+            "spriteSourceSize": {
+                "x": 0,
+                "y": 0,
+                "w": 60,
+                "h": 52
+            },
+            "sourceSize": {
+                "w": 60,
+                "h": 52
+            },
+            "rotated": false,
+            "trimed": false
+        },
         "equipIcon.png": {
             "frame": {
-                "x": 90,
-                "y": 0,
+                "x": 48,
+                "y": 179,
                 "w": 44,
                 "h": 46,
                 "idx": 0
@@ -86,8 +170,8 @@
         },
         "freezeTips.png": {
             "frame": {
-                "x": 136,
-                "y": 0,
+                "x": 67,
+                "y": 108,
                 "w": 78,
                 "h": 67,
                 "idx": 0
@@ -107,8 +191,8 @@
         },
         "hand.png": {
             "frame": {
-                "x": 216,
-                "y": 0,
+                "x": 0,
+                "y": 326,
                 "w": 107,
                 "h": 152,
                 "idx": 0
@@ -128,8 +212,8 @@
         },
         "helmetSlotsIcon.png": {
             "frame": {
-                "x": 42,
-                "y": 49,
+                "x": 62,
+                "y": 227,
                 "w": 74,
                 "h": 57,
                 "idx": 0
@@ -149,8 +233,8 @@
         },
         "hpProp.png": {
             "frame": {
-                "x": 0,
-                "y": 87,
+                "x": 94,
+                "y": 177,
                 "w": 38,
                 "h": 45,
                 "idx": 0
@@ -170,8 +254,8 @@
         },
         "image362.png": {
             "frame": {
-                "x": 118,
-                "y": 69,
+                "x": 83,
+                "y": 0,
                 "w": 79,
                 "h": 68,
                 "idx": 0
@@ -191,8 +275,8 @@
         },
         "magicIcon.png": {
             "frame": {
-                "x": 40,
-                "y": 108,
+                "x": 134,
+                "y": 177,
                 "w": 41,
                 "h": 41,
                 "idx": 0
@@ -212,8 +296,8 @@
         },
         "magicProp.png": {
             "frame": {
-                "x": 83,
-                "y": 139,
+                "x": 147,
+                "y": 70,
                 "w": 39,
                 "h": 44,
                 "idx": 0
@@ -233,8 +317,8 @@
         },
         "magicSlotsIcon.png": {
             "frame": {
-                "x": 0,
-                "y": 151,
+                "x": 147,
+                "y": 116,
                 "w": 52,
                 "h": 52,
                 "idx": 0
@@ -252,10 +336,31 @@
             "rotated": false,
             "trimed": false
         },
+        "nextStageTitle.png": {
+            "frame": {
+                "x": 188,
+                "y": 0,
+                "w": 497,
+                "h": 76,
+                "idx": 0
+            },
+            "spriteSourceSize": {
+                "x": 0,
+                "y": 0,
+                "w": 497,
+                "h": 76
+            },
+            "sourceSize": {
+                "w": 497,
+                "h": 76
+            },
+            "rotated": false,
+            "trimed": false
+        },
         "num0.png": {
             "frame": {
-                "x": 124,
-                "y": 139,
+                "x": 0,
+                "y": 480,
                 "w": 79,
                 "h": 54,
                 "idx": 0
@@ -275,8 +380,8 @@
         },
         "num1.png": {
             "frame": {
-                "x": 325,
-                "y": 0,
+                "x": 0,
+                "y": 536,
                 "w": 79,
                 "h": 54,
                 "idx": 0
@@ -296,8 +401,8 @@
         },
         "num10.png": {
             "frame": {
-                "x": 406,
-                "y": 0,
+                "x": 0,
+                "y": 592,
                 "w": 79,
                 "h": 54,
                 "idx": 0
@@ -317,8 +422,8 @@
         },
         "num11.png": {
             "frame": {
-                "x": 325,
-                "y": 56,
+                "x": 0,
+                "y": 648,
                 "w": 79,
                 "h": 54,
                 "idx": 0
@@ -338,8 +443,8 @@
         },
         "num12.png": {
             "frame": {
-                "x": 406,
-                "y": 56,
+                "x": 81,
+                "y": 480,
                 "w": 79,
                 "h": 54,
                 "idx": 0
@@ -359,8 +464,8 @@
         },
         "num13.png": {
             "frame": {
-                "x": 325,
-                "y": 112,
+                "x": 109,
+                "y": 286,
                 "w": 79,
                 "h": 54,
                 "idx": 0
@@ -380,8 +485,8 @@
         },
         "num14.png": {
             "frame": {
-                "x": 406,
-                "y": 112,
+                "x": 138,
+                "y": 220,
                 "w": 79,
                 "h": 54,
                 "idx": 0
@@ -401,8 +506,8 @@
         },
         "num15.png": {
             "frame": {
-                "x": 205,
-                "y": 154,
+                "x": 201,
+                "y": 78,
                 "w": 79,
                 "h": 54,
                 "idx": 0
@@ -422,8 +527,8 @@
         },
         "num16.png": {
             "frame": {
-                "x": 54,
-                "y": 195,
+                "x": 201,
+                "y": 134,
                 "w": 79,
                 "h": 54,
                 "idx": 0
@@ -443,8 +548,8 @@
         },
         "num17.png": {
             "frame": {
-                "x": 286,
-                "y": 168,
+                "x": 109,
+                "y": 342,
                 "w": 79,
                 "h": 54,
                 "idx": 0
@@ -464,8 +569,8 @@
         },
         "num18.png": {
             "frame": {
-                "x": 135,
-                "y": 210,
+                "x": 109,
+                "y": 398,
                 "w": 79,
                 "h": 54,
                 "idx": 0
@@ -485,8 +590,8 @@
         },
         "num19.png": {
             "frame": {
-                "x": 0,
-                "y": 251,
+                "x": 81,
+                "y": 536,
                 "w": 79,
                 "h": 54,
                 "idx": 0
@@ -506,8 +611,8 @@
         },
         "num2.png": {
             "frame": {
-                "x": 367,
-                "y": 168,
+                "x": 81,
+                "y": 592,
                 "w": 79,
                 "h": 54,
                 "idx": 0
@@ -527,8 +632,8 @@
         },
         "num20.png": {
             "frame": {
-                "x": 216,
-                "y": 224,
+                "x": 81,
+                "y": 648,
                 "w": 79,
                 "h": 54,
                 "idx": 0
@@ -548,8 +653,8 @@
         },
         "num21.png": {
             "frame": {
-                "x": 81,
-                "y": 266,
+                "x": 162,
+                "y": 454,
                 "w": 79,
                 "h": 54,
                 "idx": 0
@@ -569,8 +674,8 @@
         },
         "num3.png": {
             "frame": {
-                "x": 0,
-                "y": 307,
+                "x": 190,
+                "y": 276,
                 "w": 79,
                 "h": 54,
                 "idx": 0
@@ -590,8 +695,8 @@
         },
         "num4.png": {
             "frame": {
-                "x": 297,
-                "y": 224,
+                "x": 219,
+                "y": 190,
                 "w": 79,
                 "h": 54,
                 "idx": 0
@@ -611,8 +716,8 @@
         },
         "num5.png": {
             "frame": {
-                "x": 378,
-                "y": 224,
+                "x": 282,
+                "y": 78,
                 "w": 79,
                 "h": 54,
                 "idx": 0
@@ -632,8 +737,8 @@
         },
         "num6.png": {
             "frame": {
-                "x": 0,
-                "y": 363,
+                "x": 282,
+                "y": 134,
                 "w": 79,
                 "h": 54,
                 "idx": 0
@@ -653,8 +758,8 @@
         },
         "num7.png": {
             "frame": {
-                "x": 0,
-                "y": 419,
+                "x": 190,
+                "y": 332,
                 "w": 79,
                 "h": 54,
                 "idx": 0
@@ -674,8 +779,8 @@
         },
         "num8.png": {
             "frame": {
-                "x": 0,
-                "y": 475,
+                "x": 190,
+                "y": 388,
                 "w": 79,
                 "h": 54,
                 "idx": 0
@@ -696,7 +801,7 @@
         "num9.png": {
             "frame": {
                 "x": 162,
-                "y": 280,
+                "y": 510,
                 "w": 79,
                 "h": 54,
                 "idx": 0
@@ -714,10 +819,31 @@
             "rotated": false,
             "trimed": false
         },
+        "rewardBox.png": {
+            "frame": {
+                "x": 162,
+                "y": 566,
+                "w": 62,
+                "h": 52,
+                "idx": 0
+            },
+            "spriteSourceSize": {
+                "x": 0,
+                "y": 0,
+                "w": 62,
+                "h": 52
+            },
+            "sourceSize": {
+                "w": 62,
+                "h": 52
+            },
+            "rotated": false,
+            "trimed": false
+        },
         "roundArrow.png": {
             "frame": {
-                "x": 448,
-                "y": 168,
+                "x": 162,
+                "y": 620,
                 "w": 54,
                 "h": 44,
                 "idx": 0
@@ -735,10 +861,31 @@
             "rotated": false,
             "trimed": false
         },
+        "selectStageTitle.png": {
+            "frame": {
+                "x": 218,
+                "y": 620,
+                "w": 497,
+                "h": 76,
+                "idx": 0
+            },
+            "spriteSourceSize": {
+                "x": 0,
+                "y": 0,
+                "w": 497,
+                "h": 76
+            },
+            "sourceSize": {
+                "w": 497,
+                "h": 76
+            },
+            "rotated": false,
+            "trimed": false
+        },
         "shieldSlotsIcon.png": {
             "frame": {
-                "x": 81,
-                "y": 322,
+                "x": 162,
+                "y": 666,
                 "w": 52,
                 "h": 53,
                 "idx": 0
@@ -758,8 +905,8 @@
         },
         "slotsPanelTitleBg.png": {
             "frame": {
-                "x": 81,
-                "y": 377,
+                "x": 243,
+                "y": 444,
                 "w": 316,
                 "h": 77,
                 "idx": 0
@@ -780,7 +927,7 @@
         "slotsTitle.png": {
             "frame": {
                 "x": 243,
-                "y": 280,
+                "y": 523,
                 "w": 188,
                 "h": 53,
                 "idx": 0
@@ -801,7 +948,7 @@
         "totem1.png": {
             "frame": {
                 "x": 433,
-                "y": 280,
+                "y": 523,
                 "w": 67,
                 "h": 73,
                 "idx": 0
@@ -821,8 +968,8 @@
         },
         "totem2.png": {
             "frame": {
-                "x": 399,
-                "y": 355,
+                "x": 502,
+                "y": 523,
                 "w": 94,
                 "h": 61,
                 "idx": 0
@@ -842,8 +989,8 @@
         },
         "totem3.png": {
             "frame": {
-                "x": 399,
-                "y": 418,
+                "x": 598,
+                "y": 78,
                 "w": 95,
                 "h": 64,
                 "idx": 0
@@ -863,8 +1010,8 @@
         },
         "totem4.png": {
             "frame": {
-                "x": 81,
-                "y": 456,
+                "x": 598,
+                "y": 144,
                 "w": 79,
                 "h": 73,
                 "idx": 0
@@ -884,8 +1031,8 @@
         },
         "totem5.png": {
             "frame": {
-                "x": 162,
-                "y": 456,
+                "x": 561,
+                "y": 219,
                 "w": 93,
                 "h": 75,
                 "idx": 0
@@ -903,10 +1050,31 @@
             "rotated": false,
             "trimed": false
         },
+        "upStage.png": {
+            "frame": {
+                "x": 363,
+                "y": 78,
+                "w": 67,
+                "h": 49,
+                "idx": 0
+            },
+            "spriteSourceSize": {
+                "x": 0,
+                "y": 0,
+                "w": 67,
+                "h": 49
+            },
+            "sourceSize": {
+                "w": 67,
+                "h": 49
+            },
+            "rotated": false,
+            "trimed": false
+        },
         "weaponIcon.png": {
             "frame": {
-                "x": 459,
-                "y": 214,
+                "x": 679,
+                "y": 144,
                 "w": 37,
                 "h": 50,
                 "idx": 0
@@ -926,8 +1094,8 @@
         },
         "weaponSlotsIcon.png": {
             "frame": {
-                "x": 257,
-                "y": 456,
+                "x": 363,
+                "y": 129,
                 "w": 43,
                 "h": 58,
                 "idx": 0
@@ -941,6 +1109,27 @@
             "sourceSize": {
                 "w": 43,
                 "h": 58
+            },
+            "rotated": false,
+            "trimed": false
+        },
+        "whichSelect.png": {
+            "frame": {
+                "x": 408,
+                "y": 129,
+                "w": 40,
+                "h": 51,
+                "idx": 0
+            },
+            "spriteSourceSize": {
+                "x": 0,
+                "y": 0,
+                "w": 40,
+                "h": 51
+            },
+            "sourceSize": {
+                "w": 40,
+                "h": 51
             },
             "rotated": false,
             "trimed": false
