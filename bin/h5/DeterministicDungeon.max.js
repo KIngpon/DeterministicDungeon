@@ -1726,6 +1726,138 @@ var Laya=window.Laya=(function(window,document){
 
 
 	/**
+	*...飘字
+	*@author ...Kanon
+	*/
+	//class view.components.FloatTips
+	var FloatTips=(function(){
+		var FloatTxt;
+		function FloatTips(){}
+		__class(FloatTips,'view.components.FloatTips');
+		FloatTips.show=function(str,x,y,targetY,ease){
+			(ease===void 0)&& (ease=.15);
+			var txt=new FloatTxt();
+			txt.x=x;
+			txt.y=y;
+			txt.setFloatStr(str,targetY,ease);
+			Layer.GAME_DAMAGE.addChild(txt);
+			FloatTips.txtAry.push(txt);
+		}
+
+		FloatTips.update=function(){
+			for (var i=0;i < FloatTips.txtAry.length;i++){
+				var txt=FloatTips.txtAry[i];
+				txt.update();
+			}
+			for (var i=0;i < FloatTips.txtAry.length;i++){
+				var txt=FloatTips.txtAry[i];
+			}
+		}
+
+		FloatTips.txtAry=[];
+		FloatTips.__init$=function(){
+			//class FloatTxt extends laya.display.Sprite
+			FloatTxt=(function(_super){
+				function FloatTxt(){
+					this.ease=.15;
+					this.targetY=NaN;
+					this.flashingTimer=null;
+					this.flashingIndex=0;
+					this.isStop=false;
+					FloatTxt.__super.call(this);
+				}
+				__class(FloatTxt,'',_super);
+				var __proto=FloatTxt.prototype;
+				/**
+				*根据文本内容显示文字
+				*@param str 内容
+				*/
+				__proto.setFloatStr=function(str,targetY,ease){
+					var txt=new Text();
+					txt.font=GameConstant.GAME_FONT_NAME;
+					txt.text=str;
+					txt.scale(1.5,1.5);
+					this.targetY=targetY;
+					this.ease=ease;
+					this.addChild(txt);
+					this.flashingIndex=0;
+					this.isStop=false;
+					if (!this.flashingTimer)this.flashingTimer=new Timer();
+					this.flashingTimer.clear(this,this.flashingLoopHandler);
+					this.flashingTimer.loop(50,this,this.flashingLoopHandler);
+				}
+				__proto.flashingLoopHandler=function(){
+					if (!this.isStop)return;
+					this.visible=!this.visible;
+					this.flashingIndex++;
+					if (this.flashingIndex==8){
+						this.flashingTimer.clear(this,this.flashingLoopHandler);
+						this.removeSelf();
+					}
+				}
+				/**
+				*帧循环
+				*/
+				__proto.update=function(){
+					var vy=(this.targetY-this.y)*this.ease;
+					this.y+=vy;
+					var dis=Math.abs(this.y-this.targetY);
+					if (dis <=1){
+						this.y=this.targetY;
+						this.isStop=true;
+					}
+				}
+				return FloatTxt;
+			})(Sprite)
+		}
+
+		return FloatTips;
+	})()
+
+
+	/**
+	*...晃动
+	*@author Kanon
+	*/
+	//class view.components.Shake
+	var Shake=(function(){
+		function Shake(){}
+		__class(Shake,'view.components.Shake');
+		Shake.shake=function(target,delay,shakeDelta){
+			(delay===void 0)&& (delay=5);
+			(shakeDelta===void 0)&& (shakeDelta=3);
+			view.components.Shake.target=target;
+			view.components.Shake.targetY=target.y;
+			view.components.Shake.targetX=target.x;
+			view.components.Shake.delay=delay;
+			view.components.Shake.shakeDelta=shakeDelta;
+		}
+
+		Shake.update=function(){
+			if (view.components.Shake.target){
+				view.components.Shake.delay--;
+				if (view.components.Shake.delay > 0){
+					view.components.Shake.target.x+=view.components.Shake.shakeDelta *Random.randint(-2,2);
+					view.components.Shake.target.y+=view.components.Shake.shakeDelta *Random.randint(-1,1);
+				}
+				else{
+					view.components.Shake.target.x=view.components.Shake.targetX;
+					view.components.Shake.target.y=view.components.Shake.targetY;
+					view.components.Shake.delay=0;
+				}
+			}
+		}
+
+		Shake.target=null
+		Shake.delay=0;
+		Shake.shakeDelta=NaN
+		Shake.targetY=NaN
+		Shake.targetX=NaN
+		return Shake;
+	})()
+
+
+	/**
 	*...游戏层级
 	*@author ...Kanon
 	*/
@@ -10682,9 +10814,9 @@ var Laya=window.Laya=(function(window,document){
 				this.pVo.maxExp=pPo.exp;
 				this.pVo.maxHp=pPo.hp;
 				this.pVo.curHp=this.pVo.maxHp;
-				this.pVo.curExp=24;
+				this.pVo.curExp=0;
 				this.pVo.isFirstStep=true;
-				this.pVo.slotsDelay=270;
+				this.pVo.slotsDelay=70;
 				this.pVo.weaponPo=this.equipProxy.getEquipPoById(1);
 			}));
 		}
@@ -11830,6 +11962,7 @@ var Laya=window.Laya=(function(window,document){
 				var eVo=this.enemyProxy.getEnemyVoByIndex(this.roundIndex);
 				eVo.hp-=hurt;
 				Damage.show(hurt,enemy.x,enemy.y-100,1.5);
+				Shake.shake(Layer.GAME_STAGE);
 			}
 			this.gameStage.updateEnemyHpBar(this.enemyProxy.enemyVoList);
 		}
@@ -11850,7 +11983,7 @@ var Laya=window.Laya=(function(window,document){
 				var curLevel=this.playerVo.level;
 				this.playerProxy.addExp(eVo.enemyPo.exp);
 				this.gameStage.playerExpBar.setValue(this.playerVo.curExp);
-				Damage.floatStr("+"+eVo.enemyPo.exp+"EXP",enemy.x,enemy.y-100,1.5);
+				FloatTips.show("+"+eVo.enemyPo.exp+"EXP",enemy.x,enemy.y,enemy.y-100);
 				if (curLevel < this.playerVo.level){
 					isLevelUp=true;
 					this.gameStage.playerHpBar.setValue(this.playerVo.curHp);
@@ -11858,7 +11991,7 @@ var Laya=window.Laya=(function(window,document){
 					this.gameStage.playerExpBar.setValue(this.playerVo.curExp);
 					this.gameStage.playerExpBar.setMaxValue(this.playerVo.maxExp);
 					this.gameStage.setPlayerProp(this.playerVo);
-					Damage.floatStr("LEVEL UP!",this.gameStage.player.x,this.gameStage.player.y-100,1.5,800);
+					FloatTips.show("LEVEL UP!",this.gameStage.player.x,this.gameStage.player.y,this.gameStage.player.y-100);
 					Tween.to(this.gameStage.player,{x:this.gameStage.player.x},1,null,Handler.create(this,function(){
 						this.enemyHurt(isDead);
 					}),1200);
@@ -11895,10 +12028,13 @@ var Laya=window.Laya=(function(window,document){
 			this.playerVo.curHp-=hurt;
 			this.gameStage.playerHpBar.setValue(this.playerVo.curHp);
 			this.gameStage.playerHurt(hurt==0,Handler.create(this,this.playerHurtComplete));
-			if (hurt==0)
+			if (hurt==0){
 				Damage.showDamageByStr("miss!",this.gameStage.player.x,this.gameStage.player.y-100,1.5);
-			else
-			Damage.show(hurt,this.gameStage.player.x,this.gameStage.player.y-100,1.5);
+			}
+			else{
+				Damage.show(hurt,this.gameStage.player.x,this.gameStage.player.y-100,1.5);
+				Shake.shake(Layer.GAME_STAGE);
+			}
 		}
 
 		/**
@@ -11914,13 +12050,15 @@ var Laya=window.Laya=(function(window,document){
 		*/
 		__proto.loopHandler=function(){
 			Damage.update();
+			FloatTips.update();
+			Shake.update();
 		}
 
 		/**
 		*点击事件
 		*/
 		__proto.clickHandler=function(event){}
-		//Damage.floatStr("+10EXP",event.stageX,event.stageY,1.5);
+		//FloatTips.show("LEVEL UP!",this.gameStage.player.x,this.gameStage.player.y,this.gameStage.player.y-100);
 		__proto.onKeyDownHandler=function(event){
 			if (!this.gameStage)return;
 			if (event.keyCode==65)this.gameStage.playerAtk(Handler.create(this,this.playerAtkComplete));
@@ -29889,7 +30027,7 @@ var Laya=window.Laya=(function(window,document){
 	})(Dialog)
 
 
-	Laya.__init([LoaderManager,EventDispatcher,Damage,NotificationCenter,Facade,Timer,Render,Browser,View,GraphicAnimation1,LocalStorage]);
+	Laya.__init([LoaderManager,EventDispatcher,FloatTips,Damage,NotificationCenter,Facade,Timer,Render,Browser,View,GraphicAnimation1,LocalStorage]);
 	new Main();
 
 })(window,document,Laya);

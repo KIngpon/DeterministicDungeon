@@ -20,6 +20,8 @@ import mvc.Notification;
 import utils.MathUtil;
 import utils.Random;
 import view.components.Damage;
+import view.components.FloatTips;
+import view.components.Shake;
 import view.components.SlotsPanel;
 import view.ui.GameStageLayer;
 import view.ui.Layer;
@@ -323,6 +325,7 @@ public class GameStageMediator extends Mediator
 			var eVo:EnemyVo = this.enemyProxy.getEnemyVoByIndex(this.roundIndex);
 			eVo.hp -= hurt;
 			Damage.show(hurt, enemy.x, enemy.y - 100, 1.5);
+			Shake.shake(Layer.GAME_STAGE);
 		}
 		this.gameStage.updateEnemyHpBar(this.enemyProxy.enemyVoList);
 	}
@@ -346,7 +349,7 @@ public class GameStageMediator extends Mediator
 			var curLevel:int = this.playerVo.level;
 			this.playerProxy.addExp(eVo.enemyPo.exp);
 			this.gameStage.playerExpBar.setValue(this.playerVo.curExp);
-			Damage.floatStr("+" + eVo.enemyPo.exp + "EXP", enemy.x, enemy.y - 100, 1.5);
+			FloatTips.show("+" + eVo.enemyPo.exp + "EXP", enemy.x, enemy.y, enemy.y - 100);
 			if (curLevel < this.playerVo.level)
 			{
 				isLevelUp = true;
@@ -358,7 +361,7 @@ public class GameStageMediator extends Mediator
 				this.gameStage.playerExpBar.setMaxValue(this.playerVo.maxExp);
 				this.gameStage.setPlayerProp(this.playerVo);
 				
-				Damage.floatStr("LEVEL UP!", this.gameStage.player.x, this.gameStage.player.y - 100, 1.5, 800);
+				FloatTips.show("LEVEL UP!", this.gameStage.player.x, this.gameStage.player.y, this.gameStage.player.y - 100);
 				
 				Tween.to(this.gameStage.player, {x:this.gameStage.player.x}, 1, null, Handler.create(this, function():void
 				{
@@ -408,9 +411,14 @@ public class GameStageMediator extends Mediator
 		this.gameStage.playerHpBar.setValue(this.playerVo.curHp);
 		this.gameStage.playerHurt(hurt == 0, Handler.create(this, playerHurtComplete));
 		if (hurt == 0)
+		{
 			Damage.showDamageByStr("miss!", this.gameStage.player.x, this.gameStage.player.y - 100, 1.5);
+		}
 		else
+		{
 			Damage.show(hurt, this.gameStage.player.x, this.gameStage.player.y - 100, 1.5);
+			Shake.shake(Layer.GAME_STAGE);
+		}
 	}
 	
 	/**
@@ -429,6 +437,8 @@ public class GameStageMediator extends Mediator
 	private function loopHandler():void 
 	{
 		Damage.update();
+		FloatTips.update();
+		Shake.update();
 		//shake
 	}
 	
@@ -441,7 +451,7 @@ public class GameStageMediator extends Mediator
 		//Damage.floatStr("+10EXP", event.stageX, event.stageY, 1.5);
 		//Damage.floatStr("LEVEL UP!", this.gameStage.player.x, this.gameStage.player.y - 100, 1.5, 800);
 		//Damage.floatStr("+10EXP", event.stageX, event.stageY, 1.5);
-
+		//FloatTips.show("LEVEL UP!", this.gameStage.player.x, this.gameStage.player.y, this.gameStage.player.y - 100);
 	}
 	
 	private function onKeyDownHandler(event:Event):void 
