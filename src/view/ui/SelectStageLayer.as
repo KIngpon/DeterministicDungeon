@@ -7,6 +7,7 @@ import laya.utils.Ease;
 import laya.utils.Handler;
 import laya.utils.Timer;
 import laya.utils.Tween;
+import model.proxy.StageProxy;
 import ui.GameStage.SelectStageLayerUI;
 
 /**
@@ -24,26 +25,43 @@ public class SelectStageLayer extends Sprite
 	private var upStage:Image;
 	private var downStage:Image;
 	private var rewardBox:Image;
+	private var bossImg:Image;
+	private var bossRewardBox:Image;
 	private var flashingTimer:Timer;
 	private var timer:Timer;
 	private var curSelectIndex:int;
+	private var curSelectValue:int;
 	private var step:int;
-	private var totalNum:int = 9;
+	private var totalNum:int;
 	//已选择的数组
-	private var selectAry:Array;
+	private var numAry:Array;
 	public function SelectStageLayer() 
 	{
 		this.panel = new SelectStageLayerUI();
 		this.addChild(this.panel);
-		this.handImg = this.panel.handImg;
-		this.selectedBtn = this.panel.selectBtn;
-		this.skipBtn = this.panel.skipBtn;
-		this.handMoveComplete2();
-		this.step = 0;
-		this.curSelectIndex = 2;
-		this.selectAry = [];
+		this.initData();
 		this.initUI();
 		this.start();
+	}
+	
+	/**
+	 * 初始化关卡数据
+	 */
+	public function initStageData(sProxy:StageProxy):void
+	{
+		
+	}
+	
+	/**
+	 * 初始化数据
+	 */
+	private function initData():void
+	{
+		this.step = 0;
+		this.totalNum = 9;
+		this.curSelectIndex = 0;
+		this.curSelectValue = 1;
+		this.numAry = [1, 2, 3, 4, 5, 6, 7, 8, 9];
 	}
 	
 	private function handMoveComplete1():void
@@ -81,7 +99,12 @@ public class SelectStageLayer extends Sprite
 	 */
 	public function initUI():void
 	{
+		this.selectedBtn = this.panel.selectBtn;
+		this.handImg = this.panel.handImg;
+		this.skipBtn = this.panel.skipBtn;
 		this.upStage = this.panel.upStage;
+		this.bossImg = this.panel.bossImg;
+		this.bossRewardBox = this.panel.bossRewardBox;
 
 		this.downStage = this.panel.downStage;
 		this.rewardBox = this.panel.rewardBox;
@@ -98,6 +121,8 @@ public class SelectStageLayer extends Sprite
 		this.upStage.visible = false;
 		this.downStage.visible = false;
 		this.rewardBox.visible = false;
+		this.bossImg.visible = false;
+		this.bossRewardBox.visible = false;
 		for (var i:int = 1; i <= this.totalNum; i++) 
 		{
 			var stageIcon:Sprite = this.panel.mapSpt.getChildByName("r" + i) as Sprite;
@@ -112,6 +137,8 @@ public class SelectStageLayer extends Sprite
 			downSpt.visible = false;
 			selectImg.visible = false;
 		}
+		
+		this.handMoveComplete2();
 	}
 	
 	public function start():void
@@ -127,47 +154,60 @@ public class SelectStageLayer extends Sprite
 	 */
 	private function updateSelectImg():void
 	{
-		var stageIcon:Sprite = this.panel.mapSpt.getChildByName("r" + this.curSelectIndex) as Sprite;
+		var stageIcon:Sprite = this.panel.mapSpt.getChildByName("r" + this.curSelectValue) as Sprite;
 		if (!stageIcon) return;
+		var selectImg:Image = stageIcon.getChildByName("selectImg") as Image;
+		selectImg.visible = false;
 		if (this.step == 0)
 		{
+			//选择路径
 			var leftSpt:Sprite = stageIcon.getChildByName("leftSpt") as Sprite;
 			var rightSpt:Sprite = stageIcon.getChildByName("rightSpt") as Sprite;
 			var upSpt:Sprite = stageIcon.getChildByName("upSpt") as Sprite;
 			var downSpt:Sprite = stageIcon.getChildByName("downSpt") as Sprite;
-			var selectImg:Image = stageIcon.getChildByName("selectImg") as Image;
+			this.upStage.visible = false;
+			this.downStage.visible = false;
+			this.rewardBox.visible = false;
 			selectImg.visible = true;
-			if (this.curSelectIndex <= 3)
+			if (this.curSelectValue <= 3)
 			{
 				rightSpt.visible = !rightSpt.visible;
-				if (this.curSelectIndex < 3) downSpt.visible = !rightSpt.visible;
-				if (this.curSelectIndex > 1) upSpt.visible = !rightSpt.visible;
+				if (this.curSelectValue < 3) downSpt.visible = !rightSpt.visible;
+				if (this.curSelectValue > 1) upSpt.visible = !rightSpt.visible;
 			}
-			else if (this.curSelectIndex >= 4 && this.curSelectIndex <= 6)
+			else if (this.curSelectValue >= 4 && this.curSelectValue <= 6)
 			{
-				
+				rightSpt.visible = !rightSpt.visible;
+				leftSpt.visible = !rightSpt.visible;
+				if (this.curSelectValue < 6) downSpt.visible = !rightSpt.visible;
+				if (this.curSelectValue > 4) upSpt.visible = !leftSpt.visible;
 			}
 			else
 			{
-				
+				leftSpt.visible = !leftSpt.visible;
+				if (this.curSelectValue < 9) downSpt.visible = !leftSpt.visible;
+				if (this.curSelectValue > 7) upSpt.visible = !leftSpt.visible;
 			}
 		}
 		else if (this.step == 1)
 		{
-			this.upStage.x = stageIcon.x + stageIcon.width / 2;
-			this.upStage.y = stageIcon.y + stageIcon.height / 2;
+			//选择上层楼梯
+			this.upStage.x = stageIcon.x + selectImg.width / 2;
+			this.upStage.y = stageIcon.y + selectImg.height / 2;
 			this.upStage.visible = true;
 		}
 		else if (this.step == 2)
 		{
-			this.downStage.x = stageIcon.x + stageIcon.width / 2;
-			this.downStage.y = stageIcon.y + stageIcon.height / 2;
+			//选择下层楼梯
+			this.downStage.x = stageIcon.x + selectImg.width / 2;
+			this.downStage.y = stageIcon.y + selectImg.height / 2;
 			this.downStage.visible = true;
 		}
 		else if (this.step == 3)
 		{
-			this.rewardBox.x = stageIcon.x + stageIcon.width / 2;
-			this.rewardBox.y = stageIcon.y + stageIcon.height / 2;
+			//选择奖励宝箱位置
+			this.rewardBox.x = stageIcon.x + selectImg.width / 2;
+			this.rewardBox.y = stageIcon.y + selectImg.height / 2;
 			this.rewardBox.visible = true;
 		}
 	}
@@ -180,10 +220,29 @@ public class SelectStageLayer extends Sprite
 		if (this.step == 0)
 		{
 			this.resetAllSelectImg();
-			if (this.curSelectIndex > this.totalNum)
+			if (this.curSelectValue >= this.totalNum)
 				this.step++;
 			else
-				this.curSelectIndex++;
+				this.curSelectValue++;
+		}
+		else if (this.step <= 3)
+		{
+			//trace("curSelectIndex", this.curSelectIndex);
+			this.curSelectValue = 0;
+			this.numAry.splice(this.curSelectIndex, 1);
+			this.curSelectIndex = 0;
+			this.curSelectValue = this.numAry[this.curSelectIndex];
+			this.step++;
+		}
+		else if (this.step == 4)
+		{
+
+		}
+		else
+		{
+			this.initData();
+			this.downStage.visible = false;
+			this.rewardBox.visible = false;
 		}
 	}
 	
@@ -200,12 +259,17 @@ public class SelectStageLayer extends Sprite
 		}
 	}
 	
+	/**
+	 * 帧循环
+	 */
 	private function loopHandler():void 
 	{
 		if (this.step > 0)
 		{
 			this.curSelectIndex++;
-			if (this.curSelectIndex > this.totalNum) this.curSelectIndex = 1;
+			if (this.curSelectIndex > this.numAry.length - 1) 
+				this.curSelectIndex = 0;
+			this.curSelectValue = this.numAry[this.curSelectIndex];
 		}
 		this.updateSelectImg();
 	}

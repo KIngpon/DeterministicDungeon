@@ -2,7 +2,7 @@
     "x":0,
     "type":"View",
     "selectedBox":9,
-    "selecteID":316,
+    "selecteID":318,
     "props":{"width":1136,"sceneColor":"#000000","name":"selectImg","height":640},
     "nodeParent":-1,
     "label":"View(selectImg)",
@@ -2150,7 +2150,7 @@
                 {
                     "x":30,
                     "type":"Image",
-                    "props":{"y":177,"x":-71,"var":"rewardBox","skin":"comp/rewardBox.png"},
+                    "props":{"y":177,"x":-74,"var":"rewardBox","skin":"comp/rewardBox.png"},
                     "nodeParent":9,
                     "label":"Image(rewardBox)",
                     "isDirectory":false,
@@ -2164,6 +2164,46 @@
                             "__InPool":false
                         }],
                     "compId":316,
+                    "child":[
+                        ]
+                },
+                {
+                    "x":30,
+                    "type":"Image",
+                    "props":{"y":258,"x":-75,"var":"bossImg","skin":"comp/bossIcon.png"},
+                    "nodeParent":9,
+                    "label":"Image(bossImg)",
+                    "isDirectory":false,
+                    "isAniNode":true,
+                    "hasChild":false,
+                    "frames":[
+                        {
+                            "type":1,
+                            "props":{"y":314,"x":-45,"skin":"comp/bossIcon.png"},
+                            "frame":0,
+                            "__InPool":false
+                        }],
+                    "compId":317,
+                    "child":[
+                        ]
+                },
+                {
+                    "x":30,
+                    "type":"Image",
+                    "props":{"y":354,"x":-79,"var":"bossRewardBox","skin":"comp/bossBox.png"},
+                    "nodeParent":9,
+                    "label":"Image(bossRewardBox)",
+                    "isDirectory":false,
+                    "isAniNode":true,
+                    "hasChild":false,
+                    "frames":[
+                        {
+                            "type":1,
+                            "props":{"y":396,"x":14,"skin":"comp/bossBox.png"},
+                            "frame":0,
+                            "__InPool":false
+                        }],
+                    "compId":318,
                     "child":[
                         ]
                 }],
