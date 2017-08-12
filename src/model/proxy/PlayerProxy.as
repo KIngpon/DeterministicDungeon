@@ -61,7 +61,6 @@ public class PlayerProxy extends Proxy
 			this.pVo.maxHp = pPo.hp;
 			this.pVo.curHp = this.pVo.maxHp;
 			this.pVo.curExp = 0;
-			this.pVo.isFirstStep = true;
 			this.pVo.slotsDelay = 70;
 			this.pVo.weaponPo = this.equipProxy.getEquipPoById(1);
 		}));

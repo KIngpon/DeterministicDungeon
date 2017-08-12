@@ -421,6 +421,7 @@ var Laya=window.Laya=(function(window,document){
 		__class(MsgConstant,'config.MsgConstant');
 		MsgConstant.INIT_FIGHT_STAGE="INIT_FIGHT_STAGE";
 		MsgConstant.START_FIGHT="START_FIGHT";
+		MsgConstant.SELECT_STAGE_COMPLETE="SELECT_STAGE_COMPLETE";
 		return MsgConstant;
 	})()
 
@@ -689,7 +690,6 @@ var Laya=window.Laya=(function(window,document){
 			this.curExp=0;
 			this.maxExp=0;
 			this.level=0;
-			this.isFirstStep=false;
 			this.slotsDelay=0;
 			this.weaponPo=null;
 			this.atkAddBuff=0;
@@ -10396,6 +10396,7 @@ var Laya=window.Laya=(function(window,document){
 		var __proto=ViewCommand.prototype;
 		__proto.execute=function(notification){
 			this.facade.registerMediator(new GameStageMediator());
+			this.facade.registerMediator(new SelectStageMediator());
 		}
 
 		return ViewCommand;
@@ -10798,7 +10799,6 @@ var Laya=window.Laya=(function(window,document){
 				this.pVo.maxHp=pPo.hp;
 				this.pVo.curHp=this.pVo.maxHp;
 				this.pVo.curExp=0;
-				this.pVo.isFirstStep=true;
 				this.pVo.slotsDelay=70;
 				this.pVo.weaponPo=this.equipProxy.getEquipPoById(1);
 			}));
@@ -11733,7 +11733,6 @@ var Laya=window.Laya=(function(window,document){
 	var GameStageMediator=(function(_super){
 		function GameStageMediator(){
 			this.gameStage=null;
-			this.selectStageLayer=null;
 			this.playerProxy=null;
 			this.stageProxy=null;
 			this.enemyProxy=null;
@@ -11760,6 +11759,7 @@ var Laya=window.Laya=(function(window,document){
 			var vect=[];
 			vect.push("INIT_FIGHT_STAGE");
 			vect.push("START_FIGHT");
+			vect.push("SELECT_STAGE_COMPLETE");
 			return vect;
 		}
 
@@ -11772,15 +11772,12 @@ var Laya=window.Laya=(function(window,document){
 					break ;
 				case "START_FIGHT":
 					this.initData();
-					if (this.playerVo.isFirstStep){
-						if (this.stageProxy.curLevel==3){
-						}
-					}
-					else{
-					}
 					this.gameStage.initPlayer(this.playerVo);
 					this.gameStage.setPlayerProp(this.playerVo);
 					this.gameStage.updateStageBg(this.curStagePo,this.stageProxy);
+					break ;
+				case "SELECT_STAGE_COMPLETE":
+					this.gameStage.playerMove(250,1000,Handler.create(this,this.playerMoveComplete));
 					break ;
 				default :
 					break ;
@@ -11827,15 +11824,6 @@ var Laya=window.Laya=(function(window,document){
 				this.gameStage=new GameStageLayer();
 				Layer.GAME_STAGE.addChild(this.gameStage);
 			}
-			if (!this.selectStageLayer){
-				this.selectStageLayer=new SelectStageLayer();
-				this.selectStageLayer.selectedBtn.on("mousedown",this,this.selectedStageBtnMouseDown);
-				Layer.GAME_STAGE.addChild(this.selectStageLayer);
-			}
-		}
-
-		__proto.selectedStageBtnMouseDown=function(){
-			this.selectStageLayer.nextStep();
 		}
 
 		/**
@@ -12061,6 +12049,64 @@ var Laya=window.Laya=(function(window,document){
 
 		GameStageMediator.NAME="GameStageMediator";
 		return GameStageMediator;
+	})(Mediator)
+
+
+	/**
+	*...选择地形中介
+	*@author Kanon
+	*/
+	//class view.mediator.SelectStageMediator extends mvc.Mediator
+	var SelectStageMediator=(function(_super){
+		function SelectStageMediator(){
+			this.playerProxy=null;
+			this.stageProxy=null;
+			this.selectStageLayer=null;
+			SelectStageMediator.__super.call(this);
+			this.mediatorName="SelectStageMediator";
+			this.stageProxy=this.retrieveProxy("StageProxy");
+			this.playerProxy=this.retrieveProxy("PlayerProxy");
+		}
+
+		__class(SelectStageMediator,'view.mediator.SelectStageMediator',_super);
+		var __proto=SelectStageMediator.prototype;
+		__proto.listNotificationInterests=function(){
+			var vect=[];
+			vect.push("START_FIGHT");
+			return vect;
+		}
+
+		__proto.handleNotification=function(notification){
+			switch (notification.notificationName){
+				case "START_FIGHT":
+					this.initUI();
+					break ;
+				}
+		}
+
+		/**
+		*初始化UI
+		*/
+		__proto.initUI=function(){
+			if (!this.selectStageLayer){
+				this.selectStageLayer=new SelectStageLayer();
+				this.selectStageLayer.selectedBtn.on("click",this,this.selectedStageBtnClickHandler);
+				Layer.GAME_STAGE.addChild(this.selectStageLayer);
+			}
+			this.selectStageLayer.initStageData(this.stageProxy);
+			this.selectStageLayer.start(this.playerProxy.pVo.slotsDelay);
+		}
+
+		__proto.selectedStageBtnClickHandler=function(){
+			if (this.selectStageLayer.nextStep()){
+				this.selectStageLayer.removeSelf();
+				this.selectStageLayer=null;
+				this.sendNotification("SELECT_STAGE_COMPLETE");
+			}
+		}
+
+		SelectStageMediator.NAME="SelectStageMediator";
+		return SelectStageMediator;
 	})(Mediator)
 
 
@@ -18381,14 +18427,18 @@ var Laya=window.Laya=(function(window,document){
 			this.curSelectIndex=0;
 			this.curSelectValue=0;
 			this.step=0;
+			this.maxStep=0;
 			this.totalNum=0;
 			this.numAry=null;
+			this.curPoints=0;
+			this.curLeveMaxPoints=0;
+			this.isBossPoints=false;
+			this.isFirstPoints=false;
 			SelectStageLayer.__super.call(this);
 			this.panel=new SelectStageLayerUI();
 			this.addChild(this.panel);
 			this.initData();
 			this.initUI();
-			this.start();
 		}
 
 		__class(SelectStageLayer,'view.ui.SelectStageLayer',_super);
@@ -18396,7 +18446,16 @@ var Laya=window.Laya=(function(window,document){
 		/**
 		*初始化关卡数据
 		*/
-		__proto.initStageData=function(sProxy){}
+		__proto.initStageData=function(sProxy){
+			this.curPoints=sProxy.curPoints;
+			this.curLeveMaxPoints=sProxy.getCurStagePointsCount();
+			this.isBossPoints=this.curPoints==this.curLeveMaxPoints;
+			this.isFirstPoints=this.curPoints==1;
+			if (this.isBossPoints)this.maxStep=4;
+			else if (this.isFirstPoints)this.maxStep=3;
+			else this.maxStep=2;
+		}
+
 		/**
 		*初始化数据
 		*/
@@ -18452,6 +18511,10 @@ var Laya=window.Laya=(function(window,document){
 			this.downStage.pivotY=this.downStage.height / 2;
 			this.rewardBox.pivotX=this.rewardBox.width / 2;
 			this.rewardBox.pivotY=this.rewardBox.height / 2;
+			this.bossImg.pivotX=this.bossImg.width / 2;
+			this.bossImg.pivotY=this.bossImg.height / 2;
+			this.bossRewardBox.pivotX=this.bossRewardBox.width / 2;
+			this.bossRewardBox.pivotY=this.bossRewardBox.height / 2;
 			this.upStage.visible=false;
 			this.downStage.visible=false;
 			this.rewardBox.visible=false;
@@ -18473,10 +18536,14 @@ var Laya=window.Laya=(function(window,document){
 			this.handMoveComplete2();
 		}
 
-		__proto.start=function(){
+		/**
+		*开启
+		*@param delay
+		*/
+		__proto.start=function(delay){
 			if (!this._$3_timer)this._$3_timer=new Timer();
 			this.timer.clear(this,this.loopHandler);
-			this.timer.loop(80,this,this.loopHandler);
+			this.timer.loop(delay,this,this.loopHandler);
 			if (!this.flashingTimer)this.flashingTimer=new Timer();
 		}
 
@@ -18496,6 +18563,8 @@ var Laya=window.Laya=(function(window,document){
 				this.upStage.visible=false;
 				this.downStage.visible=false;
 				this.rewardBox.visible=false;
+				this.bossImg.visible=false;
+				this.bossRewardBox.visible=false;
 				selectImg.visible=true;
 				if (this.curSelectValue <=3){
 					rightSpt.visible=!rightSpt.visible;
@@ -18525,16 +18594,32 @@ var Laya=window.Laya=(function(window,document){
 				this.downStage.visible=true;
 			}
 			else if (this.step==3){
-				this.rewardBox.x=stageIcon.x+selectImg.width / 2;
-				this.rewardBox.y=stageIcon.y+selectImg.height / 2;
-				this.rewardBox.visible=true;
+				if (this.isBossPoints){
+					this.bossRewardBox.x=stageIcon.x+selectImg.width / 2;
+					this.bossRewardBox.y=stageIcon.y+selectImg.height / 2;
+					this.bossRewardBox.visible=true;
+				}
+				else if(this.isFirstPoints){
+					this.rewardBox.x=stageIcon.x+selectImg.width / 2;
+					this.rewardBox.y=stageIcon.y+selectImg.height / 2;
+					this.rewardBox.visible=true;
+				}
+			}
+			else if (this.step==4){
+				if (this.isBossPoints){
+					this.bossImg.x=stageIcon.x+selectImg.width / 2;
+					this.bossImg.y=stageIcon.y+selectImg.height / 2;
+					this.bossImg.visible=true;
+				}
 			}
 		}
 
 		/**
 		*下一步
+		*@return 最后一步
 		*/
 		__proto.nextStep=function(){
+			console.log("step",this.step);
 			if (this.step==0){
 				this.resetAllSelectImg();
 				if (this.curSelectValue >=this.totalNum)
@@ -18542,20 +18627,17 @@ var Laya=window.Laya=(function(window,document){
 				else
 				this.curSelectValue++;
 			}
-			else if (this.step <=3){
+			else if (this.step <=this.maxStep){
 				this.curSelectValue=0;
 				this.numAry.splice(this.curSelectIndex,1);
 				this.curSelectIndex=0;
 				this.curSelectValue=this.numAry[this.curSelectIndex];
 				this.step++;
 			}
-			else if (this.step==4){
-			}
 			else{
-				this.initData();
-				this.downStage.visible=false;
-				this.rewardBox.visible=false;
+				this.step++;
 			}
+			return this.step > this.maxStep+1;
 		}
 
 		/**

@@ -1,5 +1,6 @@
 package view.ui 
 {
+import config.GameConstant;
 import laya.display.Sprite;
 import laya.ui.Button;
 import laya.ui.Image;
@@ -32,16 +33,22 @@ public class SelectStageLayer extends Sprite
 	private var curSelectIndex:int;
 	private var curSelectValue:int;
 	private var step:int;
+	//总步数
+	private var maxStep:int;
 	private var totalNum:int;
 	//已选择的数组
 	private var numAry:Array;
+	//当前关卡点
+	private var curPoints:int;
+	private var curLeveMaxPoints:int;
+	private var isBossPoints:Boolean;
+	private var isFirstPoints:Boolean;
 	public function SelectStageLayer() 
 	{
 		this.panel = new SelectStageLayerUI();
 		this.addChild(this.panel);
 		this.initData();
 		this.initUI();
-		this.start();
 	}
 	
 	/**
@@ -49,7 +56,13 @@ public class SelectStageLayer extends Sprite
 	 */
 	public function initStageData(sProxy:StageProxy):void
 	{
-		
+		this.curPoints = sProxy.curPoints;
+		this.curLeveMaxPoints = sProxy.getCurStagePointsCount();
+		this.isBossPoints = this.curPoints == this.curLeveMaxPoints;
+		this.isFirstPoints = this.curPoints == 1;
+		if (this.isBossPoints) this.maxStep = 4;
+		else if (this.isFirstPoints) this.maxStep = 3;
+		else this.maxStep = 2;
 	}
 	
 	/**
@@ -118,6 +131,12 @@ public class SelectStageLayer extends Sprite
 		this.rewardBox.pivotX = this.rewardBox.width / 2;
 		this.rewardBox.pivotY = this.rewardBox.height / 2;
 		
+		this.bossImg.pivotX = this.bossImg.width / 2;
+		this.bossImg.pivotY = this.bossImg.height / 2;
+		
+		this.bossRewardBox.pivotX = this.bossRewardBox.width / 2;
+		this.bossRewardBox.pivotY = this.bossRewardBox.height / 2;
+		
 		this.upStage.visible = false;
 		this.downStage.visible = false;
 		this.rewardBox.visible = false;
@@ -141,11 +160,15 @@ public class SelectStageLayer extends Sprite
 		this.handMoveComplete2();
 	}
 	
-	public function start():void
+	/**
+	 * 开启
+	 * @param	delay
+	 */
+	public function start(delay:int):void
 	{
 		if (!this.timer) this.timer = new Timer();
 		this.timer.clear(this, loopHandler);
-		this.timer.loop(80, this, loopHandler);
+		this.timer.loop(delay, this, loopHandler);
 		if (!this.flashingTimer) this.flashingTimer = new Timer();
 	}
 	
@@ -168,6 +191,8 @@ public class SelectStageLayer extends Sprite
 			this.upStage.visible = false;
 			this.downStage.visible = false;
 			this.rewardBox.visible = false;
+			this.bossImg.visible = false;
+			this.bossRewardBox.visible = false;
 			selectImg.visible = true;
 			if (this.curSelectValue <= 3)
 			{
@@ -206,17 +231,37 @@ public class SelectStageLayer extends Sprite
 		else if (this.step == 3)
 		{
 			//选择奖励宝箱位置
-			this.rewardBox.x = stageIcon.x + selectImg.width / 2;
-			this.rewardBox.y = stageIcon.y + selectImg.height / 2;
-			this.rewardBox.visible = true;
+			if (this.isBossPoints)
+			{
+				this.bossRewardBox.x = stageIcon.x + selectImg.width / 2;
+				this.bossRewardBox.y = stageIcon.y + selectImg.height / 2;
+				this.bossRewardBox.visible = true;
+			}
+			else if(this.isFirstPoints)
+			{
+				this.rewardBox.x = stageIcon.x + selectImg.width / 2;
+				this.rewardBox.y = stageIcon.y + selectImg.height / 2;
+				this.rewardBox.visible = true;
+			}
+		}
+		else if (this.step == 4)
+		{
+			if (this.isBossPoints)
+			{
+				this.bossImg.x = stageIcon.x + selectImg.width / 2;
+				this.bossImg.y = stageIcon.y + selectImg.height / 2;
+				this.bossImg.visible = true;
+			}
 		}
 	}
 	
 	/**
 	 * 下一步
+	 * @return	最后一步
 	 */
-	public function nextStep():void
+	public function nextStep():Boolean
 	{
+		trace("step", this.step);
 		if (this.step == 0)
 		{
 			this.resetAllSelectImg();
@@ -225,25 +270,22 @@ public class SelectStageLayer extends Sprite
 			else
 				this.curSelectValue++;
 		}
-		else if (this.step <= 3)
+		else if (this.step <= this.maxStep)
 		{
-			//trace("curSelectIndex", this.curSelectIndex);
 			this.curSelectValue = 0;
 			this.numAry.splice(this.curSelectIndex, 1);
 			this.curSelectIndex = 0;
 			this.curSelectValue = this.numAry[this.curSelectIndex];
 			this.step++;
 		}
-		else if (this.step == 4)
-		{
-
-		}
 		else
 		{
-			this.initData();
-			this.downStage.visible = false;
-			this.rewardBox.visible = false;
+			this.step++;
+			//this.initData();
+			//this.downStage.visible = false;
+			//this.rewardBox.visible = false;
 		}
+		return this.step > this.maxStep + 1;
 	}
 	
 	/**
