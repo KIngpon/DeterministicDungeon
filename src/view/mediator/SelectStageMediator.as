@@ -2,6 +2,7 @@ package view.mediator
 {
 import config.MsgConstant;
 import laya.events.Event;
+import laya.utils.Handler;
 import model.proxy.PlayerProxy;
 import model.proxy.StageProxy;
 import mvc.Mediator;
@@ -61,7 +62,14 @@ public class SelectStageMediator extends Mediator
 	
 	private function selectedStageBtnClickHandler():void 
 	{
-		if (this.selectStageLayer.nextStep())
+		this.selectStageLayer.flashing(Handler.create(this, flashingCompleteHandler));
+	}
+	
+	private function flashingCompleteHandler():void 
+	{
+		trace("flashingCompleteHandler");
+		this.selectStageLayer.nextStep();
+		if (this.selectStageLayer.isLastStep())
 		{
 			this.selectStageLayer.removeSelf();
 			this.selectStageLayer = null;

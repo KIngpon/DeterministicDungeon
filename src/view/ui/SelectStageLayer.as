@@ -43,6 +43,10 @@ public class SelectStageLayer extends Sprite
 	private var curLeveMaxPoints:int;
 	private var isBossPoints:Boolean;
 	private var isFirstPoints:Boolean;
+	private var flashingIndex:int;
+	private var isStop:Boolean;
+	//回调
+	private var flashingCallBackHandler:Handler;
 	public function SelectStageLayer() 
 	{
 		this.panel = new SelectStageLayerUI();
@@ -71,9 +75,11 @@ public class SelectStageLayer extends Sprite
 	private function initData():void
 	{
 		this.step = 0;
+		this.flashingIndex = 0;
 		this.totalNum = 9;
 		this.curSelectIndex = 0;
 		this.curSelectValue = 1;
+		this.isStop = true;
 		this.numAry = [1, 2, 3, 4, 5, 6, 7, 8, 9];
 	}
 	
@@ -255,13 +261,27 @@ public class SelectStageLayer extends Sprite
 		}
 	}
 	
+	public function flashing(handler:Handler = null):void
+	{
+		if (!this.isStop) return;
+		if (this.step <= this.maxStep)
+		{
+			this.flashingTimer.clear(this, flashingLoopHandler);
+			this.flashingTimer.loop(80, this, flashingLoopHandler);
+			this.isStop = false;
+			this.flashingCallBackHandler = handler;
+		}
+		else
+		{
+			handler.run();
+		}
+	}
+	
 	/**
 	 * 下一步
-	 * @return	最后一步
 	 */
-	public function nextStep():Boolean
+	public function nextStep():void
 	{
-		trace("step", this.step);
 		if (this.step == 0)
 		{
 			this.resetAllSelectImg();
@@ -285,7 +305,32 @@ public class SelectStageLayer extends Sprite
 			//this.downStage.visible = false;
 			//this.rewardBox.visible = false;
 		}
+	}
+	
+	/**
+	 * 是否是最后一步
+	 * @return
+	 */
+	public function isLastStep():Boolean
+	{
 		return this.step > this.maxStep + 1;
+	}
+	
+	private function flashingLoopHandler():void 
+	{
+		var stageIcon:Sprite = this.panel.mapSpt.getChildByName("r" + this.curSelectValue) as Sprite;
+		if (!stageIcon) return;
+		var selectImg:Image = stageIcon.getChildByName("selectImg") as Image;
+		selectImg.visible = !selectImg.visible;
+		this.flashingIndex++;
+		if (this.flashingIndex >= 10)
+		{
+			this.isStop = true;
+			this.flashingIndex = 0;
+			this.flashingTimer.clear(this, flashingLoopHandler);
+			if(this.flashingCallBackHandler)
+				this.flashingCallBackHandler.run();
+		}
 	}
 	
 	/**
@@ -306,6 +351,7 @@ public class SelectStageLayer extends Sprite
 	 */
 	private function loopHandler():void 
 	{
+		if (!this.isStop) return;
 		if (this.step > 0)
 		{
 			this.curSelectIndex++;

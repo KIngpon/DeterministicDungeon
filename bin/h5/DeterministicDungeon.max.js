@@ -12098,7 +12098,13 @@ var Laya=window.Laya=(function(window,document){
 		}
 
 		__proto.selectedStageBtnClickHandler=function(){
-			if (this.selectStageLayer.nextStep()){
+			this.selectStageLayer.flashing(Handler.create(this,this.flashingCompleteHandler));
+		}
+
+		__proto.flashingCompleteHandler=function(){
+			console.log("flashingCompleteHandler");
+			this.selectStageLayer.nextStep();
+			if (this.selectStageLayer.isLastStep()){
 				this.selectStageLayer.removeSelf();
 				this.selectStageLayer=null;
 				this.sendNotification("SELECT_STAGE_COMPLETE");
@@ -18434,6 +18440,9 @@ var Laya=window.Laya=(function(window,document){
 			this.curLeveMaxPoints=0;
 			this.isBossPoints=false;
 			this.isFirstPoints=false;
+			this.flashingIndex=0;
+			this.isStop=false;
+			this.flashingCallBackHandler=null;
 			SelectStageLayer.__super.call(this);
 			this.panel=new SelectStageLayerUI();
 			this.addChild(this.panel);
@@ -18461,9 +18470,11 @@ var Laya=window.Laya=(function(window,document){
 		*/
 		__proto.initData=function(){
 			this.step=0;
+			this.flashingIndex=0;
 			this.totalNum=9;
 			this.curSelectIndex=0;
 			this.curSelectValue=1;
+			this.isStop=true;
 			this.numAry=[1,2,3,4,5,6,7,8,9];
 		}
 
@@ -18614,12 +18625,23 @@ var Laya=window.Laya=(function(window,document){
 			}
 		}
 
+		__proto.flashing=function(handler){
+			if (!this.isStop)return;
+			if (this.step <=this.maxStep){
+				this.flashingTimer.clear(this,this.flashingLoopHandler);
+				this.flashingTimer.loop(80,this,this.flashingLoopHandler);
+				this.isStop=false;
+				this.flashingCallBackHandler=handler;
+			}
+			else{
+				handler.run();
+			}
+		}
+
 		/**
 		*下一步
-		*@return 最后一步
 		*/
 		__proto.nextStep=function(){
-			console.log("step",this.step);
 			if (this.step==0){
 				this.resetAllSelectImg();
 				if (this.curSelectValue >=this.totalNum)
@@ -18637,7 +18659,29 @@ var Laya=window.Laya=(function(window,document){
 			else{
 				this.step++;
 			}
+		}
+
+		/**
+		*是否是最后一步
+		*@return
+		*/
+		__proto.isLastStep=function(){
 			return this.step > this.maxStep+1;
+		}
+
+		__proto.flashingLoopHandler=function(){
+			var stageIcon=this.panel.mapSpt.getChildByName("r"+this.curSelectValue);
+			if (!stageIcon)return;
+			var selectImg=stageIcon.getChildByName("selectImg");
+			selectImg.visible=!selectImg.visible;
+			this.flashingIndex++;
+			if (this.flashingIndex >=10){
+				this.isStop=true;
+				this.flashingIndex=0;
+				this.flashingTimer.clear(this,this.flashingLoopHandler);
+				if(this.flashingCallBackHandler)
+					this.flashingCallBackHandler.run();
+			}
 		}
 
 		/**
@@ -18655,6 +18699,7 @@ var Laya=window.Laya=(function(window,document){
 		*帧循环
 		*/
 		__proto.loopHandler=function(){
+			if (!this.isStop)return;
 			if (this.step > 0){
 				this.curSelectIndex++;
 				if (this.curSelectIndex > this.numAry.length-1)
