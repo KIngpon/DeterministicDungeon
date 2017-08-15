@@ -13,7 +13,10 @@ public class PointVo
 	public var down:Boolean;
 	//当前类型 1.上楼，2下楼，3宝箱，4boss，5boss宝箱，6合成，7特殊宝箱
 	public var type:int;
+	//索引
+	public var index:int;
 	//类型常量
+	public static const NONE:int = 0;
 	public static const UP_FLOOR:int = 1;
 	public static const DOWN_FLOOR:int = 2;
 	public static const REWARD_BOX:int = 3;

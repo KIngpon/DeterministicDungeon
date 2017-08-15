@@ -256,11 +256,30 @@ public class StageProxy extends Proxy
 		this.pointsAry = [];
 		for (var i:int = 0; i < GameConstant.POINTS_NUM_MAX; i++) 
 		{
-			var pt:PointVo = new PointVo();
+			var pVo:PointVo = new PointVo();
+			pVo.index = i + 1;
+			pVo.up = true;
+			pVo.down = true;
+			pVo.left = true;
+			pVo.right = true;
+			pVo.type = PointVo.NONE;
+			if (pVo.index <= 3) pVo.left = false;
+			if (pVo.index >= 7) pVo.right = false;
+			if (pVo.index == 1 || 
+				pVo.index == 4 || 
+				pVo.index == 7)
+				pVo.up = false;
+			if (pVo.index == 3 || 
+				pVo.index == 6 || 
+				pVo.index == 9)
+				pVo.down = false;
 			this.pointsAry.push(pt);
 		}
 	}
 	
-	
+	public function getPointVoByIndex():void
+	{
+		
+	}
 }
 }
