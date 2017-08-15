@@ -15,6 +15,8 @@ public class GameConstant
 	public static const DEBUG:Boolean = true;
 	//最大选择数量
 	public static const SLOTS_NUM_MAX:int = 9;
+	//最大关卡点数量
+	public static const POINTS_NUM_MAX:int = 9;
 	//游戏字体
 	public static var GAME_FONT_NAME:String = "gameFont";
 	public static var GAME_RED_FONT_NAME:String = "gameRedFont";

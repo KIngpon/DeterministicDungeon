@@ -1,11 +1,13 @@
 package model.proxy 
 {
+import config.GameConstant;
 import laya.utils.Handler;
 import model.po.DropPo;
 import model.po.EnemyPo;
 import model.po.EquipPo;
 import model.po.StagePo;
 import model.vo.EnemyVo;
+import model.vo.PointVo;
 import mvc.Proxy;
 
 /**
@@ -28,6 +30,8 @@ public class StageProxy extends Proxy
 	private var eProxy:EnemyProxy;
 	private var equipProxy:EquipProxy;
 	private var dProxy:DropProxy;
+	//关卡点数据列表
+	private var pointsAry:Array;
 	public function StageProxy() 
 	{
 		this.proxyName = NAME;
@@ -242,6 +246,21 @@ public class StageProxy extends Proxy
 	/**
 	 * 总关卡数
 	 */
-	public function get totalLevel():int {return _totalLevel;}
+	public function get totalLevel():int {return _totalLevel; }
+
+	/**
+	 * 初始化关卡点数组
+	 */
+	public function initPointsAry():void
+	{
+		this.pointsAry = [];
+		for (var i:int = 0; i < GameConstant.POINTS_NUM_MAX; i++) 
+		{
+			var pt:PointVo = new PointVo();
+			this.pointsAry.push(pt);
+		}
+	}
+	
+	
 }
 }

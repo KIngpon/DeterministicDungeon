@@ -145,6 +145,7 @@ public class GameStageMediator extends Mediator
 		this.playerVo = this.playerProxy.pVo;
 		this.enemyPoList = this.stageProxy.getCurStagePoEnemyPoList();
 		this.enemyProxy.clearStageEnemyList();
+		this.stageProxy.initPointsAry();
 	}
 	
 	/**

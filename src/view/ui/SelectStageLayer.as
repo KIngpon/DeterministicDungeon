@@ -267,7 +267,7 @@ public class SelectStageLayer extends Sprite
 		if (this.step <= this.maxStep)
 		{
 			this.flashingTimer.clear(this, flashingLoopHandler);
-			this.flashingTimer.loop(80, this, flashingLoopHandler);
+			this.flashingTimer.loop(40, this, flashingLoopHandler);
 			this.isStop = false;
 			this.flashingCallBackHandler = handler;
 		}
