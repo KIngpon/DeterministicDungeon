@@ -22,7 +22,7 @@ public class StageProxy extends Proxy
 	//当前关卡
 	public var curLevel:int = 1;
 	//当前关卡点
-	public var curPoints:int = 1;
+	public var curPoints:int = 3;
 	//当前需要随机的关卡点索引
 	public var curPointIndex:int = 0;
 	//当前步数
@@ -310,7 +310,8 @@ public class StageProxy extends Proxy
 		if (index < 0 || index > this.pointsAry.length - 1) return;
 		var pVo:PointVo = this.pointsAry[index];
 		//先随机通过的数量
-		var count:int = Random.randint(1, pVo.passAry.length);
+		var count:int = pVo.passAry.length - 1;
+		count = Random.randint(1, count);
 		pVo.passAry = Random.sample(pVo.passAry, count);
 	}
 	
@@ -333,8 +334,8 @@ public class StageProxy extends Proxy
 		switch (this.step) 
 		{
 			case 0:
-				this.randomCurPointPass();
-				if (index > this.pointsAry.length - 1) this.step++;
+				//this.randomCurPointPass();
+				if (index >= this.pointsAry.length - 1) this.step++;
 			break;
 			case 1:
 				pVo = this.pointsAry[index];
@@ -364,6 +365,11 @@ public class StageProxy extends Proxy
 			break;
 		}
 		//trace(this.pointsAry);
+		
+		for (var i:int = 0; i < this.pointsAry.length; i++) 
+		{
+			trace("pvo type",i, this.pointsAry[i].type);
+		}
 	}
 	
 	/**
@@ -382,6 +388,54 @@ public class StageProxy extends Proxy
 	public function isFirstPoint():Boolean
 	{
 		return this.curPoints == 1;
+	}
+	
+	/**
+	 * 判断关卡点是否合法
+	 */
+	public function checkStagePointValid():void
+	{
+		//将通路补全
+		var count:int = this.pointsAry.length;
+		for (var i:int = 0; i < count; i++) 
+		{
+			var pVo:PointVo = this.pointsAry[i];
+			if (pVo.up)
+			{
+				if (i != 0 && i != 3 && i != 6)
+				{
+					var upVo:PointVo = this.pointsAry[i - 1];
+					upVo.down = true;
+				}
+			}
+			if (pVo.down)
+			{
+				if (i != 2 && i != 5 && i != 8)
+				{
+					var downVo:PointVo = this.pointsAry[i + 1];
+					downVo.down = true;
+				}
+			}
+			if (pVo.left)
+			{
+				if (i != 0 && i != 1 && i != 2)
+				{
+					var leftVo:PointVo = this.pointsAry[i - 3];
+					leftVo.right = true;
+				}
+			}
+			if (pVo.right)
+			{
+				if (i != 6 && i != 7 && i != 8)
+				{
+					var rightVo:PointVo = this.pointsAry[i + 3];
+					rightVo.left = true;
+				}
+			}
+		}
+		
+		
+		
 	}
 }
 }

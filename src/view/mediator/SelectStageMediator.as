@@ -71,15 +71,19 @@ public class SelectStageMediator extends Mediator
 	
 	private function selectedStageBtnClickHandler():void 
 	{
+		if (this.stageProxy.step == 0) 
+		{
+			this.stageProxy.randomCurPointPass();
+			this.selectStageLayer.updatePathView(this.stageProxy.getPointVoByIndex(this.stageProxy.curPointIndex - 1));
+		}
 		this.selectStageLayer.flashing(Handler.create(this, flashingCompleteHandler));
 	}
 	
-	private function flashingCompleteHandler(index:int):void 
+	private function flashingCompleteHandler(indexValue:int):void 
 	{
-		//trace("flashingCompleteHandler");
+		var index:int = indexValue - 1;
 		this.selectStageLayer.nextStep();
 		this.stageProxy.nextStep(index);
-		
 		if (this.selectStageLayer.isLastStep())
 		{
 			this.selectStageLayer.removeSelf();

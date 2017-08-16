@@ -9,6 +9,7 @@ import laya.utils.Handler;
 import laya.utils.Timer;
 import laya.utils.Tween;
 import model.proxy.StageProxy;
+import model.vo.PointVo;
 import ui.GameStage.SelectStageLayerUI;
 
 /**
@@ -302,6 +303,40 @@ public class SelectStageLayer extends Sprite
 			//this.downStage.visible = false;
 			//this.rewardBox.visible = false;
 		}
+	}
+	
+	/**
+	 * 更新关卡点路径显示
+	 * @param	pVo	关卡点数据
+	 */
+	public function updatePathView(pVo:PointVo):void
+	{
+		trace("pVo.index", pVo.index);
+		if (this.step > 0) return;
+		if (!pVo) return;
+		var stageIcon:Sprite = this.panel.mapSpt.getChildByName("r" + pVo.index) as Sprite;
+		if (!stageIcon) return;
+		var leftSpt:Sprite = stageIcon.getChildByName("leftSpt") as Sprite;
+		var rightSpt:Sprite = stageIcon.getChildByName("rightSpt") as Sprite;
+		var upSpt:Sprite = stageIcon.getChildByName("upSpt") as Sprite;
+		var downSpt:Sprite = stageIcon.getChildByName("downSpt") as Sprite;
+		var count:int = pVo.passAry.length;
+		trace("pVo.passAry", pVo.passAry);
+		upSpt.visible = false;
+		downSpt.visible = false;
+		leftSpt.visible = false;
+		rightSpt.visible = false;
+		for (var i:int = 0; i < count; i++) 
+		{
+			if (pVo.passAry[i] == PointVo.UP_PASS)
+				upSpt.visible = true;
+			if (pVo.passAry[i] == PointVo.DOWN_PASS)
+				downSpt.visible = true;
+			if (pVo.passAry[i] == PointVo.LEFT_PASS)
+				leftSpt.visible = true;
+			if (pVo.passAry[i] == PointVo.RIGHT_PASS)
+				rightSpt.visible = true;
+		}	
 	}
 	
 	/**
