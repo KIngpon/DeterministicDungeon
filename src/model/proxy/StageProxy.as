@@ -6,9 +6,9 @@ import model.po.DropPo;
 import model.po.EnemyPo;
 import model.po.EquipPo;
 import model.po.StagePo;
-import model.vo.EnemyVo;
 import model.vo.PointVo;
 import mvc.Proxy;
+import utils.Random;
 
 /**
  * ...关卡数据代理
@@ -23,6 +23,10 @@ public class StageProxy extends Proxy
 	public var curLevel:int = 1;
 	//当前关卡点
 	public var curPoints:int = 1;
+	//当前需要随机的关卡点索引
+	public var curPointIndex:int = 0;
+	//当前步数
+	public var step:int = 0;
 	//总关卡数
 	private var _totalLevel:int;
 	//关卡列表
@@ -254,6 +258,8 @@ public class StageProxy extends Proxy
 	public function initPointsAry():void
 	{
 		this.pointsAry = [];
+		this.step = 0;
+		this.curPointIndex = 0;
 		for (var i:int = 0; i < GameConstant.POINTS_NUM_MAX; i++) 
 		{
 			var pVo:PointVo = new PointVo();
@@ -273,13 +279,109 @@ public class StageProxy extends Proxy
 				pVo.index == 6 || 
 				pVo.index == 9)
 				pVo.down = false;
-			this.pointsAry.push(pt);
+			pVo.passAry = [];
+			if (pVo.up) pVo.passAry.push(PointVo.UP_PASS);
+			if (pVo.down) pVo.passAry.push(PointVo.DOWN_PASS);
+			if (pVo.left) pVo.passAry.push(PointVo.LEFT_PASS);
+			if (pVo.right) pVo.passAry.push(PointVo.RIGHT_PASS);
+			this.pointsAry.push(pVo);
 		}
 	}
 	
-	public function getPointVoByIndex():void
+	/**
+	 * 根据索引获取点数据
+	 * @param	index	索引 0 - 8
+	 * @return	点数据
+	 */
+	public function getPointVoByIndex(index:int):PointVo
 	{
-		
+		if (!this.pointsAry) return null;
+		if (index < 0 || index > this.pointsAry.length - 1) return null;
+		return this.pointsAry[index];
+	}
+	
+	/**
+	 * 随机关卡点的通过
+	 * @param	index	索引 0 - 8
+	 */
+	public function randomPointPassByIndex(index:int):void
+	{
+		if (!this.pointsAry) return;
+		if (index < 0 || index > this.pointsAry.length - 1) return;
+		var pVo:PointVo = this.pointsAry[index];
+		//先随机通过的数量
+		var count:int = Random.randint(1, pVo.passAry.length);
+		pVo.passAry = Random.sample(pVo.passAry, count);
+	}
+	
+	/**
+	 * 随机当前关卡点
+	 */
+	public function randomCurPointPass():void
+	{
+		if (this.curPointIndex > this.pointsAry.length - 1) return;
+		this.randomPointPassByIndex(this.curPointIndex);
+		this.curPointIndex++;
+	}
+	
+	/**
+	 * 下一步
+	 */
+	public function nextStep(index:int):void
+	{
+		var pVo:PointVo;
+		switch (this.step) 
+		{
+			case 0:
+				this.randomCurPointPass();
+				if (index > this.pointsAry.length - 1) this.step++;
+			break;
+			case 1:
+				pVo = this.pointsAry[index];
+				pVo.type = PointVo.UP_FLOOR;
+				this.step++;
+			break;
+			case 2:
+				pVo = this.pointsAry[index];
+				pVo.type = PointVo.DOWN_FLOOR;
+				this.step++;
+			break;
+			case 3:
+				pVo = this.pointsAry[index];
+				if (this.isFirstPoint())
+					pVo.type = PointVo.REWARD_BOX;
+				else if (this.isBossPoint())
+					pVo.type = PointVo.BOSS_REWARD_BOX;
+				this.step++;
+			break;
+			case 4:
+				if (this.isBossPoint())
+				{
+					pVo = this.pointsAry[index];
+					pVo.type = PointVo.BOSS;
+					this.step++;
+				}
+			break;
+		}
+		//trace(this.pointsAry);
+	}
+	
+	/**
+	 * 是否是boss层
+	 * @return	
+	 */
+	public function isBossPoint():Boolean
+	{
+		return this.curPoints == this.getCurStagePointsCount();
+	}
+	
+	/**
+	 * 是否是第一层
+	 * @return
+	 */
+	public function isFirstPoint():Boolean
+	{
+		return this.curPoints == 1;
 	}
 }
 }

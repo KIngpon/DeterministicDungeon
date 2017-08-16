@@ -39,8 +39,6 @@ public class SelectStageLayer extends Sprite
 	//已选择的数组
 	private var numAry:Array;
 	//当前关卡点
-	private var curPoints:int;
-	private var curLeveMaxPoints:int;
 	private var isBossPoints:Boolean;
 	private var isFirstPoints:Boolean;
 	private var flashingIndex:int;
@@ -60,10 +58,8 @@ public class SelectStageLayer extends Sprite
 	 */
 	public function initStageData(sProxy:StageProxy):void
 	{
-		this.curPoints = sProxy.curPoints;
-		this.curLeveMaxPoints = sProxy.getCurStagePointsCount();
-		this.isBossPoints = this.curPoints == this.curLeveMaxPoints;
-		this.isFirstPoints = this.curPoints == 1;
+		this.isBossPoints = sProxy.isBossPoint();
+		this.isFirstPoints = sProxy.isFirstPoint();
 		if (this.isBossPoints) this.maxStep = 4;
 		else if (this.isFirstPoints) this.maxStep = 3;
 		else this.maxStep = 2;
@@ -285,10 +281,11 @@ public class SelectStageLayer extends Sprite
 		if (this.step == 0)
 		{
 			this.resetAllSelectImg();
+			//全部格子选择完 下一步
 			if (this.curSelectValue >= this.totalNum)
 				this.step++;
 			else
-				this.curSelectValue++;
+				this.curSelectValue++; //下一个格子
 		}
 		else if (this.step <= this.maxStep)
 		{
@@ -329,7 +326,7 @@ public class SelectStageLayer extends Sprite
 			this.flashingIndex = 0;
 			this.flashingTimer.clear(this, flashingLoopHandler);
 			if(this.flashingCallBackHandler)
-				this.flashingCallBackHandler.run();
+				this.flashingCallBackHandler.runWith(this.curSelectValue);
 		}
 	}
 	

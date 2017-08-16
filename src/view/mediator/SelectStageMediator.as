@@ -40,9 +40,18 @@ public class SelectStageMediator extends Mediator
 		switch (notification.notificationName) 
 		{
 			case MsgConstant.START_FIGHT:
+				this.initData();
 				this.initUI();
 				break;
 		}
+	}
+	
+	/**
+	 * 初始化数据
+	 */
+	private function initData():void 
+	{
+		this.stageProxy.initPointsAry();
 	}
 	
 	/**
@@ -65,10 +74,12 @@ public class SelectStageMediator extends Mediator
 		this.selectStageLayer.flashing(Handler.create(this, flashingCompleteHandler));
 	}
 	
-	private function flashingCompleteHandler():void 
+	private function flashingCompleteHandler(index:int):void 
 	{
-		trace("flashingCompleteHandler");
+		//trace("flashingCompleteHandler");
 		this.selectStageLayer.nextStep();
+		this.stageProxy.nextStep(index);
+		
 		if (this.selectStageLayer.isLastStep())
 		{
 			this.selectStageLayer.removeSelf();

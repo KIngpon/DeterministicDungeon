@@ -25,9 +25,8 @@ public class Random
             throw new Error('没有可用的范围('+ start + ',' + stop+')');
         if (width < 0)
             width = start - stop;
-            
-        var n:int = (width + step - 1) / step;
-        return random() * n * step + Math.min(start, stop);
+        var n:int = toInt((width + step - 1) / step);
+        return toInt(random() * n * step) + Math.min(start, stop);
     }
     
     /**
@@ -86,8 +85,7 @@ public class Random
     {
         if (!sequence.hasOwnProperty('length'))
             throw new Error('无法对此对象执行此操作');
-            
-        var index:int = random() * sequence.length;
+        var index:int = toInt(random() * sequence.length);
         if (sequence is String)
             return String(sequence).charAt(index);
         else
@@ -118,10 +116,9 @@ public class Random
         var indices:Array = [];
         for (var i:Number = 0; i < num; i++)
         {
-            var index:int = random() * len;
+            var index:int = toInt(random() * len);
             while (indices.indexOf(index) >= 0)
-                index = random() * len;
-            
+                index = toInt(random() * len);
             selected.push(sequence[index]);
             indices.push(index);
         }
@@ -147,6 +144,16 @@ public class Random
 	public static function boolean(chance:Number = .5):Boolean
 	{
 		return (Random.random() < chance) ? true:false;
+	}
+	
+	
+	/**
+	 * 转换为整型
+	 * @return	整型
+	 */
+	private static function toInt(value:int):int
+	{
+		return parseInt(value + "");
 	}
     
 }

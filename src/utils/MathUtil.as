@@ -131,6 +131,15 @@ public class MathUtil
     }
 	
 	/**
+	 * 转换为整型
+	 * @return	整型
+	 */
+	public static function toInt(value:int):int
+	{
+		return parseInt(value + "");
+	}
+	
+	/**
     * 返回num的绝对值
     * @param	num
     * @return  返回参数num的绝对值
