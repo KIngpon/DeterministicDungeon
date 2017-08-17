@@ -352,7 +352,11 @@ public class StageProxy extends Proxy
 		{
 			case 0:
 				//this.randomCurPointPass();
-				if (index >= this.pointsAry.length - 1) this.step++;
+				if (index >= this.pointsAry.length - 1) 
+				{
+					//TODO 判断是否有孤立的格子
+					this.step++;
+				}
 			break;
 			case 1:
 				pVo = this.pointsAry[index];
@@ -408,11 +412,10 @@ public class StageProxy extends Proxy
 	}
 	
 	/**
-	 * 判断关卡点是否合法
+	 * 补完可通过的点
 	 */
-	public function checkStagePointValid():void
+	private function fixPassPoint():void
 	{
-		//将通路补全
 		var count:int = this.pointsAry.length;
 		for (var i:int = 0; i < count; i++) 
 		{
@@ -450,9 +453,20 @@ public class StageProxy extends Proxy
 				}
 			}
 		}
+	}
+	
+	/**
+	 * 判断关卡点是否合法
+	 */
+	public function checkStagePointValid():void
+	{
+		//将通路补全
+		this.fixPassPoint();
+		
+		
 		
 		//目标点数组
-		var upFloorPVo:PointVo = this.getPointVoByType(PointVo.UP_FLOOR);
+		/*var upFloorPVo:PointVo = this.getPointVoByType(PointVo.UP_FLOOR);
 		this.resetPointSeach();
 		var isFindDownFloor:Boolean = this.seachPath(upFloorPVo, PointVo.DOWN_FLOOR);
 		trace("isFindDownFloor", isFindDownFloor);
@@ -469,7 +483,7 @@ public class StageProxy extends Proxy
 			this.resetPointSeach();
 			var isFindBossRewardBox:Boolean = this.seachPath(upFloorPVo, PointVo.BOSS_REWARD_BOX);
 			trace("isFindBoss", isFindBoss);
-		}
+		}*/
 	}
 	
 	/**
@@ -485,7 +499,7 @@ public class StageProxy extends Proxy
 		}
 	}
 	
-	private function seachPath(pVo:PointVo, type:int):Boolean
+	private function seachPath(pVo:PointVo):Boolean
 	{
 		if (!pVo) return false;
 		var openList:Array = [];
