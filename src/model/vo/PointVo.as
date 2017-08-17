@@ -31,5 +31,7 @@ public class PointVo
 	public static const BOSS_REWARD_BOX:int = 5;
 	public static const COMPOSE:int = 6;
 	public static const SPECIAL_BOX:int = 7;
+	//是否搜索过了
+	public var isSeached:Boolean;
 }
 }

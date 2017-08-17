@@ -321,21 +321,16 @@ public class SelectStageLayer extends Sprite
 		var upSpt:Sprite = stageIcon.getChildByName("upSpt") as Sprite;
 		var downSpt:Sprite = stageIcon.getChildByName("downSpt") as Sprite;
 		var count:int = pVo.passAry.length;
-		trace("pVo.passAry", pVo.passAry);
 		upSpt.visible = false;
 		downSpt.visible = false;
 		leftSpt.visible = false;
 		rightSpt.visible = false;
 		for (var i:int = 0; i < count; i++) 
 		{
-			if (pVo.passAry[i] == PointVo.UP_PASS)
-				upSpt.visible = true;
-			if (pVo.passAry[i] == PointVo.DOWN_PASS)
-				downSpt.visible = true;
-			if (pVo.passAry[i] == PointVo.LEFT_PASS)
-				leftSpt.visible = true;
-			if (pVo.passAry[i] == PointVo.RIGHT_PASS)
-				rightSpt.visible = true;
+			upSpt.visible = pVo.up;
+			downSpt.visible = pVo.down;
+			leftSpt.visible = pVo.left;
+			rightSpt.visible = pVo.right;
 		}	
 	}
 	

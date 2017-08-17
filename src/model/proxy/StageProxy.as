@@ -313,6 +313,23 @@ public class StageProxy extends Proxy
 		var count:int = pVo.passAry.length - 1;
 		count = Random.randint(1, count);
 		pVo.passAry = Random.sample(pVo.passAry, count);
+		pVo.passAry = [PointVo.UP_PASS];
+		var count:int = pVo.passAry.length;
+		pVo.up = false;
+		pVo.down = false;
+		pVo.left = false;
+		pVo.right = false;
+		for (var i:int = 0; i < count; i++) 
+		{
+			if (pVo.passAry[i] == PointVo.UP_PASS)
+				pVo.up = true;
+			else if (pVo.passAry[i] == PointVo.DOWN_PASS)
+				pVo.down = true;
+			else if (pVo.passAry[i] == PointVo.LEFT_PASS)
+				pVo.left = true;
+			else if (pVo.passAry[i] == PointVo.RIGHT_PASS)
+				pVo.right = true;
+		}
 	}
 	
 	/**
@@ -368,7 +385,7 @@ public class StageProxy extends Proxy
 		
 		for (var i:int = 0; i < this.pointsAry.length; i++) 
 		{
-			trace("pvo type",i, this.pointsAry[i].type);
+			trace("pvo type", i, this.pointsAry[i].type);
 		}
 	}
 	
@@ -434,8 +451,114 @@ public class StageProxy extends Proxy
 			}
 		}
 		
+		//目标点数组
+		var upFloorPVo:PointVo = this.getPointVoByType(PointVo.UP_FLOOR);
+		this.resetPointSeach();
+		var isFindDownFloor:Boolean = this.seachPath(upFloorPVo, PointVo.DOWN_FLOOR);
+		trace("isFindDownFloor", isFindDownFloor);
+		if (this.isFirstPoint())
+		{
+			this.resetPointSeach();
+			var isFindRewardBox:Boolean = this.seachPath(upFloorPVo, PointVo.REWARD_BOX);
+			trace("isFindRewardBox", isFindRewardBox);
+		}
+		if (this.isBossPoint())
+		{
+			this.resetPointSeach();
+			var isFindBoss:Boolean = this.seachPath(upFloorPVo, PointVo.BOSS);
+			this.resetPointSeach();
+			var isFindBossRewardBox:Boolean = this.seachPath(upFloorPVo, PointVo.BOSS_REWARD_BOX);
+			trace("isFindBoss", isFindBoss);
+		}
+	}
+	
+	/**
+	 * 重置点数据的搜索状态
+	 */
+	private function resetPointSeach():void
+	{
+		var count:int = this.pointsAry.length;
+		for (var i:int = 0; i < count; i++) 
+		{
+			var pVo:PointVo = this.pointsAry[i];
+			pVo.isSeached = false;
+		}
+	}
+	
+	private function seachPath(pVo:PointVo, type:int):Boolean
+	{
+		if (!pVo) return false;
+		var openList:Array = [];
+		pVo.isSeached = true;
+		trace("---------curPvo---------", pVo.index);
+		var i:int = pVo.index - 1;
+		if (pVo.up)
+		{
+			if (i != 0 && i != 3 && i != 6)
+			{
+				var upVo:PointVo = this.pointsAry[i - 1];
+				openList.push(upVo);
+			}
+		}
+		if (pVo.down)
+		{
+			if (i != 2 && i != 5 && i != 8)
+			{
+				var downVo:PointVo = this.pointsAry[i + 1];
+				openList.push(downVo);
+			}
+		}
+		if (pVo.left)
+		{
+			if (i != 0 && i != 1 && i != 2)
+			{
+				var leftVo:PointVo = this.pointsAry[i - 3];
+				openList.push(leftVo);
+			}
+		}
+		if (pVo.right)
+		{
+			if (i != 6 && i != 7 && i != 8)
+			{
+				var rightVo:PointVo = this.pointsAry[i + 3];
+				openList.push(rightVo);
+			}
+		}
 		
-		
+		var count:int = openList.length;
+		for (var j:int = 0; j < count; j++) 
+		{
+			var pVo:PointVo = openList[j];
+			if (pVo.type == type)
+			{
+				//trace("pvo.type", type, pVo.index);
+				return true;
+			}
+			if (!pVo.isSeached) 
+			{
+				//trace("pVo.index", pVo.index);
+				if (this.seachPath(pVo, type))
+					return true;
+			}
+		}
+		return false;
+	}
+	
+	/**
+	 * 根据类型获取关卡点数据
+	 * @param	type	类型
+	 */
+	public function getPointVoByType(type:int):void
+	{
+		if (!this.pointsAry) return null;
+		var count:int = this.pointsAry.length;
+		for (var i:int = 0; i < count; i++) 
+		{
+			var pVo:PointVo = this.pointsAry[i];
+			if (pVo.type == type)
+				return pVo;
+		}
+		return null;
 	}
 }
 }

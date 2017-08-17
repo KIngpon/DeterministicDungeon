@@ -20,7 +20,8 @@ public class SelectStageMediator extends Mediator
 	private var playerProxy:PlayerProxy;
 	private var stageProxy:StageProxy;
 	private var selectStageLayer:SelectStageLayer;
-	public static const NAME:String = "SelectStageMediator"
+	public static const NAME:String = "SelectStageMediator";
+	private var flashingIsStop:Boolean;
 	public function SelectStageMediator() 
 	{
 		this.mediatorName = NAME;
@@ -51,6 +52,7 @@ public class SelectStageMediator extends Mediator
 	 */
 	private function initData():void 
 	{
+		this.flashingIsStop = false;
 		this.stageProxy.initPointsAry();
 	}
 	
@@ -62,20 +64,28 @@ public class SelectStageMediator extends Mediator
 		if (!this.selectStageLayer)
 		{
 			this.selectStageLayer = new SelectStageLayer();
-			this.selectStageLayer.selectedBtn.on(Event.CLICK, this, selectedStageBtnClickHandler);
+			this.selectStageLayer.selectedBtn.on(Event.CLICK, this, selectedBtnClickHandler);
+			this.selectStageLayer.skipBtn.on(Event.CLICK, this, skipBtnClickHandler);
 			Layer.GAME_STAGE.addChild(selectStageLayer);
 		}
 		this.selectStageLayer.initStageData(this.stageProxy);
 		this.selectStageLayer.start(this.playerProxy.pVo.slotsDelay);
 	}
 	
-	private function selectedStageBtnClickHandler():void 
+	private function skipBtnClickHandler():void 
 	{
-		if (this.stageProxy.step == 0) 
+		trace("skip");
+		this.stageProxy.checkStagePointValid();
+	}
+	
+	private function selectedBtnClickHandler():void 
+	{
+		if (this.stageProxy.step == 0 && !this.flashingIsStop) 
 		{
 			this.stageProxy.randomCurPointPass();
 			this.selectStageLayer.updatePathView(this.stageProxy.getPointVoByIndex(this.stageProxy.curPointIndex - 1));
 		}
+		this.flashingIsStop = true;
 		this.selectStageLayer.flashing(Handler.create(this, flashingCompleteHandler));
 	}
 	
@@ -84,6 +94,7 @@ public class SelectStageMediator extends Mediator
 		var index:int = indexValue - 1;
 		this.selectStageLayer.nextStep();
 		this.stageProxy.nextStep(index);
+		this.flashingIsStop = false;
 		if (this.selectStageLayer.isLastStep())
 		{
 			this.selectStageLayer.removeSelf();
