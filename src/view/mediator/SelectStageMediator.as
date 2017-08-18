@@ -74,35 +74,41 @@ public class SelectStageMediator extends Mediator
 		this.selectStageLayer.start(this.playerProxy.pVo.slotsDelay);
 	}
 	
-	private var aa:Boolean = false;
+	//跳过
 	private function skipBtnClickHandler():void 
 	{
 		trace("this.stageProxy.step", this.stageProxy.step);
+		trace("this.stageProxy.maxStep", this.stageProxy.maxStep);
 		if (this.stageProxy.step == 0)
 		{
 			this.initData();
 			this.initUI();
 			this.stageProxy.skip();
-			if (!aa) this.stageProxy.testPoints();
-			aa = true;
+			//this.stageProxy.testPoints();
 			this.selectStageLayer.updateAllPointPassView(this.stageProxy.pointsAry);
 			if (!this.stageProxy.checkStagePointValid())
 			{
 				this.selectStageLayer.stop();
 				this.selectStageLayer.updatePointValidView(this.stageProxy.openList);
 				this.selectStageLayer.setDes("上天对你的选择不满意,让你重选。");
-				this.initData();
+				this.stageProxy.step = 0;
 			}
 			else
 			{
 				this.selectStageLayer.skip();
 			}
 		}
-		else 
+		else if (this.stageProxy.step <= this.stageProxy.maxStep)
 		{
 			this.stageProxy.skip();
 			this.selectStageLayer.updateAllPointTypeView(this.stageProxy.pointsAry);
 			this.selectStageLayer.skip();
+		}
+		else
+		{
+			this.selectStageLayer.removeSelf();
+			this.selectStageLayer = null;
+			this.sendNotification(MsgConstant.SELECT_STAGE_COMPLETE);
 		}
 	}
 	
@@ -128,11 +134,9 @@ public class SelectStageMediator extends Mediator
 	{
 		this.flashingIsStop = false;
 		var index:int = indexValue - 1;
-		if (this.stageProxy.step == 0 && indexValue == GameConstant.POINTS_NUM_MAX) 
+		if (indexValue == GameConstant.POINTS_NUM_MAX) 
 		{
-			//this.stageProxy.testPoints();
-			//this.selectStageLayer.updateAllPointView(this.stageProxy.pointsAry);
-			if (!this.stageProxy.checkStagePointValid())
+			if (this.stageProxy.step == 0 && !this.stageProxy.checkStagePointValid())
 			{
 				this.selectStageLayer.stop();
 				this.selectStageLayer.updatePointValidView(this.stageProxy.openList);

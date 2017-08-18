@@ -314,10 +314,11 @@ public class SelectStageLayer extends Sprite
 	 */
 	public function nextStep():void
 	{
-		trace("ui step");
+		trace("ui step", this.step);
 		if (this.step == 0)
 		{
 			this.resetAllSelectImg();
+			trace("this.curSelectValue", this.curSelectValue);
 			//全部格子选择完 下一步
 			if (this.curSelectValue >= GameConstant.POINTS_NUM_MAX)
 				this.step++;

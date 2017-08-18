@@ -28,7 +28,7 @@ public class StageProxy extends Proxy
 	//当前步数
 	public var step:int = 0;
 	//总步数
-	private var maxStep:int;
+	public var maxStep:int;
 	//总关卡数
 	private var _totalLevel:int;
 	//关卡列表
@@ -261,6 +261,7 @@ public class StageProxy extends Proxy
 	public function initPointsAry():void
 	{
 		this.pointsAry = [];
+		this.openList = [];
 		this.step = 0;
 		this.curPointIndex = 0;
 		if (this.isBossPoint) this.maxStep = 4;
@@ -397,6 +398,7 @@ public class StageProxy extends Proxy
 		if (this.step == 0) 
 		{
 			this.randomAllPointPass();
+			this.curPointIndex = GameConstant.POINTS_NUM_MAX;
 			this.step++;
 		}
 		else if (this.step <= this.maxStep)
@@ -585,6 +587,7 @@ public class StageProxy extends Proxy
 		this.fixPassPoint();
 		this.openList = [];
 		this.seach(this.getPointVoByIndex(0), this.openList);
+		this.resetPointSeach();
 		return this.openList.length == GameConstant.POINTS_NUM_MAX;
 	}
 	
