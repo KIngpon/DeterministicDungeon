@@ -8,6 +8,7 @@ public class GameConstant
 {
 	public static const GAME_WIDTH:int = 1136;
 	public static const GAME_HEIGHT:int = 640;
+	
 	public static const ENEMY_NUM:int = 3;
 	//人物坐标
 	public static const ROLE_POS_Y:int = 450;

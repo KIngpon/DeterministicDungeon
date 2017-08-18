@@ -1,5 +1,6 @@
 package view.mediator 
 {
+import config.GameConstant;
 import config.MsgConstant;
 import laya.events.Event;
 import laya.utils.Handler;
@@ -68,22 +69,56 @@ public class SelectStageMediator extends Mediator
 			this.selectStageLayer.skipBtn.on(Event.CLICK, this, skipBtnClickHandler);
 			Layer.GAME_STAGE.addChild(selectStageLayer);
 		}
+		this.selectStageLayer.resetUI();
 		this.selectStageLayer.initStageData(this.stageProxy);
 		this.selectStageLayer.start(this.playerProxy.pVo.slotsDelay);
 	}
 	
+	private var aa:Boolean = false;
 	private function skipBtnClickHandler():void 
 	{
-		trace("skip");
-		this.stageProxy.checkStagePointValid();
+		trace("this.stageProxy.step", this.stageProxy.step);
+		if (this.stageProxy.step == 0)
+		{
+			this.initData();
+			this.initUI();
+			this.stageProxy.skip();
+			if (!aa) this.stageProxy.testPoints();
+			aa = true;
+			this.selectStageLayer.updateAllPointPassView(this.stageProxy.pointsAry);
+			if (!this.stageProxy.checkStagePointValid())
+			{
+				this.selectStageLayer.stop();
+				this.selectStageLayer.updatePointValidView(this.stageProxy.openList);
+				this.selectStageLayer.setDes("上天对你的选择不满意,让你重选。");
+				this.initData();
+			}
+			else
+			{
+				this.selectStageLayer.skip();
+			}
+		}
+		else 
+		{
+			this.stageProxy.skip();
+			this.selectStageLayer.updateAllPointTypeView(this.stageProxy.pointsAry);
+			this.selectStageLayer.skip();
+		}
 	}
 	
 	private function selectedBtnClickHandler():void 
 	{
 		if (this.stageProxy.step == 0 && !this.flashingIsStop) 
 		{
+			if (this.stageProxy.curPointIndex == GameConstant.POINTS_NUM_MAX && 
+				!this.stageProxy.checkStagePointValid())
+			{
+				this.initData();
+				this.initUI();
+				return;
+			}
 			this.stageProxy.randomCurPointPass();
-			this.selectStageLayer.updatePathView(this.stageProxy.getPointVoByIndex(this.stageProxy.curPointIndex - 1));
+			this.selectStageLayer.updatePointView(this.stageProxy.getPointVoByIndex(this.stageProxy.curPointIndex - 1));
 		}
 		this.flashingIsStop = true;
 		this.selectStageLayer.flashing(Handler.create(this, flashingCompleteHandler));
@@ -91,10 +126,22 @@ public class SelectStageMediator extends Mediator
 	
 	private function flashingCompleteHandler(indexValue:int):void 
 	{
+		this.flashingIsStop = false;
 		var index:int = indexValue - 1;
+		if (this.stageProxy.step == 0 && indexValue == GameConstant.POINTS_NUM_MAX) 
+		{
+			//this.stageProxy.testPoints();
+			//this.selectStageLayer.updateAllPointView(this.stageProxy.pointsAry);
+			if (!this.stageProxy.checkStagePointValid())
+			{
+				this.selectStageLayer.stop();
+				this.selectStageLayer.updatePointValidView(this.stageProxy.openList);
+				this.selectStageLayer.setDes("上天对你的选择不满意,让你重选。");
+				return;
+			}
+		}
 		this.selectStageLayer.nextStep();
 		this.stageProxy.nextStep(index);
-		this.flashingIsStop = false;
 		if (this.selectStageLayer.isLastStep())
 		{
 			this.selectStageLayer.removeSelf();

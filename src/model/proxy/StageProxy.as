@@ -27,6 +27,8 @@ public class StageProxy extends Proxy
 	public var curPointIndex:int = 0;
 	//当前步数
 	public var step:int = 0;
+	//总步数
+	private var maxStep:int;
 	//总关卡数
 	private var _totalLevel:int;
 	//关卡列表
@@ -35,7 +37,8 @@ public class StageProxy extends Proxy
 	private var equipProxy:EquipProxy;
 	private var dProxy:DropProxy;
 	//关卡点数据列表
-	private var pointsAry:Array;
+	public var pointsAry:Array;
+	public var openList:Array;
 	public function StageProxy() 
 	{
 		this.proxyName = NAME;
@@ -251,7 +254,7 @@ public class StageProxy extends Proxy
 	 * 总关卡数
 	 */
 	public function get totalLevel():int {return _totalLevel; }
-
+	
 	/**
 	 * 初始化关卡点数组
 	 */
@@ -260,6 +263,9 @@ public class StageProxy extends Proxy
 		this.pointsAry = [];
 		this.step = 0;
 		this.curPointIndex = 0;
+		if (this.isBossPoint) this.maxStep = 4;
+		else if (this.isFirstPoint) this.maxStep = 3;
+		else this.maxStep = 2;
 		for (var i:int = 0; i < GameConstant.POINTS_NUM_MAX; i++) 
 		{
 			var pVo:PointVo = new PointVo();
@@ -310,15 +316,15 @@ public class StageProxy extends Proxy
 		if (index < 0 || index > this.pointsAry.length - 1) return;
 		var pVo:PointVo = this.pointsAry[index];
 		//先随机通过的数量
-		var count:int = pVo.passAry.length - 1;
+		var count:int = pVo.passAry.length;
+		if (count == 4 || count == 3) count = 2;
 		count = Random.randint(1, count);
 		pVo.passAry = Random.sample(pVo.passAry, count);
-		pVo.passAry = [PointVo.UP_PASS];
-		var count:int = pVo.passAry.length;
 		pVo.up = false;
 		pVo.down = false;
 		pVo.left = false;
 		pVo.right = false;
+		count = pVo.passAry.length;
 		for (var i:int = 0; i < count; i++) 
 		{
 			if (pVo.passAry[i] == PointVo.UP_PASS)
@@ -343,6 +349,65 @@ public class StageProxy extends Proxy
 	}
 	
 	/**
+	 * 随机所有关卡点的通道
+	 */
+	public function randomAllPointPass():void
+	{
+		for (var i:int = this.curPointIndex; i < GameConstant.POINTS_NUM_MAX; i++)
+		{
+			this.randomCurPointPass();
+		}
+	}
+	
+	/**
+	 * 随机关卡点的类型
+	 */
+	public function randomPointType():void
+	{
+		var typeAry:Array = [PointVo.UP_FLOOR, PointVo.DOWN_FLOOR];
+		if (this.isFirstPoint()) typeAry = [PointVo.UP_FLOOR, PointVo.DOWN_FLOOR, PointVo.REWARD_BOX];
+		if (this.isBossPoint()) typeAry = [PointVo.UP_FLOOR, PointVo.DOWN_FLOOR, PointVo.BOSS_REWARD_BOX, PointVo.BOSS];
+		//根据当前已经选择好的步数，剔除不需要随机的位置
+		trace("typeAry", typeAry);
+		if (this.step > 1) typeAry.splice(0, this.step - 1);
+		trace("typeAry", typeAry);
+		var sampleCount:int = typeAry.length;
+		var count:int = this.pointsAry.length;
+		var arr:Array = [];
+		for (var i:int = 0; i < count; i++)
+		{
+			var pVo:PointVo = this.pointsAry[i];
+			if (pVo.type == PointVo.NONE)
+				arr.push(pVo);
+		}
+		arr = Random.sample(arr, sampleCount);
+		count = arr.length;
+		for (var i:int = 0; i < count; i++)
+		{
+			var pVo:PointVo = arr[i];
+			pVo.type = typeAry[i];
+		}
+	}
+	
+	/**
+	 * 跳过手动随机
+	 */
+	public function skip():void
+	{
+		if (this.step == 0) 
+		{
+			this.randomAllPointPass();
+			this.step++;
+		}
+		else if (this.step <= this.maxStep)
+		{
+			trace("this.step", this.step);
+			this.randomPointType();
+			this.step = this.maxStep + 1;
+		}
+	}
+	
+	/**
 	 * 下一步
 	 */
 	public function nextStep(index:int):void
@@ -352,7 +417,7 @@ public class StageProxy extends Proxy
 		{
 			case 0:
 				//this.randomCurPointPass();
-				if (index >= this.pointsAry.length - 1) 
+				if (index >= this.pointsAry.length - 1 && this.checkStagePointValid()) 
 				{
 					//TODO 判断是否有孤立的格子
 					this.step++;
@@ -371,9 +436,13 @@ public class StageProxy extends Proxy
 			case 3:
 				pVo = this.pointsAry[index];
 				if (this.isFirstPoint())
+				{
 					pVo.type = PointVo.REWARD_BOX;
+				}
 				else if (this.isBossPoint())
+				{
 					pVo.type = PointVo.BOSS_REWARD_BOX;
+				}
 				this.step++;
 			break;
 			case 4:
@@ -384,12 +453,6 @@ public class StageProxy extends Proxy
 					this.step++;
 				}
 			break;
-		}
-		//trace(this.pointsAry);
-		
-		for (var i:int = 0; i < this.pointsAry.length; i++) 
-		{
-			trace("pvo type", i, this.pointsAry[i].type);
 		}
 	}
 	
@@ -433,7 +496,7 @@ public class StageProxy extends Proxy
 				if (i != 2 && i != 5 && i != 8)
 				{
 					var downVo:PointVo = this.pointsAry[i + 1];
-					downVo.down = true;
+					downVo.up = true;
 				}
 			}
 			if (pVo.left)
@@ -456,34 +519,134 @@ public class StageProxy extends Proxy
 	}
 	
 	/**
+	 * 测试数据
+	 */
+	public function testPoints():void
+	{
+		this.pointsAry = [];
+		var pVo:PointVo;
+		pVo = new PointVo();
+		pVo.right = true;
+		pVo.down = true;
+		pVo.index = 1;
+		this.pointsAry.push(pVo);
+		
+		pVo = new PointVo();
+		pVo.up = true;
+		pVo.right = true;
+		pVo.index = 2;
+		this.pointsAry.push(pVo);
+		
+		pVo = new PointVo();
+		pVo.right = true;
+		pVo.index = 3;
+		this.pointsAry.push(pVo);
+		
+		pVo = new PointVo();
+		pVo.left = true;
+		pVo.down = true;
+		pVo.index = 4;
+		this.pointsAry.push(pVo);
+		
+		pVo = new PointVo();
+		pVo.left = true;
+		pVo.up = true;
+		pVo.index = 5;
+		this.pointsAry.push(pVo);
+		
+		pVo = new PointVo();
+		pVo.right = true;
+		pVo.index = 6;
+		this.pointsAry.push(pVo);
+		
+		pVo = new PointVo();
+		pVo.down = true;
+		pVo.index = 7;
+		this.pointsAry.push(pVo);
+		
+		pVo = new PointVo();
+		pVo.down = true;
+		pVo.index = 8;
+		this.pointsAry.push(pVo);
+				
+		pVo = new PointVo();
+		pVo.up = true;
+		pVo.index = 9;
+		this.pointsAry.push(pVo);
+	}
+	
+	
+	/**
 	 * 判断关卡点是否合法
 	 */
-	public function checkStagePointValid():void
+	public function checkStagePointValid():Boolean
 	{
 		//将通路补全
 		this.fixPassPoint();
-		
-		
-		
-		//目标点数组
-		/*var upFloorPVo:PointVo = this.getPointVoByType(PointVo.UP_FLOOR);
-		this.resetPointSeach();
-		var isFindDownFloor:Boolean = this.seachPath(upFloorPVo, PointVo.DOWN_FLOOR);
-		trace("isFindDownFloor", isFindDownFloor);
-		if (this.isFirstPoint())
+		this.openList = [];
+		this.seach(this.getPointVoByIndex(0), this.openList);
+		return this.openList.length == GameConstant.POINTS_NUM_MAX;
+	}
+	
+	/**
+	 * 搜索整个地图查看是否有孤岛
+	 * @param	pVo			关卡点数据
+	 * @param	openList	存放通过的关卡点列表
+	 */
+	private function seach(pVo:PointVo, openList:Array):void
+	{
+		if (!pVo || !openList) return;
+		var i:int = pVo.index - 1;
+		pVo.isSeached = true;
+		openList.push(pVo);
+		//trace("---------------curPVo.index--" + pVo.index + "------------------");
+		//trace("up", pVo.up);
+		//trace("down", pVo.down);
+		//trace("left", pVo.left);
+		//trace("right", pVo.right);
+		var passVoList:Array = [];
+		if (pVo.up)
 		{
-			this.resetPointSeach();
-			var isFindRewardBox:Boolean = this.seachPath(upFloorPVo, PointVo.REWARD_BOX);
-			trace("isFindRewardBox", isFindRewardBox);
+			if (i != 0 && i != 3 && i != 6)
+			{
+				var upVo:PointVo = this.pointsAry[i - 1];
+				passVoList.push(upVo);
+			}
 		}
-		if (this.isBossPoint())
+		if (pVo.down)
 		{
-			this.resetPointSeach();
-			var isFindBoss:Boolean = this.seachPath(upFloorPVo, PointVo.BOSS);
-			this.resetPointSeach();
-			var isFindBossRewardBox:Boolean = this.seachPath(upFloorPVo, PointVo.BOSS_REWARD_BOX);
-			trace("isFindBoss", isFindBoss);
-		}*/
+			if (i != 2 && i != 5 && i != 8)
+			{
+				var downVo:PointVo = this.pointsAry[i + 1];
+				passVoList.push(downVo);
+			}
+		}
+		if (pVo.left)
+		{
+			if (i != 0 && i != 1 && i != 2)
+			{
+				var leftVo:PointVo = this.pointsAry[i - 3];
+				passVoList.push(leftVo);
+			}
+		}
+		if (pVo.right)
+		{
+			if (i != 6 && i != 7 && i != 8)
+			{
+				var rightVo:PointVo = this.pointsAry[i + 3];
+				passVoList.push(rightVo);
+			}
+		}
+		var count:int = passVoList.length;
+		for (i = 0; i < count; i++) 
+		{
+			var passVo:PointVo = passVoList[i];
+			if (!passVo.isSeached)
+			{
+				//trace("passVo", passVo.index);
+				this.seach(passVo, openList);
+			}
+		}
 	}
 	
 	/**
@@ -499,70 +662,11 @@ public class StageProxy extends Proxy
 		}
 	}
 	
-	private function seachPath(pVo:PointVo):Boolean
-	{
-		if (!pVo) return false;
-		var openList:Array = [];
-		pVo.isSeached = true;
-		trace("---------curPvo---------", pVo.index);
-		var i:int = pVo.index - 1;
-		if (pVo.up)
-		{
-			if (i != 0 && i != 3 && i != 6)
-			{
-				var upVo:PointVo = this.pointsAry[i - 1];
-				openList.push(upVo);
-			}
-		}
-		if (pVo.down)
-		{
-			if (i != 2 && i != 5 && i != 8)
-			{
-				var downVo:PointVo = this.pointsAry[i + 1];
-				openList.push(downVo);
-			}
-		}
-		if (pVo.left)
-		{
-			if (i != 0 && i != 1 && i != 2)
-			{
-				var leftVo:PointVo = this.pointsAry[i - 3];
-				openList.push(leftVo);
-			}
-		}
-		if (pVo.right)
-		{
-			if (i != 6 && i != 7 && i != 8)
-			{
-				var rightVo:PointVo = this.pointsAry[i + 3];
-				openList.push(rightVo);
-			}
-		}
-		
-		var count:int = openList.length;
-		for (var j:int = 0; j < count; j++) 
-		{
-			var pVo:PointVo = openList[j];
-			if (pVo.type == type)
-			{
-				//trace("pvo.type", type, pVo.index);
-				return true;
-			}
-			if (!pVo.isSeached) 
-			{
-				//trace("pVo.index", pVo.index);
-				if (this.seachPath(pVo, type))
-					return true;
-			}
-		}
-		return false;
-	}
-	
 	/**
 	 * 根据类型获取关卡点数据
 	 * @param	type	类型
 	 */
-	public function getPointVoByType(type:int):void
+	public function getPointVoByType(type:int):PointVo
 	{
 		if (!this.pointsAry) return null;
 		var count:int = this.pointsAry.length;

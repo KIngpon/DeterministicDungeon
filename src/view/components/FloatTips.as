@@ -42,9 +42,9 @@ public class FloatTips
 			txt.update();
 		}
 		
-		for (var i:int = 0; i < txtAry.length; i++) 
+		for (i = 0; i < txtAry.length; i++) 
 		{
-			var txt:FloatTxt = txtAry[i];
+			txt = txtAry[i];
 		}
 	}
 }

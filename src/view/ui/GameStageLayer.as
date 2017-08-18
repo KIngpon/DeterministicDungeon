@@ -330,11 +330,6 @@ public class GameStageLayer extends Sprite
 		trace(" stageProxy.getCurStagePointsCount()",  stageProxy.getCurStagePointsCount());
 		this.bgBg.skin = "stage/" + "stage" + stagePo.level + "/stageBg.png";
 		this.fontBg.skin = "stage/" + "stage" + stagePo.level + "/stageBg1.png";
-		//var scale:Number = GameConstant.GAME_WIDTH / this.bgBg.width;
-		//trace("GameConstant.GAME_WIDTH", GameConstant.GAME_WIDTH);
-		//trace("this.bgBg.width", this.bgBg.width);
-		//this.bgBg.width = GameConstant.GAME_WIDTH;
-		//this.bgBg.height *= scale; 
 		if (stagePo.points == 1)
 		{
 			
