@@ -22,7 +22,7 @@ public class StageProxy extends Proxy
 	//当前关卡
 	public var curLevel:int = 1;
 	//当前关卡点
-	public var curPoints:int = 3;
+	public var curPoints:int = 1;
 	//当前需要随机的关卡点索引
 	public var curPointIndex:int = 0;
 	//当前步数
@@ -39,6 +39,10 @@ public class StageProxy extends Proxy
 	//关卡点数据列表
 	public var pointsAry:Array;
 	public var openList:Array;
+	//当前层关卡点
+	public var curPointVo:PointVo;
+	//是否是当前层的第一步
+	public var isFirstPointVo:Boolean;
 	public function StageProxy() 
 	{
 		this.proxyName = NAME;
@@ -264,6 +268,7 @@ public class StageProxy extends Proxy
 		this.openList = [];
 		this.step = 0;
 		this.curPointIndex = 0;
+		this.isFirstPointVo = true;
 		if (this.isBossPoint) this.maxStep = 4;
 		else if (this.isFirstPoint) this.maxStep = 3;
 		else this.maxStep = 2;
@@ -403,7 +408,7 @@ public class StageProxy extends Proxy
 		}
 		else if (this.step <= this.maxStep)
 		{
-			trace("this.step", this.step);
+			//trace("this.step", this.step);
 			this.randomPointType();
 			this.step = this.maxStep + 1;
 		}
@@ -680,6 +685,14 @@ public class StageProxy extends Proxy
 				return pVo;
 		}
 		return null;
+	}
+	
+	/**
+	 * 初始化关卡点
+	 */
+	public function initStartPointVo():void
+	{
+		this.curPointVo = this.getPointVoByType(PointVo.UP_FLOOR);
 	}
 }
 }

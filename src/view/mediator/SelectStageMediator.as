@@ -4,6 +4,7 @@ import config.GameConstant;
 import config.MsgConstant;
 import laya.events.Event;
 import laya.utils.Handler;
+import model.po.StagePo;
 import model.proxy.PlayerProxy;
 import model.proxy.StageProxy;
 import mvc.Mediator;
@@ -23,6 +24,7 @@ public class SelectStageMediator extends Mediator
 	private var selectStageLayer:SelectStageLayer;
 	public static const NAME:String = "SelectStageMediator";
 	private var flashingIsStop:Boolean;
+	private var curStagePo:StagePo;
 	public function SelectStageMediator() 
 	{
 		this.mediatorName = NAME;
@@ -55,6 +57,7 @@ public class SelectStageMediator extends Mediator
 	{
 		this.flashingIsStop = false;
 		this.stageProxy.initPointsAry();
+		this.curStagePo = this.stageProxy.getCurStagePo();
 	}
 	
 	/**
@@ -72,6 +75,7 @@ public class SelectStageMediator extends Mediator
 		this.selectStageLayer.resetUI();
 		this.selectStageLayer.initStageData(this.stageProxy);
 		this.selectStageLayer.start(this.playerProxy.pVo.slotsDelay);
+		this.selectStageLayer.initSlotsBg(this.curStagePo);
 	}
 	
 	//跳过
@@ -106,6 +110,7 @@ public class SelectStageMediator extends Mediator
 		}
 		else
 		{
+			this.stageProxy.initStartPointVo();
 			this.selectStageLayer.removeSelf();
 			this.selectStageLayer = null;
 			this.sendNotification(MsgConstant.SELECT_STAGE_COMPLETE);

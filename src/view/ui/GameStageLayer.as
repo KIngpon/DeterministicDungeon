@@ -12,6 +12,7 @@ import model.po.StagePo;
 import model.proxy.StageProxy;
 import model.vo.EnemyVo;
 import model.vo.PlayerVo;
+import model.vo.PointVo;
 import view.components.HpBar;
 import view.components.PlayerBar;
 
@@ -332,15 +333,20 @@ public class GameStageLayer extends Sprite
 		this.fontBg.skin = "stage/" + "stage" + stagePo.level + "/stageBg1.png";
 		if (stagePo.points == 1)
 		{
-			
+			//第一关
+			if (stageProxy.curPointVo.type == PointVo.UP_FLOOR)
+			{
+				if (stageProxy.isFirstPointVo)
+					this.bgBg.skin = "stage/" + "stage" + stagePo.level + "/stageStartBg.png";
+				else
+					this.bgBg.skin = "stage/" + "stage" + stagePo.level + "/stageUpBg.png";
+			}
 		}
 		else if (stagePo.points == stageProxy.getCurStagePointsCount())
 		{
-			
-		}
-		else
-		{
-			
+			//最后一关
+			if (stageProxy.curPointVo.type == PointVo.DOWN_FLOOR)
+				this.bgBg.skin = "stage/" + "stage" + stagePo.level + "/stageDownBg.png";
 		}
 	}
 	

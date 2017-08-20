@@ -108,9 +108,9 @@ public class GameStageMediator extends Mediator
 				this.initData();
 				this.gameStage.initPlayer(this.playerVo);
 				this.gameStage.setPlayerProp(this.playerVo);
-				this.gameStage.updateStageBg(this.curStagePo, this.stageProxy);
 				break;
 			case MsgConstant.SELECT_STAGE_COMPLETE:
+				this.gameStage.updateStageBg(this.curStagePo, this.stageProxy);
 				this.gameStage.playerMove(250, 1000, Handler.create(this, playerMoveComplete));
 				break;
 			default:
@@ -278,7 +278,12 @@ public class GameStageMediator extends Mediator
 	
 	private function playerMoveOutComplete():void 
 	{
+		//下一关
+		//TODO 选择下一个关卡点
 		//胜利
+		
+		//选择下楼梯
+		//关卡数累加
 		this.stageProxy.curPoints++;
 		if (this.stageProxy.curPoints > this.stageProxy.getCurStagePointsCount())
 		{

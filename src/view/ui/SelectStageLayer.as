@@ -1,6 +1,7 @@
 package view.ui 
 {
 import config.GameConstant;
+import laya.debug.tools.comps.Rect;
 import laya.display.Sprite;
 import laya.ui.Button;
 import laya.ui.Image;
@@ -8,6 +9,7 @@ import laya.utils.Ease;
 import laya.utils.Handler;
 import laya.utils.Timer;
 import laya.utils.Tween;
+import model.po.StagePo;
 import model.proxy.StageProxy;
 import model.vo.PointVo;
 import ui.GameStage.SelectStageLayerUI;
@@ -144,6 +146,22 @@ public class SelectStageLayer extends Sprite
 		this.bossImg.visible = false;
 		this.bossRewardBox.visible = false;
 		this.handMoveComplete2();
+	}
+	
+	/**
+	 * 初始化背景图片
+	 * @param	stagePo	关卡数据
+	 */
+	public function initSlotsBg(stagePo:StagePo):void
+	{
+		if (!stagePo) return;
+		var bg:Image = new Image();
+		bg.skin = "stage/" + "stage" + stagePo.level + "/stageSlotsBg.png";
+		bg.skin = "stage/" + "stage7" + "/stageSlotsBg.png";
+		this.panel.bgSpt.addChild(bg);
+		trace(bg.width, bg.height);
+		trace("maskSpt", this.panel.getChildByName("maskSpt"));
+		bg.mask = this.panel.getChildByName("maskSpt");
 	}
 	
 	/**
