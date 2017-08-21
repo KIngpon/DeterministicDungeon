@@ -1,7 +1,6 @@
 package view.ui 
 {
 import config.GameConstant;
-import laya.debug.tools.comps.Rect;
 import laya.display.Sprite;
 import laya.ui.Button;
 import laya.ui.Image;
@@ -157,11 +156,14 @@ public class SelectStageLayer extends Sprite
 		if (!stagePo) return;
 		var bg:Image = new Image();
 		bg.skin = "stage/" + "stage" + stagePo.level + "/stageSlotsBg.png";
-		bg.skin = "stage/" + "stage7" + "/stageSlotsBg.png";
+		bg.skin = "stage/" + "stage2" + "/stageSlotsBg.png";
+		bg.x = this.panel.bgSpt.width / 2 - bg.width / 2;
+		bg.y = this.panel.bgSpt.height / 2 - bg.height / 2;
 		this.panel.bgSpt.addChild(bg);
-		trace(bg.width, bg.height);
-		trace("maskSpt", this.panel.getChildByName("maskSpt"));
-		bg.mask = this.panel.getChildByName("maskSpt");
+		var maskBg:Image = new Image("bg/bgMask.png");
+		maskBg.x = (bg.width - this.panel.bgSpt.width) / 2;
+		maskBg.y = (bg.height - this.panel.bgSpt.height) / 2;
+		bg.mask = maskBg;
 	}
 	
 	/**

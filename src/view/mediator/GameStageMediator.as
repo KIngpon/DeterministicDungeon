@@ -110,6 +110,7 @@ public class GameStageMediator extends Mediator
 				this.gameStage.setPlayerProp(this.playerVo);
 				break;
 			case MsgConstant.SELECT_STAGE_COMPLETE:
+				this.stageProxy.initStartPointVo();
 				this.gameStage.updateStageBg(this.curStagePo, this.stageProxy);
 				this.gameStage.playerMove(250, 1000, Handler.create(this, playerMoveComplete));
 				break;

@@ -58,6 +58,7 @@ public class SelectStageMediator extends Mediator
 		this.flashingIsStop = false;
 		this.stageProxy.initPointsAry();
 		this.curStagePo = this.stageProxy.getCurStagePo();
+		trace("this.curStagePo", this.curStagePo);
 	}
 	
 	/**
@@ -110,7 +111,6 @@ public class SelectStageMediator extends Mediator
 		}
 		else
 		{
-			this.stageProxy.initStartPointVo();
 			this.selectStageLayer.removeSelf();
 			this.selectStageLayer = null;
 			this.sendNotification(MsgConstant.SELECT_STAGE_COMPLETE);
