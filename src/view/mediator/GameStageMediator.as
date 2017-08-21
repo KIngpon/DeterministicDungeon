@@ -12,6 +12,7 @@ import model.po.PlayerPo;
 import model.po.StagePo;
 import model.proxy.EnemyProxy;
 import model.proxy.PlayerProxy;
+import model.proxy.ResProxy;
 import model.proxy.StageProxy;
 import model.vo.EnemyVo;
 import model.vo.PlayerVo;
@@ -58,6 +59,8 @@ public class GameStageMediator extends Mediator
 	private var stageProxy:StageProxy;
 	//敌人数据代理
 	private var enemyProxy:EnemyProxy;
+	//资源数据代理
+	private var resProxy:ResProxy;
 	//角色数据
 	private var playerVo:PlayerVo;
 	//回合数
@@ -84,6 +87,7 @@ public class GameStageMediator extends Mediator
 		this.playerProxy = this.retrieveProxy(PlayerProxy.NAME) as PlayerProxy;
 		this.stageProxy = this.retrieveProxy(StageProxy.NAME) as StageProxy;
 		this.enemyProxy = this.retrieveProxy(EnemyProxy.NAME) as EnemyProxy;
+		this.resProxy = this.retrieveProxy(ResProxy.NAME) as ResProxy;
 	}
 	
 	override protected function listNotificationInterests():Vector.<String> 
@@ -102,7 +106,8 @@ public class GameStageMediator extends Mediator
 			case MsgConstant.INIT_FIGHT_STAGE:
 				this.initUI();
 				this.initEvent();
-				this.sendNotification(MsgConstant.START_FIGHT, null);
+				//加载资源
+				this.loadBgRes();
 				break;
 			case MsgConstant.START_FIGHT:
 				this.initData();
@@ -168,6 +173,15 @@ public class GameStageMediator extends Mediator
 			Layer.GAME_STAGE.addChild(this.gameStage);
 		}
 	}
+	
+	/**
+	 * 加载资源
+	 */
+	private function loadBgRes():void
+	{
+		this.resProxy.loadStageBgByLevel(this.stageProxy.curLevel);
+	}
+	
 	
 	/**
 	 * 初始化选择敌人数量

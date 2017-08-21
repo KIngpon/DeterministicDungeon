@@ -4,6 +4,7 @@ import config.GameConstant;
 import config.MsgConstant;
 import laya.display.BitmapFont;
 import laya.display.Text;
+import laya.events.Event;
 import laya.net.Loader;
 import laya.utils.Handler;
 import mvc.Proxy;
@@ -16,10 +17,12 @@ public class ResProxy extends Proxy
 	private var resList:Array = [];
 	private var fontList:Array = [];
 	private var bgList:Array = [];
+	private var stageBgList:Array = [];
 	private var resCount:int = 0;
 	private var fontCount:int = 0;
 	private var levelCount:int = 0;
 	private var bgCount:int = 0;
+	private var stageBgCount:int = 0;
 	public static const NAME:String = "ResProxy";
 	private var gameBitmapFont:BitmapFont;
 	private var sProxy:StageProxy;
@@ -87,6 +90,7 @@ public class ResProxy extends Proxy
 			arr.push("stage/" + "stage" + i + "/stageUpBg.png");
 			this.bgList.push(arr);
 		}
+		
 		for (i = 0; i < count; i++)
 		{
 			var arr:Array = this.bgList[i];
@@ -100,6 +104,24 @@ public class ResProxy extends Proxy
 	}
 	
 	/**
+	 * 根据关卡数加载背景
+	 * @param	level		关卡数
+	 */
+	public function loadStageBgByLevel(level:int):void
+	{
+		this.stageBgCount = 0;
+		this.stageBgList = [];
+		this.stageBgList.push("stage/" + "stage" + level + "/stageBg.png");
+		this.stageBgList.push("stage/" + "stage" + level + "/stageBg1.png");
+		this.stageBgList.push("stage/" + "stage" + level + "/stageBg2.png");
+		this.stageBgList.push("stage/" + "stage" + level + "/stageDownBg.png");
+		this.stageBgList.push("stage/" + "stage" + level + "/stageSlotsBg.png");
+		this.stageBgList.push("stage/" + "stage" + level + "/stageStartBg.png");
+		this.stageBgList.push("stage/" + "stage" + level + "/stageUpBg.png");
+		Laya.loader.load(this.stageBgList[this.stageBgCount], Handler.create(this, loadStageImgComplete), Handler.create(this, loadImgProgress), Loader.IMAGE);
+	}
+	
+	/**
 	 * 加载字体结束
 	 */
 	private function loadFontComplete(bmpFont:BitmapFont):void
@@ -108,7 +130,7 @@ public class ResProxy extends Proxy
 		this.fontCount++;
 		if (this.fontCount >= this.fontList.length)
 		{
-			this.initBgImage();
+			this.sendNotification(MsgConstant.INIT_FIGHT_STAGE);
 		}
 	}
 	
@@ -140,6 +162,29 @@ public class ResProxy extends Proxy
 				this.sendNotification(MsgConstant.INIT_FIGHT_STAGE);
 			}
 		}
+	}
+	
+	/**
+	 * 加载关卡背景图成功
+	 * @param	level
+	 */
+	private function loadStageImgComplete(level:int):void
+	{
+		this.stageBgCount++;
+		if (this.stageBgCount < this.stageBgList.length)
+		{
+			Laya.loader.load(this.stageBgList[this.stageBgCount], Handler.create(this, loadStageImgComplete), Handler.create(this, loadImgProgress), Loader.IMAGE);
+		}
+		else
+		{
+			//加载完毕
+			this.sendNotification(MsgConstant.START_FIGHT);
+		}
+	}
+	
+	private function loadImgProgress(pro:Number):void
+	{
+		this.sendNotification(MsgConstant.LOAD_PROGRESS_FIGHT_STAGE, pro);
 	}
 }
 }
