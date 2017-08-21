@@ -18,6 +18,8 @@ public class Layer
 	public static var GAME_UI:Sprite;
 	//游戏弹框
 	public static var GAME_ALERT:Sprite;
+	//loading
+	public static var GAME_LOADNG:Sprite;
 	//飘字层
 	public static var GAME_DAMAGE:Sprite;
 	//调试用文本
@@ -37,11 +39,13 @@ public class Layer
 		GAME_UI = new Sprite();
 		GAME_ALERT = new Sprite();
 		GAME_DAMAGE = new Sprite();
+		GAME_LOADNG = new Sprite();
 		
 		STAGE.addChild(GAME_STAGE);
 		STAGE.addChild(GAME_UI);
 		STAGE.addChild(GAME_ALERT);
 		STAGE.addChild(GAME_DAMAGE);
+		STAGE.addChild(GAME_LOADNG);
 		
 		if (GameConstant.DEBUG)
 		{

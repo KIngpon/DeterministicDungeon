@@ -16,12 +16,10 @@ public class ResProxy extends Proxy
 {
 	private var resList:Array = [];
 	private var fontList:Array = [];
-	private var bgList:Array = [];
 	private var stageBgList:Array = [];
 	private var resCount:int = 0;
 	private var fontCount:int = 0;
-	private var levelCount:int = 0;
-	private var bgCount:int = 0;
+	private var levelCount:int = 1;
 	private var stageBgCount:int = 0;
 	public static const NAME:String = "ResProxy";
 	private var gameBitmapFont:BitmapFont;
@@ -73,34 +71,8 @@ public class ResProxy extends Proxy
 	 */
 	private function initBgImage():void
 	{
-		this.bgCount = 0;
-		this.levelCount = 0;
-		this.bgList = [];
-		var count:int = this.sProxy.totalLevel;
-		count = 8;
-		for (var i:int = 1; i <= count; i++) 
-		{
-			var arr:Array = [];
-			arr.push("stage/" + "stage" + i + "/stageBg.png");
-			arr.push("stage/" + "stage" + i + "/stageBg1.png");
-			arr.push("stage/" + "stage" + i + "/stageBg2.png");
-			arr.push("stage/" + "stage" + i + "/stageDownBg.png");
-			arr.push("stage/" + "stage" + i + "/stageSlotsBg.png");
-			arr.push("stage/" + "stage" + i + "/stageStartBg.png");
-			arr.push("stage/" + "stage" + i + "/stageUpBg.png");
-			this.bgList.push(arr);
-		}
-		
-		for (i = 0; i < count; i++)
-		{
-			var arr:Array = this.bgList[i];
-			var arrCount:int = arr.length;
-			for (var j:int = 0; j < arrCount; j++) 
-			{
-				var path:String = arr[j];
-				Laya.loader.load(path, Handler.create(this, loadImgComplete, [i]), null, Loader.IMAGE);
-			}
-		}
+		this.levelCount = 1;
+		this.loadStageBgByLevel(this.levelCount);
 	}
 	
 	/**
@@ -130,7 +102,7 @@ public class ResProxy extends Proxy
 		this.fontCount++;
 		if (this.fontCount >= this.fontList.length)
 		{
-			this.sendNotification(MsgConstant.INIT_FIGHT_STAGE);
+			this.initBgImage();
 		}
 	}
 	
@@ -145,26 +117,6 @@ public class ResProxy extends Proxy
 	}
 		
 	/**
-	 * 加载图片结束
-	 */
-	private function loadImgComplete(index:int):void
-	{
-		var arr:Array = this.bgList[index];
-		var arrCount:int = arr.length;
-		this.bgCount++;
-		if (this.bgCount >= arrCount)
-		{
-			this.bgCount = 0;
-			this.levelCount++;
-			if (this.levelCount >= this.bgList.length)
-			{
-				trace("开始")
-				this.sendNotification(MsgConstant.INIT_FIGHT_STAGE);
-			}
-		}
-	}
-	
-	/**
 	 * 加载关卡背景图成功
 	 * @param	level
 	 */
@@ -178,13 +130,18 @@ public class ResProxy extends Proxy
 		else
 		{
 			//加载完毕
-			this.sendNotification(MsgConstant.START_FIGHT);
+			this.levelCount++;
+			if (this.levelCount > 8)
+				this.sendNotification(MsgConstant.INIT_FIGHT_STAGE);
+			else
+				this.loadStageBgByLevel(this.levelCount);
 		}
 	}
 	
 	private function loadImgProgress(pro:Number):void
 	{
-		this.sendNotification(MsgConstant.LOAD_PROGRESS_FIGHT_STAGE, pro);
+		var per:Number = this.levelCount / 8;
+		this.sendNotification(MsgConstant.LOAD_PROGRESS_FIGHT_STAGE, per);
 	}
 }
 }

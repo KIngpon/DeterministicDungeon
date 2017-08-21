@@ -104,13 +104,12 @@ public class GameStageMediator extends Mediator
 		switch (notification.notificationName) 
 		{
 			case MsgConstant.INIT_FIGHT_STAGE:
-				this.initUI();
 				this.initEvent();
-				//加载资源
-				this.loadBgRes();
+				this.sendNotification(MsgConstant.START_FIGHT);
 				break;
 			case MsgConstant.START_FIGHT:
 				this.initData();
+				this.initUI();
 				this.gameStage.initPlayer(this.playerVo);
 				this.gameStage.setPlayerProp(this.playerVo);
 				break;
@@ -177,10 +176,10 @@ public class GameStageMediator extends Mediator
 	/**
 	 * 加载资源
 	 */
-	private function loadBgRes():void
-	{
-		this.resProxy.loadStageBgByLevel(this.stageProxy.curLevel);
-	}
+	//private function loadBgRes():void
+	//{
+		//this.resProxy.loadStageBgByLevel(this.stageProxy.curLevel);
+	//}
 	
 	
 	/**
