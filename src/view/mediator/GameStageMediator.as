@@ -96,6 +96,7 @@ public class GameStageMediator extends Mediator
 		vect.push(MsgConstant.INIT_FIGHT_STAGE);
 		vect.push(MsgConstant.START_FIGHT);
 		vect.push(MsgConstant.SELECT_STAGE_COMPLETE);
+		vect.push(MsgConstant.SELECT_NEXT_POINT);
 		return vect;
 	}
 	
@@ -109,6 +110,7 @@ public class GameStageMediator extends Mediator
 				break;
 			case MsgConstant.START_FIGHT:
 				this.initData();
+				this.resetPointsAry();
 				this.initUI();
 				this.gameStage.initPlayer(this.playerVo);
 				this.gameStage.setPlayerProp(this.playerVo);
@@ -116,8 +118,13 @@ public class GameStageMediator extends Mediator
 			case MsgConstant.SELECT_STAGE_COMPLETE:
 				this.stageProxy.initStartPointVo();
 				this.gameStage.updateStageBg(this.curStagePo, this.stageProxy);
-				this.sendNotification(MsgConstant.SHOW_SELECT_NEXT_POINT_LAYER);
-				//this.gameStage.playerMove(250, 1000, Handler.create(this, playerMoveComplete));
+				this.gameStage.playerMove(250, 1000, Handler.create(this, playerMoveComplete));
+				break;
+			case MsgConstant.SELECT_NEXT_POINT:
+				this.initData();
+				this.gameStage.initPlayer(this.playerVo);
+				this.gameStage.updateStageBg(this.curStagePo, this.stageProxy);
+				this.gameStage.playerMove(250, 1000, Handler.create(this, playerMoveComplete));
 				break;
 			default:
 				break;
@@ -151,7 +158,15 @@ public class GameStageMediator extends Mediator
 		this.playerVo = this.playerProxy.pVo;
 		this.enemyPoList = this.stageProxy.getCurStagePoEnemyPoList();
 		this.enemyProxy.clearStageEnemyList();
-		this.stageProxy.initPointsAry();
+	}
+	
+	/**
+	 * 重置关卡点数据
+	 */
+	private function resetPointsAry():void
+	{
+		if (this.stageProxy)
+			this.stageProxy.initPointsAry();
 	}
 	
 	/**

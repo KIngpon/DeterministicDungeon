@@ -16,9 +16,15 @@ public class PointVo
 	public static const DOWN_PASS:int = 2;
 	public static const LEFT_PASS:int = 3;
 	public static const RIGHT_PASS:int = 4;
+	//方向
+	public static const UP:int = 1;
+	public static const DOWN:int = 2;
+	public static const LEFT:int = 3;
+	public static const RIGHT:int = 4;
+	
 	//当前类型 1.上楼，2下楼，3宝箱，4boss，5boss宝箱，6合成，7特殊宝箱
 	public var type:int;
-	//索引
+	//索引(1-9)
 	public var index:int;
 	//可通过的点数组
 	public var passAry:Array;

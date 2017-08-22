@@ -16,5 +16,7 @@ public class MsgConstant
 	public static const LOAD_PROGRESS_FIGHT_STAGE:String = "LOAD_PROGRESS_FIGHT_STAGE";
 	//显示选择下一关卡
 	public static const SHOW_SELECT_NEXT_POINT_LAYER:String = "SHOW_SELECT_NEXT_POINT_LAYER";
+	//选择下一关
+	public static const SELECT_NEXT_POINT:String = "SELECT_NEXT_POINT";
 }
 }

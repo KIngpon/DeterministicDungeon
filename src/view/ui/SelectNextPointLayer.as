@@ -15,7 +15,7 @@ import ui.GameStage.SelectStageLayerUI;
 public class SelectNextPointLayer extends Sprite 
 {
 	//UI
-	private var panel:SelectStageLayerUI;
+	public var panel:SelectStageLayerUI;
 	private var upStage:Image;
 	private var downStage:Image;
 	private var rewardBox:Image;
@@ -226,52 +226,50 @@ public class SelectNextPointLayer extends Sprite
 		var downSpt:Sprite = stageIcon.getChildByName("downSpt") as Sprite;
 		selectImg.visible = true;
 		var arrow:Image;
-		var pt:Point = new Point();
 		if (pVo.up)
 		{		
 			arrow = new Image("comp/arrow.png");
+			arrow.name = "upArrow";
 			arrow.pivotX = arrow.width / 2;
 			arrow.pivotY = arrow.height / 2;
-			pt.x = upSpt.x;
-			pt.y = upSpt.y;
-			upSpt.localToGlobal(pt);
-			this.panel.mapSpt.globalToLocal(pt);
-			
-			arrow.x = pt.x + upSpt.width / 2;
-			arrow.y = pt.y + upSpt.height / 2;
+			arrow.x = upSpt.x + upSpt.width / 2 + stageIcon.x;
+			arrow.y = upSpt.y + upSpt.height / 2 + stageIcon.y;
 			this.panel.mapSpt.addChild(arrow);
 		}
 		
 		if (pVo.left)
 		{		
 			arrow = new Image("comp/arrow.png");
+			arrow.name = "leftArrow";
 			arrow.pivotX = arrow.width / 2;
 			arrow.pivotY = arrow.height / 2;
 			arrow.rotation = -90;
-			arrow.x = leftSpt.x + leftSpt.width / 2;
-			arrow.y = leftSpt.y + leftSpt.height / 2;
+			arrow.x = leftSpt.x + leftSpt.width / 2 + stageIcon.x;
+			arrow.y = leftSpt.y + leftSpt.height / 2 + stageIcon.y;
 			this.panel.mapSpt.addChild(arrow);
 		}
 		
 		if (pVo.right)
 		{		
 			arrow = new Image("comp/arrow.png");
+			arrow.name = "rightArrow";
 			arrow.pivotX = arrow.width / 2;
 			arrow.pivotY = arrow.height / 2;
 			arrow.rotation = 90;
-			arrow.x = rightSpt.x + rightSpt.width / 2;
-			arrow.y = rightSpt.y + rightSpt.height / 2;
+			arrow.x = rightSpt.x + rightSpt.width / 2 + stageIcon.x;
+			arrow.y = rightSpt.y + rightSpt.height / 2 + stageIcon.y;
 			this.panel.mapSpt.addChild(arrow);
 		}
 		
 		if (pVo.down)
 		{		
 			arrow = new Image("comp/arrow.png");
+			arrow.name = "downArrow";
 			arrow.pivotX = arrow.width / 2;
 			arrow.pivotY = arrow.height / 2;
 			arrow.rotation = -180;
-			arrow.x = downSpt.x + downSpt.width / 2;
-			arrow.y = downSpt.y + downSpt.height / 2;
+			arrow.x = downSpt.x + downSpt.width / 2 + stageIcon.x;
+			arrow.y = downSpt.y + downSpt.height / 2 + stageIcon.y;
 			
 			this.panel.mapSpt.addChild(arrow);
 		}

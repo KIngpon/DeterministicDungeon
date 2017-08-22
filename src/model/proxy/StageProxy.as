@@ -658,6 +658,37 @@ public class StageProxy extends Proxy
 	}
 	
 	/**
+	 * 根据方向获取关卡点数据
+	 * @param	index		当前索引
+	 * @param	dir			方向
+	 * @return	关卡点数据
+	 */
+	public function getPointVoByDir(index:int, dir:int):PointVo
+	{
+		switch (dir) 
+		{
+			case PointVo.UP:
+				if (index != 0 && index != 3 && index != 6)
+					return this.pointsAry[index - 1];
+			break;
+			case PointVo.DOWN:
+				if (index != 2 && index != 5 && index != 8)
+					return this.pointsAry[index + 1];
+			break;
+			case PointVo.LEFT:
+				if (index != 0 && index != 1 && index != 2)
+					return this.pointsAry[index - 3];
+			break;
+			case PointVo.RIGHT:
+				if (index != 6 && index != 7 && index != 8)
+					return this.pointsAry[index + 3];
+			break;
+		}
+		return null;
+	}
+	
+	
+	/**
 	 * 重置点数据的搜索状态
 	 */
 	private function resetPointSeach():void

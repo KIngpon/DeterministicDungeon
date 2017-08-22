@@ -4,7 +4,6 @@ import config.GameConstant;
 import config.MsgConstant;
 import laya.display.BitmapFont;
 import laya.display.Text;
-import laya.events.Event;
 import laya.net.Loader;
 import laya.utils.Handler;
 import mvc.Proxy;
