@@ -424,6 +424,7 @@ var Laya=window.Laya=(function(window,document){
 		MsgConstant.START_FIGHT="START_FIGHT";
 		MsgConstant.SELECT_STAGE_COMPLETE="SELECT_STAGE_COMPLETE";
 		MsgConstant.LOAD_PROGRESS_FIGHT_STAGE="LOAD_PROGRESS_FIGHT_STAGE";
+		MsgConstant.SHOW_SELECT_NEXT_POINT_LAYER="SHOW_SELECT_NEXT_POINT_LAYER";
 		return MsgConstant;
 	})()
 
@@ -10445,6 +10446,7 @@ var Laya=window.Laya=(function(window,document){
 			this.facade.registerMediator(new GameStageMediator());
 			this.facade.registerMediator(new SelectStageMediator());
 			this.facade.registerMediator(new LoadingMediator());
+			this.facade.registerMediator(new SelectNextPointMediator());
 		}
 
 		return ViewCommand;
@@ -10997,7 +10999,6 @@ var Laya=window.Laya=(function(window,document){
 				arr.push({url:"stage/"+"stage"+i+"/stageStartBg.png",type:"image"});
 				arr.push({url:"stage/"+"stage"+i+"/stageUpBg.png",type:"image"});
 			}
-			console.log("arr",arr);
 			Laya.loader.load(arr,Handler.create(this,this.loadImgComplete),Handler.create(this,this.loadImgProgress,null,false),"image");
 		}
 
@@ -12237,7 +12238,7 @@ var Laya=window.Laya=(function(window,document){
 				case "SELECT_STAGE_COMPLETE":
 					this.stageProxy.initStartPointVo();
 					this.gameStage.updateStageBg(this.curStagePo,this.stageProxy);
-					this.gameStage.playerMove(250,1000,Handler.create(this,this.playerMoveComplete));
+					this.sendNotification("SHOW_SELECT_NEXT_POINT_LAYER");
 					break ;
 				default :
 					break ;
@@ -12375,16 +12376,7 @@ var Laya=window.Laya=(function(window,document){
 		}
 
 		__proto.playerMoveOutComplete=function(){
-			this.stageProxy.curPoints++;
-			if (this.stageProxy.curPoints > this.stageProxy.getCurStagePointsCount()){
-				this.stageProxy.curPoints=1;
-				this.stageProxy.curLevel++;
-				if (this.stageProxy.curLevel > this.stageProxy.totalLevel){
-					console.log("通关了");
-					return;
-				}
-			}
-			this.sendNotification("START_FIGHT");
+			this.sendNotification("SHOW_SELECT_NEXT_POINT_LAYER");
 		}
 
 		/**
@@ -12569,6 +12561,54 @@ var Laya=window.Laya=(function(window,document){
 
 		LoadingMediator.NAME="LoadingMediator";
 		return LoadingMediator;
+	})(Mediator)
+
+
+	/**
+	*...选择下一个关卡点的ui中介
+	*@author ...Kanon
+	*/
+	//class view.mediator.SelectNextPointMediator extends mvc.Mediator
+	var SelectNextPointMediator=(function(_super){
+		function SelectNextPointMediator(){
+			this.selectNextPointLayer=null;
+			this.stageProxy=null;
+			SelectNextPointMediator.__super.call(this);
+			this.mediatorName="SelectNextPointMediator";
+			this.stageProxy=this.retrieveProxy("StageProxy");
+		}
+
+		__class(SelectNextPointMediator,'view.mediator.SelectNextPointMediator',_super);
+		var __proto=SelectNextPointMediator.prototype;
+		__proto.listNotificationInterests=function(){
+			var vect=[];
+			vect.push("SHOW_SELECT_NEXT_POINT_LAYER");
+			return vect;
+		}
+
+		__proto.handleNotification=function(notification){
+			switch (notification.notificationName){
+				case "SHOW_SELECT_NEXT_POINT_LAYER":
+					this.createUI();
+					break ;
+				}
+		}
+
+		/**
+		*创建UI
+		*/
+		__proto.createUI=function(){
+			if (!this.selectNextPointLayer){
+				this.selectNextPointLayer=new SelectNextPointLayer();
+				Layer.GAME_UI.addChild(this.selectNextPointLayer);
+			}
+			this.selectNextPointLayer.initPointPass(this.stageProxy.pointsAry);
+			this.selectNextPointLayer.initSlotsBg(this.stageProxy.getCurStagePo());
+			this.selectNextPointLayer.updateCurPointView(this.stageProxy.curPointVo);
+		}
+
+		SelectNextPointMediator.NAME="SelectNextPointMediator";
+		return SelectNextPointMediator;
 	})(Mediator)
 
 
@@ -19003,6 +19043,237 @@ var Laya=window.Laya=(function(window,document){
 		}
 
 		return GameStageLayer;
+	})(Sprite)
+
+
+	/**
+	*...选择下一关界面
+	*@author ...Kanon
+	*/
+	//class view.ui.SelectNextPointLayer extends laya.display.Sprite
+	var SelectNextPointLayer=(function(_super){
+		function SelectNextPointLayer(){
+			this.panel=null;
+			this.upStage=null;
+			this.downStage=null;
+			this.rewardBox=null;
+			this.bossImg=null;
+			this.bossRewardBox=null;
+			SelectNextPointLayer.__super.call(this);
+			this.initUI();
+		}
+
+		__class(SelectNextPointLayer,'view.ui.SelectNextPointLayer',_super);
+		var __proto=SelectNextPointLayer.prototype;
+		/**
+		*初始化UI
+		*/
+		__proto.initUI=function(){
+			if (!this.panel){
+				this.panel=new SelectStageLayerUI();
+				this.addChild(this.panel);
+			}
+			this.panel.handImg.visible=false;
+			this.panel.selectBtn.visible=false;
+			this.panel.skipBtn.visible=false;
+			this.panel.skipWord.visible=false;
+			this.upStage=this.panel.upStage;
+			this.bossImg=this.panel.bossImg;
+			this.bossRewardBox=this.panel.bossRewardBox;
+			this.downStage=this.panel.downStage;
+			this.rewardBox=this.panel.rewardBox;
+			this.upStage.visible=false;
+			this.bossImg.visible=false;
+			this.bossRewardBox.visible=false;
+			this.downStage.visible=false;
+			this.rewardBox.visible=false;
+			this.upStage.pivotX=this.upStage.width / 2;
+			this.upStage.pivotY=this.upStage.height / 2;
+			this.downStage.pivotX=this.downStage.width / 2;
+			this.downStage.pivotY=this.downStage.height / 2;
+			this.rewardBox.pivotX=this.rewardBox.width / 2;
+			this.rewardBox.pivotY=this.rewardBox.height / 2;
+			this.bossImg.pivotX=this.bossImg.width / 2;
+			this.bossImg.pivotY=this.bossImg.height / 2;
+			this.bossRewardBox.pivotX=this.bossRewardBox.width / 2;
+			this.bossRewardBox.pivotY=this.bossRewardBox.height / 2;
+			for (var i=1;i <=9;i++){
+				var stageIcon=this.panel.mapSpt.getChildByName("r"+i);
+				var leftSpt=stageIcon.getChildByName("leftSpt");
+				var rightSpt=stageIcon.getChildByName("rightSpt");
+				var upSpt=stageIcon.getChildByName("upSpt");
+				var downSpt=stageIcon.getChildByName("downSpt");
+				var selectImg=stageIcon.getChildByName("selectImg");
+				var goodImg=stageIcon.getChildByName("goodImg");
+				var badImg=stageIcon.getChildByName("badImg");
+				leftSpt.visible=false;
+				rightSpt.visible=false;
+				upSpt.visible=false;
+				downSpt.visible=false;
+				upSpt.width=20;
+				upSpt.height=20;
+				downSpt.width=20;
+				downSpt.height=20;
+				leftSpt.width=20;
+				leftSpt.height=20;
+				rightSpt.width=20;
+				rightSpt.height=20;
+				selectImg.visible=false;
+				goodImg.visible=false;
+				badImg.visible=false;
+			}
+		}
+
+		/**
+		*设置描述
+		*@param str 内容
+		*/
+		__proto.setDes=function(str){
+			if (!this.panel)return;
+			this.panel.selectDesTxt.text=str;
+		}
+
+		/**
+		*设置标题
+		*@param str 内容
+		*/
+		__proto.setTitle=function(str){
+			if (!this.panel)return;
+			this.panel.stageNumTxt.text=str;
+		}
+
+		/**
+		*初始化可通过的点
+		*@param pointAry 点数据数组
+		*/
+		__proto.initPointPass=function(pointAry){
+			if (!pointAry)return;
+			var count=pointAry.length;
+			for (var i=0;i < count;++i){
+				var pVo=pointAry[i];
+				this.updatePointView(pVo);
+			}
+		}
+
+		/**
+		*初始化背景图片
+		*@param stagePo 关卡数据
+		*/
+		__proto.initSlotsBg=function(stagePo){
+			if (!stagePo)return;
+			var bg=new Image();
+			var maskBg=new Image("bg/bgMask.png");
+			bg.skin="stage/"+"stage"+stagePo.level+"/stageSlotsBg.png";
+			bg.skin="stage/"+"stage8"+"/stageSlotsBg.png";
+			bg.x=this.panel.bgSpt.width / 2-bg.width / 2;
+			bg.y=this.panel.bgSpt.height / 2-bg.height / 2;
+			this.panel.bgSpt.addChild(bg);
+			maskBg.x=(bg.width-this.panel.bgSpt.width)/ 2;
+			maskBg.y=(bg.height-this.panel.bgSpt.height)/ 2;
+			bg.mask=maskBg;
+		}
+
+		/**
+		*更新关卡点路径显示
+		*@param pVo 关卡点数据
+		*/
+		__proto.updatePointView=function(pVo){
+			if (!pVo)return;
+			var stageIcon=this.panel.mapSpt.getChildByName("r"+pVo.index);
+			if (!stageIcon)return;
+			var leftSpt=stageIcon.getChildByName("leftSpt");
+			var rightSpt=stageIcon.getChildByName("rightSpt");
+			var upSpt=stageIcon.getChildByName("upSpt");
+			var downSpt=stageIcon.getChildByName("downSpt");
+			var selectImg=stageIcon.getChildByName("selectImg");
+			selectImg.visible=false;
+			upSpt.visible=pVo.up;
+			downSpt.visible=pVo.down;
+			leftSpt.visible=pVo.left;
+			rightSpt.visible=pVo.right;
+			if (pVo.type==1){
+				this.upStage.x=stageIcon.x+selectImg.width / 2;
+				this.upStage.y=stageIcon.y+selectImg.height / 2;
+				this.upStage.visible=true;
+			}
+			if (pVo.type==2){
+				this.downStage.x=stageIcon.x+selectImg.width / 2;
+				this.downStage.y=stageIcon.y+selectImg.height / 2;
+				this.downStage.visible=true;
+			}
+			if (pVo.type==3){
+				this.rewardBox.x=stageIcon.x+selectImg.width / 2;
+				this.rewardBox.y=stageIcon.y+selectImg.height / 2;
+				this.rewardBox.visible=true;
+			}
+			if (pVo.type==5){
+				this.bossRewardBox.x=stageIcon.x+selectImg.width / 2;
+				this.bossRewardBox.y=stageIcon.y+selectImg.height / 2;
+				this.bossRewardBox.visible=true;
+			}
+			if (pVo.type==4){
+				this.bossImg.x=stageIcon.x+selectImg.width / 2;
+				this.bossImg.y=stageIcon.y+selectImg.height / 2;
+				this.bossImg.visible=true;
+			}
+		}
+
+		/**
+		*更新当前关卡点的显示
+		*/
+		__proto.updateCurPointView=function(pVo){
+			if (!pVo)return;
+			var stageIcon=this.panel.mapSpt.getChildByName("r"+pVo.index);
+			var selectImg=stageIcon.getChildByName("selectImg");
+			var leftSpt=stageIcon.getChildByName("leftSpt");
+			var rightSpt=stageIcon.getChildByName("rightSpt");
+			var upSpt=stageIcon.getChildByName("upSpt");
+			var downSpt=stageIcon.getChildByName("downSpt");
+			selectImg.visible=true;
+			var arrow;
+			var pt=new Point();
+			if (pVo.up){
+				arrow=new Image("comp/arrow.png");
+				arrow.pivotX=arrow.width / 2;
+				arrow.pivotY=arrow.height / 2;
+				pt.x=upSpt.x;
+				pt.y=upSpt.y;
+				upSpt.localToGlobal(pt);
+				this.panel.mapSpt.globalToLocal(pt);
+				arrow.x=pt.x;
+				arrow.y=pt.y;
+				this.panel.mapSpt.addChild(arrow);
+			}
+			if (pVo.left){
+				arrow=new Image("comp/arrow.png");
+				arrow.pivotX=arrow.width / 2;
+				arrow.pivotY=arrow.height / 2;
+				arrow.rotation=-90;
+				arrow.x=leftSpt.x+leftSpt.width / 2;
+				arrow.y=leftSpt.y+leftSpt.height / 2;
+				this.panel.mapSpt.addChild(arrow);
+			}
+			if (pVo.right){
+				arrow=new Image("comp/arrow.png");
+				arrow.pivotX=arrow.width / 2;
+				arrow.pivotY=arrow.height / 2;
+				arrow.rotation=90;
+				arrow.x=rightSpt.x+rightSpt.width / 2;
+				arrow.y=rightSpt.y+rightSpt.height / 2;
+				this.panel.mapSpt.addChild(arrow);
+			}
+			if (pVo.down){
+				arrow=new Image("comp/arrow.png");
+				arrow.pivotX=arrow.width / 2;
+				arrow.pivotY=arrow.height / 2;
+				arrow.rotation=-180;
+				arrow.x=downSpt.x+downSpt.width / 2;
+				arrow.y=downSpt.y+downSpt.height / 2;
+				this.panel.mapSpt.addChild(arrow);
+			}
+		}
+
+		return SelectNextPointLayer;
 	})(Sprite)
 
 
@@ -30302,6 +30573,7 @@ var Laya=window.Laya=(function(window,document){
 			this.bossImg=null;
 			this.bossRewardBox=null;
 			this.skipBtn=null;
+			this.skipWord=null;
 			this.stageNumTxt=null;
 			this.selectDesTxt=null;
 			SelectStageLayerUI.__super.call(this);
@@ -30315,7 +30587,7 @@ var Laya=window.Laya=(function(window,document){
 		}
 
 		__static(SelectStageLayerUI,
-		['uiView',function(){return this.uiView={"type":"View","props":{"width":1136,"name":"selectImg","height":640},"child":[{"type":"Rect","props":{"y":0,"x":0,"width":1136,"lineWidth":1,"height":640,"fillColor":"#000000"}},{"type":"Sprite","props":{"y":162,"x":229,"width":640,"var":"bgSpt","height":394}},{"type":"Button","props":{"y":504,"x":960,"var":"selectBtn","stateNum":"3","skin":"btn/selectBtn.png","anchorY":1,"anchorX":0.5}},{"type":"Image","props":{"y":264,"x":919,"var":"handImg","skin":"comp/hand.png"}},{"type":"Sprite","props":{"y":207,"x":291,"width":518,"var":"mapSpt","height":322},"child":[{"type":"Sprite","props":{"y":33,"x":85,"name":"r1"},"child":[{"type":"Rect","props":{"width":110,"lineWidth":1,"height":78,"fillColor":"#000000"}},{"type":"Image","props":{"y":0,"x":0,"width":110,"skin":"frame/stageSlotsSelectedBg.png","name":"selectImg","height":78}},{"type":"Sprite","props":{"y":30,"x":-15,"name":"leftSpt"},"child":[{"type":"Rect","props":{"width":20,"lineWidth":1,"height":20,"fillColor":"#000000"}}]},{"type":"Sprite","props":{"y":-13,"x":45,"name":"upSpt"},"child":[{"type":"Rect","props":{"width":20,"lineWidth":1,"height":20,"fillColor":"#000000"}}]},{"type":"Sprite","props":{"y":71,"x":45,"name":"downSpt"},"child":[{"type":"Rect","props":{"width":20,"lineWidth":1,"height":20,"fillColor":"#000000"}}]},{"type":"Sprite","props":{"y":30,"x":105,"name":"rightSpt"},"child":[{"type":"Rect","props":{"width":20,"lineWidth":1,"height":20,"fillColor":"#000000"}}]},{"type":"Image","props":{"y":42,"x":76,"skin":"btn/okBtn.png","scaleY":0.4,"scaleX":0.4,"name":"goodImg"}},{"type":"Image","props":{"y":42,"x":74,"skin":"btn/closeBtn.png","scaleY":0.4,"scaleX":0.4,"name":"badImg"}}]},{"type":"Sprite","props":{"y":33,"x":205,"name":"r4"},"child":[{"type":"Rect","props":{"width":110,"lineWidth":1,"height":78,"fillColor":"#000000"}},{"type":"Image","props":{"y":0,"x":0,"width":110,"skin":"frame/stageSlotsSelectedBg.png","name":"selectImg","height":78}},{"type":"Sprite","props":{"y":30,"x":-15,"name":"leftSpt"},"child":[{"type":"Rect","props":{"width":20,"lineWidth":1,"height":20,"fillColor":"#000000"}}]},{"type":"Sprite","props":{"y":-13,"x":45,"name":"upSpt"},"child":[{"type":"Rect","props":{"width":20,"lineWidth":1,"height":20,"fillColor":"#000000"}}]},{"type":"Sprite","props":{"y":71,"x":45,"name":"downSpt"},"child":[{"type":"Rect","props":{"width":20,"lineWidth":1,"height":20,"fillColor":"#000000"}}]},{"type":"Sprite","props":{"y":30,"x":105,"name":"rightSpt"},"child":[{"type":"Rect","props":{"width":20,"lineWidth":1,"height":20,"fillColor":"#000000"}}]},{"type":"Image","props":{"y":42,"x":76,"skin":"btn/okBtn.png","scaleY":0.4,"scaleX":0.4,"name":"goodImg"}},{"type":"Image","props":{"y":42,"x":74,"skin":"btn/closeBtn.png","scaleY":0.4,"scaleX":0.4,"name":"badImg"}}]},{"type":"Sprite","props":{"y":33,"x":325,"name":"r7"},"child":[{"type":"Rect","props":{"width":110,"lineWidth":1,"height":78,"fillColor":"#000000"}},{"type":"Image","props":{"y":0,"x":0,"width":110,"skin":"frame/stageSlotsSelectedBg.png","name":"selectImg","height":78}},{"type":"Sprite","props":{"y":30,"x":-15,"name":"leftSpt"},"child":[{"type":"Rect","props":{"width":20,"lineWidth":1,"height":20,"fillColor":"#000000"}}]},{"type":"Sprite","props":{"y":-13,"x":45,"name":"upSpt"},"child":[{"type":"Rect","props":{"width":20,"lineWidth":1,"height":20,"fillColor":"#000000"}}]},{"type":"Sprite","props":{"y":71,"x":45,"name":"downSpt"},"child":[{"type":"Rect","props":{"width":20,"lineWidth":1,"height":20,"fillColor":"#000000"}}]},{"type":"Sprite","props":{"y":30,"x":105,"name":"rightSpt"},"child":[{"type":"Rect","props":{"width":20,"lineWidth":1,"height":20,"fillColor":"#000000"}}]},{"type":"Image","props":{"y":42,"x":74,"skin":"btn/okBtn.png","scaleY":0.4,"scaleX":0.4,"name":"goodImg"}},{"type":"Image","props":{"y":42,"x":74,"skin":"btn/closeBtn.png","scaleY":0.4,"scaleX":0.4,"name":"badImg"}}]},{"type":"Sprite","props":{"y":121,"x":85,"name":"r2"},"child":[{"type":"Rect","props":{"width":110,"lineWidth":1,"height":78,"fillColor":"#000000"}},{"type":"Image","props":{"y":0,"x":0,"width":110,"skin":"frame/stageSlotsSelectedBg.png","name":"selectImg","height":78}},{"type":"Sprite","props":{"y":30,"x":-15,"name":"leftSpt"},"child":[{"type":"Rect","props":{"width":20,"lineWidth":1,"height":20,"fillColor":"#000000"}}]},{"type":"Sprite","props":{"y":-13,"x":45,"name":"upSpt"},"child":[{"type":"Rect","props":{"width":20,"lineWidth":1,"height":20,"fillColor":"#000000"}}]},{"type":"Sprite","props":{"y":71,"x":45,"name":"downSpt"},"child":[{"type":"Rect","props":{"width":20,"lineWidth":1,"height":20,"fillColor":"#000000"}}]},{"type":"Sprite","props":{"y":30,"x":105,"name":"rightSpt"},"child":[{"type":"Rect","props":{"width":20,"lineWidth":1,"height":20,"fillColor":"#000000"}}]},{"type":"Image","props":{"y":42,"x":76,"skin":"btn/okBtn.png","scaleY":0.4,"scaleX":0.4,"name":"goodImg"}},{"type":"Image","props":{"y":42,"x":74,"skin":"btn/closeBtn.png","scaleY":0.4,"scaleX":0.4,"name":"badImg"}}]},{"type":"Sprite","props":{"y":121,"x":205,"name":"r5"},"child":[{"type":"Rect","props":{"width":110,"lineWidth":1,"height":78,"fillColor":"#000000"}},{"type":"Image","props":{"y":0,"x":0,"width":110,"skin":"frame/stageSlotsSelectedBg.png","name":"selectImg","height":78}},{"type":"Sprite","props":{"y":30,"x":-15,"name":"leftSpt"},"child":[{"type":"Rect","props":{"width":20,"lineWidth":1,"height":20,"fillColor":"#000000"}}]},{"type":"Sprite","props":{"y":-13,"x":45,"name":"upSpt"},"child":[{"type":"Rect","props":{"width":20,"lineWidth":1,"height":20,"fillColor":"#000000"}}]},{"type":"Sprite","props":{"y":71,"x":45,"name":"downSpt"},"child":[{"type":"Rect","props":{"width":20,"lineWidth":1,"height":20,"fillColor":"#000000"}}]},{"type":"Sprite","props":{"y":30,"x":105,"name":"rightSpt"},"child":[{"type":"Rect","props":{"width":20,"lineWidth":1,"height":20,"fillColor":"#000000"}}]},{"type":"Image","props":{"y":42,"x":74,"skin":"btn/okBtn.png","scaleY":0.4,"scaleX":0.4,"name":"goodImg"}},{"type":"Image","props":{"y":42,"x":74,"skin":"btn/closeBtn.png","scaleY":0.4,"scaleX":0.4,"name":"badImg"}}]},{"type":"Sprite","props":{"y":121,"x":325,"name":"r8"},"child":[{"type":"Rect","props":{"width":110,"lineWidth":1,"height":78,"fillColor":"#000000"}},{"type":"Image","props":{"y":0,"x":0,"width":110,"skin":"frame/stageSlotsSelectedBg.png","name":"selectImg","height":78}},{"type":"Sprite","props":{"y":30,"x":-15,"name":"leftSpt"},"child":[{"type":"Rect","props":{"width":20,"lineWidth":1,"height":20,"fillColor":"#000000"}}]},{"type":"Sprite","props":{"y":-13,"x":45,"name":"upSpt"},"child":[{"type":"Rect","props":{"width":20,"lineWidth":1,"height":20,"fillColor":"#000000"}}]},{"type":"Sprite","props":{"y":71,"x":45,"name":"downSpt"},"child":[{"type":"Rect","props":{"width":20,"lineWidth":1,"height":20,"fillColor":"#000000"}}]},{"type":"Sprite","props":{"y":30,"x":105,"name":"rightSpt"},"child":[{"type":"Rect","props":{"width":20,"lineWidth":1,"height":20,"fillColor":"#000000"}}]},{"type":"Image","props":{"y":42,"x":74,"skin":"btn/okBtn.png","scaleY":0.4,"scaleX":0.4,"name":"goodImg"}},{"type":"Image","props":{"y":42,"x":74,"skin":"btn/closeBtn.png","scaleY":0.4,"scaleX":0.4,"name":"badImg"}}]},{"type":"Sprite","props":{"y":209,"x":85,"name":"r3"},"child":[{"type":"Rect","props":{"width":110,"lineWidth":1,"height":78,"fillColor":"#000000"}},{"type":"Image","props":{"y":0,"x":0,"width":110,"skin":"frame/stageSlotsSelectedBg.png","name":"selectImg","height":78}},{"type":"Sprite","props":{"y":30,"x":-15,"name":"leftSpt"},"child":[{"type":"Rect","props":{"width":20,"lineWidth":1,"height":20,"fillColor":"#000000"}}]},{"type":"Sprite","props":{"y":-13,"x":45,"name":"upSpt"},"child":[{"type":"Rect","props":{"width":20,"lineWidth":1,"height":20,"fillColor":"#000000"}}]},{"type":"Sprite","props":{"y":71,"x":45,"name":"downSpt"},"child":[{"type":"Rect","props":{"width":20,"lineWidth":1,"height":20,"fillColor":"#000000"}}]},{"type":"Sprite","props":{"y":30,"x":105,"name":"rightSpt"},"child":[{"type":"Rect","props":{"width":20,"lineWidth":1,"height":20,"fillColor":"#000000"}}]},{"type":"Image","props":{"y":42,"x":74,"skin":"btn/okBtn.png","scaleY":0.4,"scaleX":0.4,"name":"goodImg"}},{"type":"Image","props":{"y":42,"x":74,"skin":"btn/closeBtn.png","scaleY":0.4,"scaleX":0.4,"name":"badImg"}}]},{"type":"Sprite","props":{"y":209,"x":205,"name":"r6"},"child":[{"type":"Rect","props":{"width":110,"lineWidth":1,"height":78,"fillColor":"#000000"}},{"type":"Image","props":{"y":0,"x":0,"width":110,"skin":"frame/stageSlotsSelectedBg.png","name":"selectImg","height":78}},{"type":"Sprite","props":{"y":30,"x":-15,"name":"leftSpt"},"child":[{"type":"Rect","props":{"width":20,"lineWidth":1,"height":20,"fillColor":"#000000"}}]},{"type":"Sprite","props":{"y":-13,"x":45,"name":"upSpt"},"child":[{"type":"Rect","props":{"width":20,"lineWidth":1,"height":20,"fillColor":"#000000"}}]},{"type":"Sprite","props":{"y":71,"x":45,"name":"downSpt"},"child":[{"type":"Rect","props":{"width":20,"lineWidth":1,"height":20,"fillColor":"#000000"}}]},{"type":"Sprite","props":{"y":30,"x":105,"name":"rightSpt"},"child":[{"type":"Rect","props":{"width":20,"lineWidth":1,"height":20,"fillColor":"#000000"}}]},{"type":"Image","props":{"y":42,"x":74,"skin":"btn/okBtn.png","scaleY":0.4,"scaleX":0.4,"name":"goodImg"}},{"type":"Image","props":{"y":42,"x":74,"skin":"btn/closeBtn.png","scaleY":0.4,"scaleX":0.4,"name":"badImg"}}]},{"type":"Sprite","props":{"y":209,"x":325,"name":"r9"},"child":[{"type":"Rect","props":{"width":110,"lineWidth":1,"height":78,"fillColor":"#000000"}},{"type":"Image","props":{"y":0,"x":0,"width":110,"skin":"frame/stageSlotsSelectedBg.png","name":"selectImg","height":78}},{"type":"Sprite","props":{"y":30,"x":-15,"name":"leftSpt"},"child":[{"type":"Rect","props":{"width":20,"lineWidth":1,"height":20,"fillColor":"#000000"}}]},{"type":"Sprite","props":{"y":-13,"x":45,"name":"upSpt"},"child":[{"type":"Rect","props":{"width":20,"lineWidth":1,"height":20,"fillColor":"#000000"}}]},{"type":"Sprite","props":{"y":71,"x":45,"name":"downSpt"},"child":[{"type":"Rect","props":{"width":20,"lineWidth":1,"height":20,"fillColor":"#000000"}}]},{"type":"Sprite","props":{"y":30,"x":105,"name":"rightSpt"},"child":[{"type":"Rect","props":{"width":20,"lineWidth":1,"height":20,"fillColor":"#000000"}}]},{"type":"Image","props":{"y":42,"x":74,"skin":"btn/okBtn.png","scaleY":0.4,"scaleX":0.4,"name":"goodImg"}},{"type":"Image","props":{"y":42,"x":74,"skin":"btn/closeBtn.png","scaleY":0.4,"scaleX":0.4,"name":"badImg"}}]},{"type":"Image","props":{"y":107,"x":-62,"var":"downStage","skin":"comp/downStage.png"}},{"type":"Image","props":{"y":27,"x":-70,"var":"upStage","skin":"comp/upStage.png"}},{"type":"Image","props":{"y":177,"x":-74,"var":"rewardBox","skin":"comp/rewardBox.png"}},{"type":"Image","props":{"y":258,"x":-75,"var":"bossImg","skin":"comp/bossIcon.png"}},{"type":"Image","props":{"y":354,"x":-79,"var":"bossRewardBox","skin":"comp/bossBox.png"}}]},{"type":"Image","props":{"y":112,"x":549,"skin":"comp/selectStageTitle.png","anchorX":0.5}},{"type":"Image","props":{"y":181,"x":483,"skin":"frame/stageNumBg.png"}},{"type":"Button","props":{"y":523,"x":906,"var":"skipBtn","stateNum":"1","skin":"btn/jumpBtn.png"}},{"type":"Image","props":{"y":526,"x":920,"skin":"btn/jumpWord.png","mouseEnabled":false}},{"type":"Label","props":{"y":180,"x":369,"width":364,"var":"stageNumTxt","valign":"top","text":"泥土 1-1","strokeColor":"#000000","stroke":0,"height":37,"fontSize":20,"font":"Microsoft YaHei","color":"#ffffff","align":"center"}},{"type":"Label","props":{"y":515,"x":370,"width":364,"var":"selectDesTxt","text":"选择房间通道","strokeColor":"#080808","stroke":3,"height":37,"fontSize":22,"font":"Microsoft YaHei","color":"#ffffff","align":"center"}}]};}
+		['uiView',function(){return this.uiView={"type":"View","props":{"width":1136,"name":"selectImg","height":640},"child":[{"type":"Rect","props":{"y":0,"x":0,"width":1136,"lineWidth":1,"height":640,"fillColor":"#000000"}},{"type":"Sprite","props":{"y":162,"x":229,"width":640,"var":"bgSpt","height":394}},{"type":"Button","props":{"y":504,"x":960,"var":"selectBtn","stateNum":"3","skin":"btn/selectBtn.png","anchorY":1,"anchorX":0.5}},{"type":"Image","props":{"y":264,"x":917,"var":"handImg","skin":"comp/hand.png"}},{"type":"Sprite","props":{"y":207,"x":291,"width":518,"var":"mapSpt","height":322},"child":[{"type":"Sprite","props":{"y":33,"x":85,"name":"r1"},"child":[{"type":"Rect","props":{"width":110,"lineWidth":1,"height":78,"fillColor":"#000000"}},{"type":"Image","props":{"y":0,"x":0,"width":110,"skin":"frame/stageSlotsSelectedBg.png","name":"selectImg","height":78}},{"type":"Sprite","props":{"y":30,"x":-15,"name":"leftSpt"},"child":[{"type":"Rect","props":{"width":20,"lineWidth":1,"height":20,"fillColor":"#000000"}}]},{"type":"Sprite","props":{"y":-13,"x":45,"name":"upSpt"},"child":[{"type":"Rect","props":{"width":20,"lineWidth":1,"height":20,"fillColor":"#000000"}}]},{"type":"Sprite","props":{"y":71,"x":45,"name":"downSpt"},"child":[{"type":"Rect","props":{"width":20,"lineWidth":1,"height":20,"fillColor":"#000000"}}]},{"type":"Sprite","props":{"y":30,"x":105,"name":"rightSpt"},"child":[{"type":"Rect","props":{"width":20,"lineWidth":1,"height":20,"fillColor":"#000000"}}]},{"type":"Image","props":{"y":42,"x":76,"skin":"btn/okBtn.png","scaleY":0.4,"scaleX":0.4,"name":"goodImg"}},{"type":"Image","props":{"y":44,"x":76,"skin":"btn/closeBtn.png","scaleY":0.4,"scaleX":0.4,"name":"badImg"}}]},{"type":"Sprite","props":{"y":33,"x":205,"name":"r4"},"child":[{"type":"Rect","props":{"width":110,"lineWidth":1,"height":78,"fillColor":"#000000"}},{"type":"Image","props":{"y":0,"x":0,"width":110,"skin":"frame/stageSlotsSelectedBg.png","name":"selectImg","height":78}},{"type":"Sprite","props":{"y":30,"x":-15,"name":"leftSpt"},"child":[{"type":"Rect","props":{"width":20,"lineWidth":1,"height":20,"fillColor":"#000000"}}]},{"type":"Sprite","props":{"y":-13,"x":45,"name":"upSpt"},"child":[{"type":"Rect","props":{"width":20,"lineWidth":1,"height":20,"fillColor":"#000000"}}]},{"type":"Sprite","props":{"y":71,"x":45,"name":"downSpt"},"child":[{"type":"Rect","props":{"width":20,"lineWidth":1,"height":20,"fillColor":"#000000"}}]},{"type":"Sprite","props":{"y":30,"x":105,"name":"rightSpt"},"child":[{"type":"Rect","props":{"width":20,"lineWidth":1,"height":20,"fillColor":"#000000"}}]},{"type":"Image","props":{"y":42,"x":76,"skin":"btn/okBtn.png","scaleY":0.4,"scaleX":0.4,"name":"goodImg"}},{"type":"Image","props":{"y":44,"x":76,"skin":"btn/closeBtn.png","scaleY":0.4,"scaleX":0.4,"name":"badImg"}}]},{"type":"Sprite","props":{"y":33,"x":325,"name":"r7"},"child":[{"type":"Rect","props":{"width":110,"lineWidth":1,"height":78,"fillColor":"#000000"}},{"type":"Image","props":{"y":0,"x":0,"width":110,"skin":"frame/stageSlotsSelectedBg.png","name":"selectImg","height":78}},{"type":"Sprite","props":{"y":30,"x":-15,"name":"leftSpt"},"child":[{"type":"Rect","props":{"width":20,"lineWidth":1,"height":20,"fillColor":"#000000"}}]},{"type":"Sprite","props":{"y":-13,"x":45,"name":"upSpt"},"child":[{"type":"Rect","props":{"width":20,"lineWidth":1,"height":20,"fillColor":"#000000"}}]},{"type":"Sprite","props":{"y":71,"x":45,"name":"downSpt"},"child":[{"type":"Rect","props":{"width":20,"lineWidth":1,"height":20,"fillColor":"#000000"}}]},{"type":"Sprite","props":{"y":30,"x":105,"name":"rightSpt"},"child":[{"type":"Rect","props":{"width":20,"lineWidth":1,"height":20,"fillColor":"#000000"}}]},{"type":"Image","props":{"y":42,"x":76,"skin":"btn/okBtn.png","scaleY":0.4,"scaleX":0.4,"name":"goodImg"}},{"type":"Image","props":{"y":44,"x":76,"skin":"btn/closeBtn.png","scaleY":0.4,"scaleX":0.4,"name":"badImg"}}]},{"type":"Sprite","props":{"y":121,"x":85,"name":"r2"},"child":[{"type":"Rect","props":{"width":110,"lineWidth":1,"height":78,"fillColor":"#000000"}},{"type":"Image","props":{"y":0,"x":0,"width":110,"skin":"frame/stageSlotsSelectedBg.png","name":"selectImg","height":78}},{"type":"Sprite","props":{"y":30,"x":-15,"name":"leftSpt"},"child":[{"type":"Rect","props":{"width":20,"lineWidth":1,"height":20,"fillColor":"#000000"}}]},{"type":"Sprite","props":{"y":-13,"x":45,"name":"upSpt"},"child":[{"type":"Rect","props":{"width":20,"lineWidth":1,"height":20,"fillColor":"#000000"}}]},{"type":"Sprite","props":{"y":71,"x":45,"name":"downSpt"},"child":[{"type":"Rect","props":{"width":20,"lineWidth":1,"height":20,"fillColor":"#000000"}}]},{"type":"Sprite","props":{"y":30,"x":105,"name":"rightSpt"},"child":[{"type":"Rect","props":{"width":20,"lineWidth":1,"height":20,"fillColor":"#000000"}}]},{"type":"Image","props":{"y":42,"x":76,"skin":"btn/okBtn.png","scaleY":0.4,"scaleX":0.4,"name":"goodImg"}},{"type":"Image","props":{"y":44,"x":76,"skin":"btn/closeBtn.png","scaleY":0.4,"scaleX":0.4,"name":"badImg"}}]},{"type":"Sprite","props":{"y":121,"x":205,"name":"r5"},"child":[{"type":"Rect","props":{"width":110,"lineWidth":1,"height":78,"fillColor":"#000000"}},{"type":"Image","props":{"y":0,"x":0,"width":110,"skin":"frame/stageSlotsSelectedBg.png","name":"selectImg","height":78}},{"type":"Sprite","props":{"y":30,"x":-15,"name":"leftSpt"},"child":[{"type":"Rect","props":{"width":20,"lineWidth":1,"height":20,"fillColor":"#000000"}}]},{"type":"Sprite","props":{"y":-13,"x":45,"name":"upSpt"},"child":[{"type":"Rect","props":{"width":20,"lineWidth":1,"height":20,"fillColor":"#000000"}}]},{"type":"Sprite","props":{"y":71,"x":45,"name":"downSpt"},"child":[{"type":"Rect","props":{"width":20,"lineWidth":1,"height":20,"fillColor":"#000000"}}]},{"type":"Sprite","props":{"y":30,"x":105,"name":"rightSpt"},"child":[{"type":"Rect","props":{"width":20,"lineWidth":1,"height":20,"fillColor":"#000000"}}]},{"type":"Image","props":{"y":42,"x":76,"skin":"btn/okBtn.png","scaleY":0.4,"scaleX":0.4,"name":"goodImg"}},{"type":"Image","props":{"y":44,"x":76,"skin":"btn/closeBtn.png","scaleY":0.4,"scaleX":0.4,"name":"badImg"}}]},{"type":"Sprite","props":{"y":121,"x":325,"name":"r8"},"child":[{"type":"Rect","props":{"width":110,"lineWidth":1,"height":78,"fillColor":"#000000"}},{"type":"Image","props":{"y":0,"x":0,"width":110,"skin":"frame/stageSlotsSelectedBg.png","name":"selectImg","height":78}},{"type":"Sprite","props":{"y":30,"x":-15,"name":"leftSpt"},"child":[{"type":"Rect","props":{"width":20,"lineWidth":1,"height":20,"fillColor":"#000000"}}]},{"type":"Sprite","props":{"y":-13,"x":45,"name":"upSpt"},"child":[{"type":"Rect","props":{"width":20,"lineWidth":1,"height":20,"fillColor":"#000000"}}]},{"type":"Sprite","props":{"y":71,"x":45,"name":"downSpt"},"child":[{"type":"Rect","props":{"width":20,"lineWidth":1,"height":20,"fillColor":"#000000"}}]},{"type":"Sprite","props":{"y":30,"x":105,"name":"rightSpt"},"child":[{"type":"Rect","props":{"width":20,"lineWidth":1,"height":20,"fillColor":"#000000"}}]},{"type":"Image","props":{"y":42,"x":76,"skin":"btn/okBtn.png","scaleY":0.4,"scaleX":0.4,"name":"goodImg"}},{"type":"Image","props":{"y":44,"x":76,"skin":"btn/closeBtn.png","scaleY":0.4,"scaleX":0.4,"name":"badImg"}}]},{"type":"Sprite","props":{"y":209,"x":85,"name":"r3"},"child":[{"type":"Rect","props":{"width":110,"lineWidth":1,"height":78,"fillColor":"#000000"}},{"type":"Image","props":{"y":0,"x":0,"width":110,"skin":"frame/stageSlotsSelectedBg.png","name":"selectImg","height":78}},{"type":"Sprite","props":{"y":30,"x":-15,"name":"leftSpt"},"child":[{"type":"Rect","props":{"width":20,"lineWidth":1,"height":20,"fillColor":"#000000"}}]},{"type":"Sprite","props":{"y":-13,"x":45,"name":"upSpt"},"child":[{"type":"Rect","props":{"width":20,"lineWidth":1,"height":20,"fillColor":"#000000"}}]},{"type":"Sprite","props":{"y":71,"x":45,"name":"downSpt"},"child":[{"type":"Rect","props":{"width":20,"lineWidth":1,"height":20,"fillColor":"#000000"}}]},{"type":"Sprite","props":{"y":30,"x":105,"name":"rightSpt"},"child":[{"type":"Rect","props":{"width":20,"lineWidth":1,"height":20,"fillColor":"#000000"}}]},{"type":"Image","props":{"y":42,"x":76,"skin":"btn/okBtn.png","scaleY":0.4,"scaleX":0.4,"name":"goodImg"}},{"type":"Image","props":{"y":44,"x":76,"skin":"btn/closeBtn.png","scaleY":0.4,"scaleX":0.4,"name":"badImg"}}]},{"type":"Sprite","props":{"y":209,"x":205,"name":"r6"},"child":[{"type":"Rect","props":{"width":110,"lineWidth":1,"height":78,"fillColor":"#000000"}},{"type":"Image","props":{"y":0,"x":0,"width":110,"skin":"frame/stageSlotsSelectedBg.png","name":"selectImg","height":78}},{"type":"Sprite","props":{"y":30,"x":-15,"name":"leftSpt"},"child":[{"type":"Rect","props":{"width":20,"lineWidth":1,"height":20,"fillColor":"#000000"}}]},{"type":"Sprite","props":{"y":-13,"x":45,"name":"upSpt"},"child":[{"type":"Rect","props":{"width":20,"lineWidth":1,"height":20,"fillColor":"#000000"}}]},{"type":"Sprite","props":{"y":71,"x":45,"name":"downSpt"},"child":[{"type":"Rect","props":{"width":20,"lineWidth":1,"height":20,"fillColor":"#000000"}}]},{"type":"Sprite","props":{"y":30,"x":105,"name":"rightSpt"},"child":[{"type":"Rect","props":{"width":20,"lineWidth":1,"height":20,"fillColor":"#000000"}}]},{"type":"Image","props":{"y":42,"x":76,"skin":"btn/okBtn.png","scaleY":0.4,"scaleX":0.4,"name":"goodImg"}},{"type":"Image","props":{"y":44,"x":76,"skin":"btn/closeBtn.png","scaleY":0.4,"scaleX":0.4,"name":"badImg"}}]},{"type":"Sprite","props":{"y":209,"x":325,"name":"r9"},"child":[{"type":"Rect","props":{"width":110,"lineWidth":1,"height":78,"fillColor":"#000000"}},{"type":"Image","props":{"y":0,"x":0,"width":110,"skin":"frame/stageSlotsSelectedBg.png","name":"selectImg","height":78}},{"type":"Sprite","props":{"y":30,"x":-15,"name":"leftSpt"},"child":[{"type":"Rect","props":{"width":20,"lineWidth":1,"height":20,"fillColor":"#000000"}}]},{"type":"Sprite","props":{"y":-13,"x":45,"name":"upSpt"},"child":[{"type":"Rect","props":{"width":20,"lineWidth":1,"height":20,"fillColor":"#000000"}}]},{"type":"Sprite","props":{"y":71,"x":45,"name":"downSpt"},"child":[{"type":"Rect","props":{"width":20,"lineWidth":1,"height":20,"fillColor":"#000000"}}]},{"type":"Sprite","props":{"y":30,"x":105,"name":"rightSpt"},"child":[{"type":"Rect","props":{"width":20,"lineWidth":1,"height":20,"fillColor":"#000000"}}]},{"type":"Image","props":{"y":42,"x":76,"skin":"btn/okBtn.png","scaleY":0.4,"scaleX":0.4,"name":"goodImg"}},{"type":"Image","props":{"y":44,"x":76,"skin":"btn/closeBtn.png","scaleY":0.4,"scaleX":0.4,"name":"badImg"}}]},{"type":"Image","props":{"y":107,"x":-62,"var":"downStage","skin":"comp/downStage.png"}},{"type":"Image","props":{"y":27,"x":-70,"var":"upStage","skin":"comp/upStage.png"}},{"type":"Image","props":{"y":177,"x":-74,"var":"rewardBox","skin":"comp/rewardBox.png"}},{"type":"Image","props":{"y":258,"x":-75,"var":"bossImg","skin":"comp/bossIcon.png"}},{"type":"Image","props":{"y":354,"x":-79,"var":"bossRewardBox","skin":"comp/bossBox.png"}}]},{"type":"Image","props":{"y":112,"x":549,"skin":"comp/selectStageTitle.png","anchorX":0.5}},{"type":"Image","props":{"y":181,"x":483,"skin":"frame/stageNumBg.png"}},{"type":"Button","props":{"y":523,"x":906,"var":"skipBtn","stateNum":"1","skin":"btn/jumpBtn.png"}},{"type":"Image","props":{"y":526,"x":920,"var":"skipWord","skin":"btn/jumpWord.png","mouseEnabled":false}},{"type":"Label","props":{"y":180,"x":369,"width":364,"var":"stageNumTxt","valign":"top","text":"泥土 1-1","strokeColor":"#000000","stroke":0,"height":37,"fontSize":20,"font":"Microsoft YaHei","color":"#ffffff","align":"center"}},{"type":"Label","props":{"y":515,"x":370,"width":364,"var":"selectDesTxt","text":"选择房间通道","strokeColor":"#080808","stroke":3,"height":37,"fontSize":22,"font":"Microsoft YaHei","color":"#ffffff","align":"center"}}]};}
 		]);
 		return SelectStageLayerUI;
 	})(View)

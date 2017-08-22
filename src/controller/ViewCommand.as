@@ -4,6 +4,7 @@ import mvc.Command;
 import mvc.Notification;
 import view.mediator.GameStageMediator;
 import view.mediator.LoadingMediator;
+import view.mediator.SelectNextPointMediator;
 import view.mediator.SelectStageMediator;
 /**
  * ...视图command
@@ -16,6 +17,7 @@ public class ViewCommand extends Command
 		this.facade.registerMediator(new GameStageMediator());
 		this.facade.registerMediator(new SelectStageMediator());
 		this.facade.registerMediator(new LoadingMediator());
+		this.facade.registerMediator(new SelectNextPointMediator());
 	}
 }
 }

@@ -1,8 +1,8 @@
 {
     "x":0,
     "type":"View",
-    "selectedBox":1,
-    "selecteID":39,
+    "selectedBox":81,
+    "selecteID":281,
     "props":{"width":1136,"sceneColor":"#000000","name":"selectImg","height":640},
     "nodeParent":-1,
     "label":"View(selectImg)",
@@ -38,7 +38,7 @@
             "compId":3,
             "child":[
                 ],
-            "$LOCKED":true
+            "$LOCKED":false
         },
         {
             "x":15,
@@ -87,7 +87,7 @@
         {
             "x":15,
             "type":"Image",
-            "props":{"y":264,"x":919,"var":"handImg","skin":"comp/hand.png"},
+            "props":{"y":264,"x":917,"var":"handImg","skin":"comp/hand.png"},
             "nodeParent":1,
             "label":"Image(handImg)",
             "isDirectory":false,
@@ -364,7 +364,7 @@
                         {
                             "x":45,
                             "type":"Image",
-                            "props":{"y":42,"x":74,"skin":"btn/closeBtn.png","scaleY":0.4,"scaleX":0.4,"name":"badImg"},
+                            "props":{"y":44,"x":76,"skin":"btn/closeBtn.png","scaleY":0.4,"scaleX":0.4,"name":"badImg"},
                             "nodeParent":46,
                             "label":"Image(badImg)",
                             "isDirectory":false,
@@ -377,7 +377,7 @@
                                     "frame":0,
                                     "__InPool":false
                                 }],
-                            "compId":328,
+                            "compId":337,
                             "child":[
                                 ]
                         }]
@@ -622,7 +622,7 @@
                         {
                             "x":45,
                             "type":"Image",
-                            "props":{"y":42,"x":74,"skin":"btn/closeBtn.png","scaleY":0.4,"scaleX":0.4,"name":"badImg"},
+                            "props":{"y":44,"x":76,"skin":"btn/closeBtn.png","scaleY":0.4,"scaleX":0.4,"name":"badImg"},
                             "nodeParent":51,
                             "label":"Image(badImg)",
                             "isDirectory":false,
@@ -635,7 +635,7 @@
                                     "frame":0,
                                     "__InPool":false
                                 }],
-                            "compId":329,
+                            "compId":338,
                             "child":[
                                 ]
                         }]
@@ -860,7 +860,7 @@
                         {
                             "x":45,
                             "type":"Image",
-                            "props":{"y":42,"x":74,"skin":"btn/okBtn.png","scaleY":0.4,"scaleX":0.4,"name":"goodImg"},
+                            "props":{"y":42,"x":76,"skin":"btn/okBtn.png","scaleY":0.4,"scaleX":0.4,"name":"goodImg"},
                             "nodeParent":57,
                             "label":"Image(goodImg)",
                             "isDirectory":false,
@@ -880,7 +880,7 @@
                         {
                             "x":45,
                             "type":"Image",
-                            "props":{"y":42,"x":74,"skin":"btn/closeBtn.png","scaleY":0.4,"scaleX":0.4,"name":"badImg"},
+                            "props":{"y":44,"x":76,"skin":"btn/closeBtn.png","scaleY":0.4,"scaleX":0.4,"name":"badImg"},
                             "nodeParent":57,
                             "label":"Image(badImg)",
                             "isDirectory":false,
@@ -893,7 +893,7 @@
                                     "frame":0,
                                     "__InPool":false
                                 }],
-                            "compId":330,
+                            "compId":340,
                             "child":[
                                 ]
                         }]
@@ -1150,7 +1150,7 @@
                         {
                             "x":45,
                             "type":"Image",
-                            "props":{"y":42,"x":74,"skin":"btn/closeBtn.png","scaleY":0.4,"scaleX":0.4,"name":"badImg"},
+                            "props":{"y":44,"x":76,"skin":"btn/closeBtn.png","scaleY":0.4,"scaleX":0.4,"name":"badImg"},
                             "nodeParent":63,
                             "label":"Image(badImg)",
                             "isDirectory":false,
@@ -1400,7 +1400,7 @@
                         {
                             "x":45,
                             "type":"Image",
-                            "props":{"y":42,"x":74,"skin":"btn/okBtn.png","scaleY":0.4,"scaleX":0.4,"name":"goodImg"},
+                            "props":{"y":42,"x":76,"skin":"btn/okBtn.png","scaleY":0.4,"scaleX":0.4,"name":"goodImg"},
                             "nodeParent":64,
                             "label":"Image(goodImg)",
                             "isDirectory":false,
@@ -1420,7 +1420,7 @@
                         {
                             "x":45,
                             "type":"Image",
-                            "props":{"y":42,"x":74,"skin":"btn/closeBtn.png","scaleY":0.4,"scaleX":0.4,"name":"badImg"},
+                            "props":{"y":44,"x":76,"skin":"btn/closeBtn.png","scaleY":0.4,"scaleX":0.4,"name":"badImg"},
                             "nodeParent":64,
                             "label":"Image(badImg)",
                             "isDirectory":false,
@@ -1433,7 +1433,7 @@
                                     "frame":0,
                                     "__InPool":false
                                 }],
-                            "compId":332,
+                            "compId":343,
                             "child":[
                                 ]
                         }]
@@ -1670,7 +1670,7 @@
                         {
                             "x":45,
                             "type":"Image",
-                            "props":{"y":42,"x":74,"skin":"btn/okBtn.png","scaleY":0.4,"scaleX":0.4,"name":"goodImg"},
+                            "props":{"y":42,"x":76,"skin":"btn/okBtn.png","scaleY":0.4,"scaleX":0.4,"name":"goodImg"},
                             "nodeParent":65,
                             "label":"Image(goodImg)",
                             "isDirectory":false,
@@ -1690,7 +1690,7 @@
                         {
                             "x":45,
                             "type":"Image",
-                            "props":{"y":42,"x":74,"skin":"btn/closeBtn.png","scaleY":0.4,"scaleX":0.4,"name":"badImg"},
+                            "props":{"y":44,"x":76,"skin":"btn/closeBtn.png","scaleY":0.4,"scaleX":0.4,"name":"badImg"},
                             "nodeParent":65,
                             "label":"Image(badImg)",
                             "isDirectory":false,
@@ -1703,7 +1703,7 @@
                                     "frame":0,
                                     "__InPool":false
                                 }],
-                            "compId":333,
+                            "compId":342,
                             "child":[
                                 ]
                         }]
@@ -1775,9 +1775,7 @@
                             "props":{"y":30,"x":-15,"name":"leftSpt"},
                             "nodeParent":81,
                             "label":"Sprite(leftSpt)",
-                            "isOpen":{
-
-                            },
+                            "isOpen":true,
                             "isDirectory":true,
                             "isAniNode":true,
                             "hasChild":true,
@@ -1940,7 +1938,7 @@
                         {
                             "x":45,
                             "type":"Image",
-                            "props":{"y":42,"x":74,"skin":"btn/okBtn.png","scaleY":0.4,"scaleX":0.4,"name":"goodImg"},
+                            "props":{"y":42,"x":76,"skin":"btn/okBtn.png","scaleY":0.4,"scaleX":0.4,"name":"goodImg"},
                             "nodeParent":81,
                             "label":"Image(goodImg)",
                             "isDirectory":false,
@@ -1960,7 +1958,7 @@
                         {
                             "x":45,
                             "type":"Image",
-                            "props":{"y":42,"x":74,"skin":"btn/closeBtn.png","scaleY":0.4,"scaleX":0.4,"name":"badImg"},
+                            "props":{"y":44,"x":76,"skin":"btn/closeBtn.png","scaleY":0.4,"scaleX":0.4,"name":"badImg"},
                             "nodeParent":81,
                             "label":"Image(badImg)",
                             "isDirectory":false,
@@ -1973,7 +1971,7 @@
                                     "frame":0,
                                     "__InPool":false
                                 }],
-                            "compId":334,
+                            "compId":347,
                             "child":[
                                 ]
                         }]
@@ -2210,7 +2208,7 @@
                         {
                             "x":45,
                             "type":"Image",
-                            "props":{"y":42,"x":74,"skin":"btn/okBtn.png","scaleY":0.4,"scaleX":0.4,"name":"goodImg"},
+                            "props":{"y":42,"x":76,"skin":"btn/okBtn.png","scaleY":0.4,"scaleX":0.4,"name":"goodImg"},
                             "nodeParent":82,
                             "label":"Image(goodImg)",
                             "isDirectory":false,
@@ -2230,7 +2228,7 @@
                         {
                             "x":45,
                             "type":"Image",
-                            "props":{"y":42,"x":74,"skin":"btn/closeBtn.png","scaleY":0.4,"scaleX":0.4,"name":"badImg"},
+                            "props":{"y":44,"x":76,"skin":"btn/closeBtn.png","scaleY":0.4,"scaleX":0.4,"name":"badImg"},
                             "nodeParent":82,
                             "label":"Image(badImg)",
                             "isDirectory":false,
@@ -2243,7 +2241,7 @@
                                     "frame":0,
                                     "__InPool":false
                                 }],
-                            "compId":335,
+                            "compId":346,
                             "child":[
                                 ]
                         }]
@@ -2477,7 +2475,7 @@
                         {
                             "x":45,
                             "type":"Image",
-                            "props":{"y":42,"x":74,"skin":"btn/okBtn.png","scaleY":0.4,"scaleX":0.4,"name":"goodImg"},
+                            "props":{"y":42,"x":76,"skin":"btn/okBtn.png","scaleY":0.4,"scaleX":0.4,"name":"goodImg"},
                             "nodeParent":83,
                             "label":"Image(goodImg)",
                             "isDirectory":false,
@@ -2497,7 +2495,7 @@
                         {
                             "x":45,
                             "type":"Image",
-                            "props":{"y":42,"x":74,"skin":"btn/closeBtn.png","scaleY":0.4,"scaleX":0.4,"name":"badImg"},
+                            "props":{"y":44,"x":76,"skin":"btn/closeBtn.png","scaleY":0.4,"scaleX":0.4,"name":"badImg"},
                             "nodeParent":83,
                             "label":"Image(badImg)",
                             "isDirectory":false,
@@ -2510,7 +2508,7 @@
                                     "frame":0,
                                     "__InPool":false
                                 }],
-                            "compId":336,
+                            "compId":345,
                             "child":[
                                 ]
                         }]
@@ -2682,9 +2680,9 @@
         {
             "x":15,
             "type":"Image",
-            "props":{"y":526,"x":920,"skin":"btn/jumpWord.png","mouseEnabled":false},
+            "props":{"y":526,"x":920,"var":"skipWord","skin":"btn/jumpWord.png","mouseEnabled":false},
             "nodeParent":1,
-            "label":"Image",
+            "label":"Image(skipWord)",
             "isDirectory":false,
             "isAniNode":true,
             "hasChild":false,

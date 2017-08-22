@@ -116,7 +116,8 @@ public class GameStageMediator extends Mediator
 			case MsgConstant.SELECT_STAGE_COMPLETE:
 				this.stageProxy.initStartPointVo();
 				this.gameStage.updateStageBg(this.curStagePo, this.stageProxy);
-				this.gameStage.playerMove(250, 1000, Handler.create(this, playerMoveComplete));
+				this.sendNotification(MsgConstant.SHOW_SELECT_NEXT_POINT_LAYER);
+				//this.gameStage.playerMove(250, 1000, Handler.create(this, playerMoveComplete));
 				break;
 			default:
 				break;
@@ -295,22 +296,24 @@ public class GameStageMediator extends Mediator
 		//下一关
 		//TODO 选择下一个关卡点
 		//胜利
+		this.sendNotification(MsgConstant.SHOW_SELECT_NEXT_POINT_LAYER);
 		
 		//选择下楼梯
 		//关卡数累加
-		this.stageProxy.curPoints++;
-		if (this.stageProxy.curPoints > this.stageProxy.getCurStagePointsCount())
-		{
-			this.stageProxy.curPoints = 1;
-			this.stageProxy.curLevel++;
-			if (this.stageProxy.curLevel > this.stageProxy.totalLevel)
-			{
-				trace("通关了");
-				//TODO 过关动画
-				return;
-			}
-		}
-		this.sendNotification(MsgConstant.START_FIGHT);
+		
+		//this.stageProxy.curPoints++;
+		//if (this.stageProxy.curPoints > this.stageProxy.getCurStagePointsCount())
+		//{
+			//this.stageProxy.curPoints = 1;
+			//this.stageProxy.curLevel++;
+			//if (this.stageProxy.curLevel > this.stageProxy.totalLevel)
+			//{
+				//trace("通关了");
+				////TODO 过关动画
+				//return;
+			//}
+		//}
+		//this.sendNotification(MsgConstant.START_FIGHT);
 	}
 	
 	/**
