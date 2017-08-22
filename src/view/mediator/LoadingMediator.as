@@ -45,8 +45,7 @@ public class LoadingMediator extends Mediator
 	 */
 	private function removeLoading():void
 	{
-		if (this.loading)
-			this.loading.removeSelf();
+		if (this.loading) this.loading.removeSelf();
 		this.loading = null;
 	}
 	

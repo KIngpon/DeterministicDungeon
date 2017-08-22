@@ -19,8 +19,6 @@ public class ResProxy extends Proxy
 	private var stageBgList:Array = [];
 	private var resCount:int = 0;
 	private var fontCount:int = 0;
-	private var levelCount:int = 1;
-	private var stageBgCount:int = 0;
 	public static const NAME:String = "ResProxy";
 	private var gameBitmapFont:BitmapFont;
 	private var sProxy:StageProxy;
@@ -67,30 +65,24 @@ public class ResProxy extends Proxy
 	}
 	
 	/**
-	 * 初始化大背景图
+	 * 初始化大背景图预先加载进内存
 	 */
-	private function initBgImage():void
+	private function initImg():void
 	{
-		this.levelCount = 1;
-		this.loadStageBgByLevel(this.levelCount);
-	}
-	
-	/**
-	 * 根据关卡数加载背景
-	 * @param	level		关卡数
-	 */
-	public function loadStageBgByLevel(level:int):void
-	{
-		this.stageBgCount = 0;
-		this.stageBgList = [];
-		this.stageBgList.push("stage/" + "stage" + level + "/stageBg.png");
-		this.stageBgList.push("stage/" + "stage" + level + "/stageBg1.png");
-		this.stageBgList.push("stage/" + "stage" + level + "/stageBg2.png");
-		this.stageBgList.push("stage/" + "stage" + level + "/stageDownBg.png");
-		this.stageBgList.push("stage/" + "stage" + level + "/stageSlotsBg.png");
-		this.stageBgList.push("stage/" + "stage" + level + "/stageStartBg.png");
-		this.stageBgList.push("stage/" + "stage" + level + "/stageUpBg.png");
-		Laya.loader.load(this.stageBgList[this.stageBgCount], Handler.create(this, loadStageImgComplete), Handler.create(this, loadImgProgress), Loader.IMAGE);
+		var count:int = this.sProxy.totalLevel;
+		count = 8;
+		var arr:Array = [];
+		for (var i:int = 1; i <= count; i++) 
+		{
+			arr.push({url:"stage/" + "stage" + i + "/stageBg.png", type:Loader.IMAGE});
+			arr.push({url:"stage/" + "stage" + i + "/stageBg1.png", type:Loader.IMAGE});
+			arr.push({url:"stage/" + "stage" + i + "/stageBg2.png", type:Loader.IMAGE});
+			arr.push({url:"stage/" + "stage" + i + "/stageDownBg.png", type:Loader.IMAGE});
+			arr.push({url:"stage/" + "stage" + i + "/stageSlotsBg.png", type:Loader.IMAGE});
+			arr.push({url:"stage/" + "stage" + i + "/stageStartBg.png", type:Loader.IMAGE});
+			arr.push({url:"stage/" + "stage" + i + "/stageUpBg.png", type:Loader.IMAGE});
+		}
+		Laya.loader.load(arr, Handler.create(this, loadImgComplete), Handler.create(this, loadImgProgress, null, false), Loader.IMAGE);
 	}
 	
 	/**
@@ -102,7 +94,7 @@ public class ResProxy extends Proxy
 		this.fontCount++;
 		if (this.fontCount >= this.fontList.length)
 		{
-			this.initBgImage();
+			this.initImg();
 		}
 	}
 	
@@ -120,28 +112,14 @@ public class ResProxy extends Proxy
 	 * 加载关卡背景图成功
 	 * @param	level
 	 */
-	private function loadStageImgComplete(level:int):void
+	private function loadImgComplete():void
 	{
-		this.stageBgCount++;
-		if (this.stageBgCount < this.stageBgList.length)
-		{
-			Laya.loader.load(this.stageBgList[this.stageBgCount], Handler.create(this, loadStageImgComplete), Handler.create(this, loadImgProgress), Loader.IMAGE);
-		}
-		else
-		{
-			//加载完毕
-			this.levelCount++;
-			if (this.levelCount > 8)
-				this.sendNotification(MsgConstant.INIT_FIGHT_STAGE);
-			else
-				this.loadStageBgByLevel(this.levelCount);
-		}
+		this.sendNotification(MsgConstant.INIT_FIGHT_STAGE);
 	}
 	
 	private function loadImgProgress(pro:Number):void
 	{
-		var per:Number = this.levelCount / 8;
-		this.sendNotification(MsgConstant.LOAD_PROGRESS_FIGHT_STAGE, per);
+		this.sendNotification(MsgConstant.LOAD_PROGRESS_FIGHT_STAGE, pro);
 	}
 }
 }

@@ -10942,8 +10942,6 @@ var Laya=window.Laya=(function(window,document){
 			this.stageBgList=[];
 			this.resCount=0;
 			this.fontCount=0;
-			this.levelCount=1;
-			this.stageBgCount=0;
 			this.gameBitmapFont=null;
 			this.sProxy=null;
 			ResProxy.__super.call(this);
@@ -10984,28 +10982,23 @@ var Laya=window.Laya=(function(window,document){
 		}
 
 		/**
-		*初始化大背景图
+		*初始化大背景图预先加载进内存
 		*/
-		__proto.initBgImage=function(){
-			this.levelCount=1;
-			this.loadStageBgByLevel(this.levelCount);
-		}
-
-		/**
-		*根据关卡数加载背景
-		*@param level 关卡数
-		*/
-		__proto.loadStageBgByLevel=function(level){
-			this.stageBgCount=0;
-			this.stageBgList=[];
-			this.stageBgList.push("stage/"+"stage"+level+"/stageBg.png");
-			this.stageBgList.push("stage/"+"stage"+level+"/stageBg1.png");
-			this.stageBgList.push("stage/"+"stage"+level+"/stageBg2.png");
-			this.stageBgList.push("stage/"+"stage"+level+"/stageDownBg.png");
-			this.stageBgList.push("stage/"+"stage"+level+"/stageSlotsBg.png");
-			this.stageBgList.push("stage/"+"stage"+level+"/stageStartBg.png");
-			this.stageBgList.push("stage/"+"stage"+level+"/stageUpBg.png");
-			Laya.loader.load(this.stageBgList[this.stageBgCount],Handler.create(this,this.loadStageImgComplete),Handler.create(this,this.loadImgProgress),"image");
+		__proto.initImg=function(){
+			var count=this.sProxy.totalLevel;
+			count=8;
+			var arr=[];
+			for (var i=1;i <=count;i++){
+				arr.push({url:"stage/"+"stage"+i+"/stageBg.png",type:"image"});
+				arr.push({url:"stage/"+"stage"+i+"/stageBg1.png",type:"image"});
+				arr.push({url:"stage/"+"stage"+i+"/stageBg2.png",type:"image"});
+				arr.push({url:"stage/"+"stage"+i+"/stageDownBg.png",type:"image"});
+				arr.push({url:"stage/"+"stage"+i+"/stageSlotsBg.png",type:"image"});
+				arr.push({url:"stage/"+"stage"+i+"/stageStartBg.png",type:"image"});
+				arr.push({url:"stage/"+"stage"+i+"/stageUpBg.png",type:"image"});
+			}
+			console.log("arr",arr);
+			Laya.loader.load(arr,Handler.create(this,this.loadImgComplete),Handler.create(this,this.loadImgProgress,null,false),"image");
 		}
 
 		/**
@@ -11015,7 +11008,7 @@ var Laya=window.Laya=(function(window,document){
 			bmpFont.setSpaceWidth(10);
 			this.fontCount++;
 			if (this.fontCount >=this.fontList.length){
-				this.initBgImage();
+				this.initImg();
 			}
 		}
 
@@ -11030,23 +11023,12 @@ var Laya=window.Laya=(function(window,document){
 		*加载关卡背景图成功
 		*@param level
 		*/
-		__proto.loadStageImgComplete=function(level){
-			this.stageBgCount++;
-			if (this.stageBgCount < this.stageBgList.length){
-				Laya.loader.load(this.stageBgList[this.stageBgCount],Handler.create(this,this.loadStageImgComplete),Handler.create(this,this.loadImgProgress),"image");
-			}
-			else{
-				this.levelCount++;
-				if (this.levelCount > 8)
-					this.sendNotification("INIT_FIGHT_STAGE");
-				else
-				this.loadStageBgByLevel(this.levelCount);
-			}
+		__proto.loadImgComplete=function(){
+			this.sendNotification("INIT_FIGHT_STAGE");
 		}
 
 		__proto.loadImgProgress=function(pro){
-			var per=this.levelCount / 8;
-			this.sendNotification("LOAD_PROGRESS_FIGHT_STAGE",per);
+			this.sendNotification("LOAD_PROGRESS_FIGHT_STAGE",pro);
 		}
 
 		ResProxy.NAME="ResProxy";
@@ -12568,8 +12550,7 @@ var Laya=window.Laya=(function(window,document){
 		*删除loading
 		*/
 		__proto.removeLoading=function(){
-			if (this.loading)
-				this.loading.removeSelf();
+			if (this.loading)this.loading.removeSelf();
 			this.loading=null;
 		}
 
