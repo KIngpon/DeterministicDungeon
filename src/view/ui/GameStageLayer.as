@@ -14,6 +14,7 @@ import model.vo.EnemyVo;
 import model.vo.PlayerVo;
 import model.vo.PointVo;
 import view.components.HpBar;
+import view.components.MiniMap;
 import view.components.PlayerBar;
 
 /**
@@ -40,6 +41,8 @@ public class GameStageLayer extends Sprite
 	public var playerHpBar:PlayerBar;
 	//人物经验条
 	public var playerExpBar:PlayerBar;
+	//小地图
+	public var miniMap:MiniMap;
 	//属性文本
 	private var atkTxt:Text;
 	private var defTxt:Text;
@@ -212,6 +215,10 @@ public class GameStageLayer extends Sprite
 		this.nameTxt.y = levelBg.y - 68;
 		this.nameTxt.text = "玩家名字"
 		this.addChild(this.nameTxt);
+		
+		this.miniMap = new MiniMap();
+		this.miniMap.x = GameConstant.GAME_WIDTH / 2 - this.miniMap.width / 2;
+		this.addChild(this.miniMap);
 	}
 	
 	/**
