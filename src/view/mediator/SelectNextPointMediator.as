@@ -3,6 +3,7 @@ package view.mediator
 import config.MsgConstant;
 import laya.events.Event;
 import laya.ui.Image;
+import laya.utils.Handler;
 import model.proxy.StageProxy;
 import model.vo.PointVo;
 import mvc.Mediator;
@@ -22,6 +23,8 @@ public class SelectNextPointMediator extends Mediator
 	private var stageProxy:StageProxy;
 	//当前关卡点
 	private var curPointVo:PointVo;
+	//是否已经选择了下一个点
+	private var isSelected:Boolean;
 	public function SelectNextPointMediator()
 	{
 		this.mediatorName = NAME;
@@ -56,6 +59,7 @@ public class SelectNextPointMediator extends Mediator
 	private function initData():void
 	{
 		this.curPointVo = this.stageProxy.curPointVo;
+		this.isSelected = false;
 	}
 	
 	/**
@@ -96,30 +100,51 @@ public class SelectNextPointMediator extends Mediator
 	
 	private function downArrowClickHandler():void 
 	{
+		if (this.isSelected) return;
 		this.stageProxy.curPointVo =
 				this.stageProxy.getPointVoByDir(this.curPointVo.index - 1, PointVo.DOWN);
-		//TODO 选中后闪烁几下
-		this.sendNotification(MsgConstant.SELECT_NEXT_POINT);
+		this.stageProxy.isFirstPointVo = false;
+		//选中后闪烁几下
+		this.selectNextPointLayer.flashing(this.stageProxy.curPointVo.index, 
+										   Handler.create(this, flashingCompleteHandler));
+		this.isSelected = true;
 	}
 	
 	private function rightArrowClickHandler():void 
 	{
+		if (this.isSelected) return;
 		this.stageProxy.curPointVo =
 				this.stageProxy.getPointVoByDir(this.curPointVo.index - 1, PointVo.RIGHT);
-		this.sendNotification(MsgConstant.SELECT_NEXT_POINT);
+		this.stageProxy.isFirstPointVo = false;
+		this.selectNextPointLayer.flashing(this.stageProxy.curPointVo.index, 
+										   Handler.create(this, flashingCompleteHandler));
+		this.isSelected = true;
 	}
 	
 	private function leftArrowClickHandler():void 
 	{
+		if (this.isSelected) return;
 		this.stageProxy.curPointVo = 
 				this.stageProxy.getPointVoByDir(this.curPointVo.index - 1, PointVo.LEFT);
-		this.sendNotification(MsgConstant.SELECT_NEXT_POINT);
+		this.stageProxy.isFirstPointVo = false;
+		this.selectNextPointLayer.flashing(this.stageProxy.curPointVo.index, 
+										   Handler.create(this, flashingCompleteHandler));
+		this.isSelected = true;
 	}
 	
 	private function upArrowClickHandler():void 
 	{
+		if (this.isSelected) return;
 		this.stageProxy.curPointVo =
 				this.stageProxy.getPointVoByDir(this.curPointVo.index - 1, PointVo.UP);
+		this.stageProxy.isFirstPointVo = false;
+		this.selectNextPointLayer.flashing(this.stageProxy.curPointVo.index,
+										   Handler.create(this, flashingCompleteHandler));
+		this.isSelected = true;
+	}
+	
+	private function flashingCompleteHandler():void
+	{
 		this.sendNotification(MsgConstant.SELECT_NEXT_POINT);
 	}
 }

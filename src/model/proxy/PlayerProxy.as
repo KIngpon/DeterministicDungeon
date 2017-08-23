@@ -55,13 +55,13 @@ public class PlayerProxy extends Proxy
 			}
 			this.isLoaded = true;
 			this.pVo = new PlayerVo();
-			this.pVo.level = 0;
+			this.pVo.level = 20;
 			var pPo:PlayerPo = this.getPlayerPoByLevel(this.pVo.level);
 			this.pVo.maxExp = pPo.exp;
 			this.pVo.maxHp = pPo.hp;
 			this.pVo.curHp = this.pVo.maxHp;
 			this.pVo.curExp = 0;
-			this.pVo.slotsDelay = 70;
+			this.pVo.slotsDelay = 270;
 			this.pVo.weaponPo = this.equipProxy.getEquipPoById(1);
 		}));
 	}

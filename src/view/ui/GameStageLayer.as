@@ -32,8 +32,8 @@ public class GameStageLayer extends Sprite
 	//箭头
 	public var arrowImg:Image;
 	//前景
-	private var fontBg:Image;
-	private var bgBg:Image;
+	private var frontBg:Image;
+	private var bg:Image;
 	//ui的背景
 	private var uiBg:Image;
 	//人物血条
@@ -57,16 +57,15 @@ public class GameStageLayer extends Sprite
 	 */
 	private function initUI():void
 	{
-		this.bgBg = new Image();
-		this.fontBg = new Image();
-		this.addChild(this.bgBg);
-		this.addChild(this.fontBg);
-		this.bgBg.scale(1.55, 1.55);
-		this.fontBg.scale(1.55, 1.55);
-		this.bgBg.anchorX = .5;
-		this.bgBg.x = GameConstant.GAME_WIDTH / 2;
-		this.fontBg.anchorX = .5;
-		this.fontBg.x = GameConstant.GAME_WIDTH / 2;
+		this.bg = new Image();
+		this.frontBg = new Image();
+		this.addChild(this.bg);
+		this.addChild(this.frontBg);
+		this.bg.scale(1.55, 1.55);
+		this.frontBg.scale(1.55, 1.55);
+		this.bg.anchorX = .5;
+		this.frontBg.anchorX = .5;
+		this.frontBg.x = GameConstant.GAME_WIDTH / 2;
 		this.uiBg = new Image("frame/uiBg.png");
 		this.addChild(this.uiBg);
 		this.uiBg.anchorX = .5;
@@ -108,7 +107,6 @@ public class GameStageLayer extends Sprite
 		lineBg.x = 225;
 		lineBg.y = 530;
 		this.addChild(lineBg);
-		
 		
 		var levelBg:Image = new Image("frame/levelBg.png");
 		levelBg.x = 275;
@@ -326,29 +324,57 @@ public class GameStageLayer extends Sprite
 	public function updateStageBg(stagePo:StagePo, stageProxy:StageProxy):void
 	{
 		if (!stagePo || !stageProxy) return;
-		trace("stagePo.level", stagePo.level);
-		trace("stagePo.points", stagePo.points);
-		trace(" stageProxy.getCurStagePointsCount()",  stageProxy.getCurStagePointsCount());
-		this.bgBg.skin = "stage/" + "stage" + stagePo.level + "/stageBg.png";
-		this.fontBg.skin = "stage/" + "stage" + stagePo.level + "/stageBg1.png";
-		if (stagePo.points == 1)
+		var level:int = stagePo.level;
+		level = 8;
+		//trace("stagePo.level", stagePo.level);
+		//trace("stagePo.points", stagePo.points);
+		//trace(" stageProxy.getCurStagePointsCount()",  stageProxy.getCurStagePointsCount());
+		//trace("stageProxy.curPointVo.type", stageProxy.curPointVo.type);
+		//第一关
+		if (stageProxy.curPointVo.type == PointVo.UP_FLOOR)
 		{
-			//第一关
-			if (stageProxy.curPointVo.type == PointVo.UP_FLOOR)
-			{
-				if (stageProxy.isFirstPointVo)
-					this.bgBg.skin = "stage/" + "stage" + stagePo.level + "/stageStartBg.png";
-				else
-					this.bgBg.skin = "stage/" + "stage" + stagePo.level + "/stageUpBg.png";
-			}
+			if (stageProxy.isFirstPointVo)
+				this.bg.skin = "stage/" + "stage" + level + "/stageStartBg.png";
+			else
+				this.bg.skin = "stage/" + "stage" + level + "/stageUpBg.png";
+			this.frontBg.skin = "stage/" + "stage" + level + "/stageBg1.png";
 		}
-		else if (stagePo.points == stageProxy.getCurStagePointsCount())
+		else if (stageProxy.curPointVo.type == PointVo.DOWN_FLOOR)
 		{
-			//最后一关
-			if (stageProxy.curPointVo.type == PointVo.DOWN_FLOOR)
-				this.bgBg.skin = "stage/" + "stage" + stagePo.level + "/stageDownBg.png";
+			this.bg.skin = "stage/" + "stage" + level + "/stageDownBg.png";
+			this.frontBg.skin = "stage/" + "stage" + level + "/stageBg2.png";
 		}
+		else
+		{
+			this.bg.skin = "stage/" + "stage" + level + "/stageBg.png";
+			this.frontBg.skin = "stage/" + "stage" + level + "/stageBg1.png";
+		}
+		this.setBgPos(level, stageProxy.curPointVo.type);
 	}
+	
+	/**
+	 * 根据关卡和类型设置背景的位置
+	 * @param	level		关卡数
+	 * @param	pointType	关卡点类型
+	 */
+	private function setBgPos(level:int, pointType:int):void
+	{
+		var bgPosAry:Array;
+		if (pointType == PointVo.DOWN_FLOOR)
+			bgPosAry = [[608, -15], [567, -15], [560, -30], [670, -26.5], [580, -56], [536, -155], [594, -55], [652, -231]];
+		else if (pointType == PointVo.UP_FLOOR)
+			bgPosAry = [[584, -57], [584, -57], [584, -57], [584, -57], [584, -57], [584, -147], [592, -53], [592, -223]];
+		else 
+			bgPosAry = [[608, -15], [567, -30], [560, -115], [584, -21], [584, -55], [568, -155], [596, -50], [584, -239]];
+		var x:Number = bgPosAry[level - 1][0];
+		var y:Number = bgPosAry[level - 1][1];
+		this.bg.x = x;
+		this.bg.y = y;
+		//前景的位置
+		var frontPosYAry:Array = [0, 0, 0, 0, 0, 0, 0, -31];
+		this.frontBg.y = frontPosYAry[level - 1];
+	}
+	
 	
 	/**
 	 * 初始化敌人UI

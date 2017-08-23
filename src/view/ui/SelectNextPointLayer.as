@@ -2,8 +2,9 @@ package view.ui
 {
 import config.GameConstant;
 import laya.display.Sprite;
-import laya.maths.Point;
 import laya.ui.Image;
+import laya.utils.Handler;
+import laya.utils.Timer;
 import model.po.StagePo;
 import model.vo.PointVo;
 import ui.GameStage.SelectStageLayerUI;
@@ -21,6 +22,10 @@ public class SelectNextPointLayer extends Sprite
 	private var rewardBox:Image;
 	private var bossImg:Image;
 	private var bossRewardBox:Image;
+	private var flashingTimer:Timer;
+	private var flashingIndex:int;
+	private var selectIndex:int;
+	private var flashingCallBackHandler:Handler;
 	public function SelectNextPointLayer() 
 	{
 		this.initUI();
@@ -218,6 +223,7 @@ public class SelectNextPointLayer extends Sprite
 	public function updateCurPointView(pVo:PointVo):void
 	{
 		if (!pVo) return;
+		this.selectIndex = pVo.index;
 		var stageIcon:Sprite = this.panel.mapSpt.getChildByName("r" + pVo.index) as Sprite;
 		var selectImg:Image = stageIcon.getChildByName("selectImg") as Image;
 		var leftSpt:Sprite = stageIcon.getChildByName("leftSpt") as Sprite;
@@ -270,8 +276,52 @@ public class SelectNextPointLayer extends Sprite
 			arrow.rotation = -180;
 			arrow.x = downSpt.x + downSpt.width / 2 + stageIcon.x;
 			arrow.y = downSpt.y + downSpt.height / 2 + stageIcon.y;
-			
 			this.panel.mapSpt.addChild(arrow);
+		}
+	}
+
+	/**
+	 * 闪烁
+	 * @param	handler
+	 */
+	public function flashing(index:int, handler:Handler = null):void
+	{
+		this.selectIndex = index;
+		this.resetAllPointSelect();
+		if (!this.flashingTimer) this.flashingTimer = new Timer();
+		this.flashingTimer.clear(this, flashingLoopHandler);
+		this.flashingTimer.loop(40, this, flashingLoopHandler);
+		this.flashingCallBackHandler = handler;
+	}
+	
+	/**
+	 * 重置所有选中效果
+	 */
+	private function resetAllPointSelect():void
+	{
+		for (var i:int = 1; i <= GameConstant.POINTS_NUM_MAX; i++) 
+		{
+			var stageIcon:Sprite = this.panel.mapSpt.getChildByName("r" + i) as Sprite;
+			var selectImg:Image = stageIcon.getChildByName("selectImg") as Image;
+			selectImg.visible = false;
+		}
+	}
+	
+	private function flashingLoopHandler():void 
+	{
+		var stageIcon:Sprite = this.panel.mapSpt.getChildByName("r" + this.selectIndex) as Sprite;
+		if (stageIcon)
+		{
+			var selectImg:Image = stageIcon.getChildByName("selectImg") as Image;
+			selectImg.visible = !selectImg.visible;
+		}
+		this.flashingIndex++;
+		if (this.flashingIndex >= 10)
+		{
+			this.flashingIndex = 0;
+			this.flashingTimer.clear(this, flashingLoopHandler);
+			if(this.flashingCallBackHandler)
+				this.flashingCallBackHandler.runWith(this.curSelectValue);
 		}
 	}
 }

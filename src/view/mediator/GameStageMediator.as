@@ -263,7 +263,7 @@ public class GameStageMediator extends Mediator
 			if (this.enemyCanSelectCount > 0)
 				this.initSlotsSelectEnemyType();
 			else 
-				this.gameStage.playerMove(GameConstant.GAME_WIDTH, 3000, Handler.create(this, playerMoveOutComplete));
+				this.gameStage.playerMove(GameConstant.GAME_WIDTH, 300, Handler.create(this, playerMoveOutComplete));
 			//直接移动出舞台
 		}
 		else if (!this.isSelectEnemyType)

@@ -209,8 +209,8 @@ public class SelectStageLayer extends Sprite
 	 */
 	public function stop():void
 	{
-		this.timer.clear(this, loopHandler);
-		this.flashingTimer.clear(this, flashingLoopHandler);
+		if (this.timer) this.timer.clear(this, loopHandler);
+		if (this.flashingTimer) this.flashingTimer.clear(this, flashingLoopHandler);
 	}
 	
 	/**
