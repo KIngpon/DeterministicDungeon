@@ -77,6 +77,7 @@ public class SelectStageMediator extends Mediator
 		this.selectStageLayer.initStageData(this.stageProxy);
 		this.selectStageLayer.start(this.playerProxy.pVo.slotsDelay);
 		this.selectStageLayer.initSlotsBg(this.curStagePo);
+		this.selectStageLayer.setTitle(this.curStagePo.name + " " + this.curStagePo.points + "-" + this.stageProxy.getCurStagePointsCount());
 	}
 	
 	//跳过

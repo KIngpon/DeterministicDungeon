@@ -325,7 +325,7 @@ public class GameStageLayer extends Sprite
 	{
 		if (!stagePo || !stageProxy) return;
 		var level:int = stagePo.level;
-		level = 8;
+		//level = 8;
 		//trace("stagePo.level", stagePo.level);
 		//trace("stagePo.points", stagePo.points);
 		//trace(" stageProxy.getCurStagePointsCount()",  stageProxy.getCurStagePointsCount());
@@ -374,7 +374,6 @@ public class GameStageLayer extends Sprite
 		var frontPosYAry:Array = [0, 0, 0, 0, 0, 0, 0, -31];
 		this.frontBg.y = frontPosYAry[level - 1];
 	}
-	
 	
 	/**
 	 * 初始化敌人UI

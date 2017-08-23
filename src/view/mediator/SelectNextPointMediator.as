@@ -4,6 +4,7 @@ import config.MsgConstant;
 import laya.events.Event;
 import laya.ui.Image;
 import laya.utils.Handler;
+import model.po.StagePo;
 import model.proxy.StageProxy;
 import model.vo.PointVo;
 import mvc.Mediator;
@@ -23,6 +24,7 @@ public class SelectNextPointMediator extends Mediator
 	private var stageProxy:StageProxy;
 	//当前关卡点
 	private var curPointVo:PointVo;
+	private var curStagePo:StagePo;
 	//是否已经选择了下一个点
 	private var isSelected:Boolean;
 	public function SelectNextPointMediator()
@@ -58,6 +60,7 @@ public class SelectNextPointMediator extends Mediator
 	 */
 	private function initData():void
 	{
+		this.curStagePo = this.stageProxy.getCurStagePo();
 		this.curPointVo = this.stageProxy.curPointVo;
 		this.isSelected = false;
 	}
@@ -76,7 +79,10 @@ public class SelectNextPointMediator extends Mediator
 		this.selectNextPointLayer.initPointPass(this.stageProxy.pointsAry);
 		this.selectNextPointLayer.initSlotsBg(this.stageProxy.getCurStagePo());
 		this.selectNextPointLayer.updateCurPointView(this.stageProxy.curPointVo);
-	
+		this.selectNextPointLayer.setDes("点击箭头移动");
+		this.selectNextPointLayer.setTitle(this.curStagePo.name + " " + 
+										   this.curStagePo.points + "-" + 
+										   this.stageProxy.getCurStagePointsCount());
 		var upArrow:Image = this.panel.mapSpt.getChildByName("upArrow") as Image;
 		var leftArrow:Image = this.panel.mapSpt.getChildByName("leftArrow") as Image;
 		var rightArrow:Image = this.panel.mapSpt.getChildByName("rightArrow") as Image;
