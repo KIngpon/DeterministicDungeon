@@ -157,7 +157,7 @@ public class SelectStageLayer extends Sprite
 		var bg:Image = new Image();
 		var maskBg:Image = new Image("bg/bgMask.png");
 		bg.skin = "stage/" + "stage" + stagePo.level + "/stageSlotsBg.png";
-		bg.skin = "stage/" + "stage8" + "/stageSlotsBg.png";
+		//bg.skin = "stage/" + "stage8" + "/stageSlotsBg.png";
 		bg.x = this.panel.bgSpt.width / 2 - bg.width / 2;
 		bg.y = this.panel.bgSpt.height / 2 - bg.height / 2;
 		this.panel.bgSpt.addChild(bg);
