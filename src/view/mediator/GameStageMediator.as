@@ -118,12 +118,16 @@ public class GameStageMediator extends Mediator
 			case MsgConstant.SELECT_STAGE_COMPLETE:
 				this.stageProxy.initStartPointVo();
 				this.gameStage.updateStageBg(this.curStagePo, this.stageProxy);
+				this.gameStage.miniMap.updateAllPointPassView(this.stageProxy.pointsAry, this.stageProxy.curPointVo);
+				this.gameStage.miniMap.updateAllPointTypeView(this.stageProxy.pointsAry);
 				this.gameStage.playerMove(250, 1000, Handler.create(this, playerMoveComplete));
 				break;
 			case MsgConstant.SELECT_NEXT_POINT:
 				this.initData();
 				this.gameStage.initPlayer(this.playerVo);
 				this.gameStage.updateStageBg(this.curStagePo, this.stageProxy);
+				this.gameStage.miniMap.updateAllPointPassView(this.stageProxy.pointsAry, this.stageProxy.curPointVo);
+				this.gameStage.miniMap.updateAllPointTypeView(this.stageProxy.pointsAry);
 				this.gameStage.playerMove(250, 1000, Handler.create(this, playerMoveComplete));
 				break;
 			default:
@@ -188,15 +192,6 @@ public class GameStageMediator extends Mediator
 			Layer.GAME_STAGE.addChild(this.gameStage);
 		}
 	}
-	
-	/**
-	 * 加载资源
-	 */
-	//private function loadBgRes():void
-	//{
-		//this.resProxy.loadStageBgByLevel(this.stageProxy.curLevel);
-	//}
-	
 	
 	/**
 	 * 初始化选择敌人数量

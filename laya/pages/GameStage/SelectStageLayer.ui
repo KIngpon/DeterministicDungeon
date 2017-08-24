@@ -1,8 +1,8 @@
 {
     "x":0,
     "type":"View",
-    "selectedBox":1,
-    "selecteID":13,
+    "selectedBox":9,
+    "selecteID":318,
     "props":{"width":1136,"sceneColor":"#000000","name":"selectImg","height":640},
     "nodeParent":-1,
     "label":"View(selectImg)",
@@ -60,7 +60,7 @@
             "compId":5,
             "child":[
                 ],
-            "$LOCKED":false
+            "$LOCKED":true
         },
         {
             "x":15,
@@ -130,7 +130,7 @@
                     "props":{"y":33,"x":85,"name":"r1"},
                     "nodeParent":9,
                     "label":"Sprite(r1)",
-                    "isOpen":true,
+                    "isOpen":false,
                     "isDirectory":true,
                     "isAniNode":true,
                     "hasChild":true,
