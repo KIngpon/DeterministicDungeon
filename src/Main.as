@@ -21,6 +21,8 @@ import view.ui.Layer;
  * [选择关卡地形]
  * [关卡表对应关卡背景图片，敌人id]
  * [选择移动格子]
+ * 上下楼梯
+ * 楼梯动画
  * 小地图
  * 本地化表
  * 导航菜单
@@ -34,6 +36,7 @@ import view.ui.Layer;
  * 开宝箱
  * 中文字体图
  * 角色动画
+ * boss
  * @author ...Kanon
  */
 public class Main 
