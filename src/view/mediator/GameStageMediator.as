@@ -16,6 +16,7 @@ import model.proxy.ResProxy;
 import model.proxy.StageProxy;
 import model.vo.EnemyVo;
 import model.vo.PlayerVo;
+import model.vo.PointVo;
 import mvc.Mediator;
 import mvc.Notification;
 import utils.MathUtil;
@@ -79,6 +80,8 @@ public class GameStageMediator extends Mediator
 	private var curEnemySelectCount:int;
 	//关卡数据
 	private var curStagePo:StagePo;
+	//当前关卡点
+	private var curPointVo:PointVo;
 	//敌人列表
 	private var enemyPoList:Array;
 	public function GameStageMediator() 
@@ -117,11 +120,13 @@ public class GameStageMediator extends Mediator
 				break;
 			case MsgConstant.SELECT_STAGE_COMPLETE:
 				this.stageProxy.initStartPointVo();
+				this.curPointVo = this.stageProxy.curPointVo;
 				this.gameStage.updateStageBg(this.curStagePo, this.stageProxy);
 				this.gameStage.playerMove(250, 1000, Handler.create(this, playerMoveComplete));
 				break;
 			case MsgConstant.SELECT_NEXT_POINT:
 				this.initData();
+				this.curPointVo = this.stageProxy.curPointVo;
 				this.gameStage.initPlayer(this.playerVo);
 				this.gameStage.updateStageBg(this.curStagePo, this.stageProxy);
 				this.gameStage.playerMove(250, 1000, Handler.create(this, playerMoveComplete));
@@ -311,7 +316,19 @@ public class GameStageMediator extends Mediator
 		//下一关
 		//TODO 选择下一个关卡点
 		//胜利
-		this.sendNotification(MsgConstant.SHOW_SELECT_NEXT_POINT_LAYER);
+		
+		if (this.curPointVo.type == PointVo.DOWN_FLOOR)
+		{
+			//弹出对话框
+		}
+		else if (this.curPointVo.type == PointVo.UP_FLOOR)
+		{
+			//弹出对话框
+		}
+		else
+		{
+			this.sendNotification(MsgConstant.SHOW_SELECT_NEXT_POINT_LAYER);
+		}
 		
 		//选择下楼梯
 		//关卡数累加

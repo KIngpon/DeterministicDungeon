@@ -12239,6 +12239,7 @@ var Laya=window.Laya=(function(window,document){
 			this.enemyCanSelectCount=0;
 			this.curEnemySelectCount=0;
 			this.curStagePo=null;
+			this.curPointVo=null;
 			this.enemyPoList=null;
 			GameStageMediator.__super.call(this);
 			this.mediatorName="GameStageMediator";
@@ -12274,11 +12275,13 @@ var Laya=window.Laya=(function(window,document){
 					break ;
 				case "SELECT_STAGE_COMPLETE":
 					this.stageProxy.initStartPointVo();
+					this.curPointVo=this.stageProxy.curPointVo;
 					this.gameStage.updateStageBg(this.curStagePo,this.stageProxy);
 					this.gameStage.playerMove(250,1000,Handler.create(this,this.playerMoveComplete));
 					break ;
 				case "SELECT_NEXT_POINT":
 					this.initData();
+					this.curPointVo=this.stageProxy.curPointVo;
 					this.gameStage.initPlayer(this.playerVo);
 					this.gameStage.updateStageBg(this.curStagePo,this.stageProxy);
 					this.gameStage.playerMove(250,1000,Handler.create(this,this.playerMoveComplete));
@@ -12426,7 +12429,13 @@ var Laya=window.Laya=(function(window,document){
 		}
 
 		__proto.playerMoveOutComplete=function(){
-			this.sendNotification("SHOW_SELECT_NEXT_POINT_LAYER");
+			if (this.curPointVo.type==2){
+			}
+			else if (this.curPointVo.type==1){
+			}
+			else{
+				this.sendNotification("SHOW_SELECT_NEXT_POINT_LAYER");
+			}
 		}
 
 		/**
