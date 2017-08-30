@@ -18,5 +18,11 @@ public class MsgConstant
 	public static const SHOW_SELECT_NEXT_POINT_LAYER:String = "SHOW_SELECT_NEXT_POINT_LAYER";
 	//选择下一关
 	public static const SELECT_NEXT_POINT:String = "SELECT_NEXT_POINT";
+	//显示弹框
+	public static const SHOW_ALERT:String = "SHOW_ALERT";
+	//关闭弹框
+	public static const ALERT_CLOSE:String = "CLOSE_ALERT";
+	//弹框点击确定
+	public static const ALERT_CONFIRM:String = "ALERT_CONFIRM";
 }
 }
