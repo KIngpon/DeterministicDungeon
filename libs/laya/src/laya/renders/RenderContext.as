@@ -364,8 +364,8 @@ package laya.renders {
 			this.ctx.globalAlpha = args[0];
 		}
 		
-		public function fillWords(words:Vector.<HTMLChar>, x:Number, y:Number, font:String, color:String):void {
-			this.ctx.fillWords(words, x, y, font, color);
+		public function fillWords(words:Vector.<HTMLChar>, x:Number, y:Number, font:String, color:String,underLine:int=0):void {
+			this.ctx.fillWords(words, x, y, font, color,underLine);
 		}
 		/*** @private */
 		public function fillBorderWords(words:Vector.<HTMLChar>, x:Number, y:Number, font:String, fillColor:String, borderColor:String, lineWidth:int):void {	

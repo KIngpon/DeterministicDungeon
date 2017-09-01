@@ -12,6 +12,7 @@ package laya.d3.shader {
 	import laya.webgl.WebGL;
 	import laya.webgl.WebGLContext;
 	import laya.webgl.shader.BaseShader;
+	import laya.webgl.utils.Buffer;
 	
 	public class Shader3D extends BaseShader {
 		/*[DISABLE-ADD-VARIABLE-DEFAULT-VALUE]*/
@@ -114,7 +115,6 @@ package laya.d3.shader {
 		}
 		
 		override protected function recreateResource():void {
-			startCreate();
 			_compile();
 			completeCreate();
 			memorySize = 0;//忽略尺寸尺寸
@@ -283,9 +283,12 @@ package laya.d3.shader {
 		
 		private function _attribute(one:*, value:*):int {
 			var gl:WebGLContext = WebGL.mainContext;
-			gl.enableVertexAttribArray(one.location);
-			gl.vertexAttribPointer(one.location, value[0], value[1], value[2], value[3], value[4]);
-			return 2;
+			var enableAtributes:Array = Buffer._enableAtributes;
+			var location:int = one.location;
+			(enableAtributes[location]) || (gl.enableVertexAttribArray(location));
+			gl.vertexAttribPointer(location, value[0], value[1], value[2], value[3], value[4]);
+			enableAtributes[location] = Buffer._bindVertexBuffer;
+			return 1;
 		}
 		
 		private function _uniform1f(one:*, value:*):int {
@@ -695,11 +698,5 @@ package laya.d3.shader {
 			i += 2;
 			return i;
 		}
-		
-		override public function dispose():void {
-			resourceManager.removeResource(this);
-			super.dispose();
-		}
-	
 	}
 }

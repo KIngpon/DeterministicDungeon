@@ -147,6 +147,7 @@ package laya.d3.resource.models {
 			var bufferData:Object = data[0];
 			var textureMap:Object = data[1];
 			MeshReader.read(bufferData as ArrayBuffer, this, _materials, _subMeshes, textureMap);
+			completeCreate();//TODO:应该和解析函数绑定
 			_endLoaded();
 		}
 		
@@ -167,22 +168,24 @@ package laya.d3.resource.models {
 			return _subMeshes.length;
 		}
 		
+		/**
+		 * @inheritDoc
+		 */
 		override public function getRenderElementsCount():int {
 			return _subMeshes.length;
 		}
 		
+		/**
+		 * @inheritDoc
+		 */
 		override public function getRenderElement(index:int):IRenderable {
 			return _subMeshes[index];
 		}
 		
 		/**
-		 * <p>彻底清理资源。</p>
-		 * <p><b>注意：</b>会强制解锁清理。</p>
+		 * @inheritDoc
 		 */
-		override public function dispose():void {
-			_resourceManager.removeResource(this);
-			super.dispose();
-			
+		override protected function detoryResource():void {
 			for (var i:int = 0; i < _subMeshes.length; i++)
 				_subMeshes[i].dispose();
 			_materials = null;

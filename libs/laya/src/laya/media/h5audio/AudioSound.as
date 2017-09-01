@@ -42,7 +42,7 @@ package laya.media.h5audio {
 		}
 		
 		/**@private */
-		private static function _initMusicAudio():void
+		public static function _initMusicAudio():void
 		{
 			if (_musicAudio) return;
 			if (!_musicAudio) _musicAudio = Browser.createElement("audio") as Audio;
@@ -159,7 +159,7 @@ package laya.media.h5audio {
 			if ( Render.isConchApp ){
 				if ( !tAd ){
 					tAd = Browser.createElement("audio") as Audio;
-					tAd.src = ad.src;
+					tAd.src = this.url;
 				}
 			}
 			else {
@@ -167,6 +167,7 @@ package laya.media.h5audio {
 				{
 					_initMusicAudio();
 					tAd = _musicAudio;		
+					tAd.src = url;
 				}else
 				{
 					tAd = tAd ? tAd : ad.cloneNode(true);

@@ -85,7 +85,6 @@ package laya.d3.resource.models {
 		 */
 		override protected function recreateResource():void {//TODO:通过索引改为顶点复用
 			//(this._released) || (dispose());//如果已存在，则释放资源
-			startCreate();
 			_numberVertices = 36;
 			_numberIndices = 36;
 			var indices:Uint16Array = new Uint16Array(_numberIndices);

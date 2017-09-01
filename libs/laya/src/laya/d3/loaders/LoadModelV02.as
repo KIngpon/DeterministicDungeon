@@ -220,12 +220,14 @@ package laya.d3.loaders {
 			submesh._vertexCount = vbLength;
 			
 			var ibStart:int = _readData.getUint32();
-			var ibLength:int = _readData.getUint32();
-			submesh._indexBuffer = _mesh._indexBuffer;
+			var ibCount:int = _readData.getUint32();
+			var indexBuffer:IndexBuffer3D = _mesh._indexBuffer;
+			submesh._indexBuffer = indexBuffer;
 			submesh._indexStart = ibStart;
-			submesh._indexCount = ibLength;
-			var offset:int = _DATA.offset;
+			submesh._indexCount = ibCount;
+			submesh._indices = new Uint16Array(indexBuffer.getData().buffer, ibStart * 2, ibCount);
 			
+			var offset:int = _DATA.offset;
 			var subIndexBufferStart:Vector.<int> = submesh._subIndexBufferStart;
 			var subIndexBufferCount:Vector.<int> = submesh._subIndexBufferCount;
 			var boneIndicesList:Vector.<Uint8Array> = submesh._boneIndicesList;
