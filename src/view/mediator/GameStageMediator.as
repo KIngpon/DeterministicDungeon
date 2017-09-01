@@ -14,6 +14,7 @@ import model.proxy.EnemyProxy;
 import model.proxy.PlayerProxy;
 import model.proxy.ResProxy;
 import model.proxy.StageProxy;
+import model.vo.AlertVo;
 import model.vo.EnemyVo;
 import model.vo.PlayerVo;
 import model.vo.PointVo;
@@ -100,6 +101,8 @@ public class GameStageMediator extends Mediator
 		vect.push(MsgConstant.START_FIGHT);
 		vect.push(MsgConstant.SELECT_STAGE_COMPLETE);
 		vect.push(MsgConstant.SELECT_NEXT_POINT);
+		vect.push(MsgConstant.CLOSE_ALERT);
+		vect.push(MsgConstant.ALERT_CONFIRM);
 		return vect;
 	}
 	
@@ -124,6 +127,7 @@ public class GameStageMediator extends Mediator
 				this.gameStage.updateStageBg(this.curStagePo, this.stageProxy);
 				this.gameStage.miniMap.updateAllPointPassView(this.stageProxy.pointsAry, this.stageProxy.curPointVo);
 				this.gameStage.miniMap.updateAllPointTypeView(this.stageProxy.pointsAry);
+				this.gameStage.miniMap.setTitle(this.curStagePo.name + " " + this.curStagePo.points + "-" + this.stageProxy.getCurStagePointsCount());
 				this.gameStage.playerMove(250, 1000, Handler.create(this, playerMoveComplete));
 				break;
 			case MsgConstant.SELECT_NEXT_POINT:
@@ -134,6 +138,42 @@ public class GameStageMediator extends Mediator
 				this.gameStage.miniMap.updateAllPointPassView(this.stageProxy.pointsAry, this.stageProxy.curPointVo);
 				this.gameStage.miniMap.updateAllPointTypeView(this.stageProxy.pointsAry);
 				this.gameStage.playerMove(250, 1000, Handler.create(this, playerMoveComplete));
+				break;
+			case MsgConstant.CLOSE_ALERT:
+				this.sendNotification(MsgConstant.SHOW_SELECT_NEXT_POINT_LAYER);
+				break;
+			case MsgConstant.ALERT_CONFIRM:
+				//选择下楼梯
+				//关卡数累加
+				var aVo:AlertVo = notification.body as AlertVo;
+				if (aVo.type == AlertVo.DOWN_FLOOR)
+				{
+					this.stageProxy.curPoints++;
+					if (this.stageProxy.curPoints > this.stageProxy.getCurStagePointsCount())
+					{
+						this.stageProxy.curPoints = 1;
+						this.stageProxy.curLevel++;
+						if (this.stageProxy.curLevel > this.stageProxy.totalLevel)
+						{
+							trace("通关了");
+							//TODO 过关动画
+							return;
+						}
+					}
+				}
+				else if (aVo.type == AlertVo.UP_FLOOR)
+				{
+					this.stageProxy.curPoints--;
+					if (this.stageProxy.curPoints <= 0)
+					{
+						this.stageProxy.curPoints = 1;
+						this.stageProxy.curLevel--;
+					}
+				}
+				trace("aVo.type", aVo.type);
+				trace("this.stageProxy.curPoints, this.stageProxy.curLevel");
+				trace(this.stageProxy.curPoints, this.stageProxy.curLevel);
+				this.sendNotification(MsgConstant.START_FIGHT);
 				break;
 			default:
 				break;
@@ -311,36 +351,29 @@ public class GameStageMediator extends Mediator
 		//下一关
 		//TODO 选择下一个关卡点
 		//胜利
-		
+		var aVo:AlertVo;
 		if (this.curPointVo.type == PointVo.DOWN_FLOOR)
 		{
 			//弹出对话框
+			aVo = new AlertVo();
+			aVo.type = AlertVo.DOWN_FLOOR;
+			aVo.content = "前往下一层？";
+			this.sendNotification(MsgConstant.SHOW_ALERT, aVo);
 		}
-		else if (this.curPointVo.type == PointVo.UP_FLOOR)
+		else if (!this.stageProxy.isFirstPointVo && 
+				  this.stageProxy.curLevel > 1 &&
+				  this.curPointVo.type == PointVo.UP_FLOOR)
 		{
 			//弹出对话框
+			aVo = new AlertVo();
+			aVo.type = AlertVo.UP_FLOOR;
+			aVo.content = "前往上一层？";
+			this.sendNotification(MsgConstant.SHOW_ALERT, aVo);
 		}
 		else
 		{
 			this.sendNotification(MsgConstant.SHOW_SELECT_NEXT_POINT_LAYER);
 		}
-		
-		//选择下楼梯
-		//关卡数累加
-		
-		//this.stageProxy.curPoints++;
-		//if (this.stageProxy.curPoints > this.stageProxy.getCurStagePointsCount())
-		//{
-			//this.stageProxy.curPoints = 1;
-			//this.stageProxy.curLevel++;
-			//if (this.stageProxy.curLevel > this.stageProxy.totalLevel)
-			//{
-				//trace("通关了");
-				////TODO 过关动画
-				//return;
-			//}
-		//}
-		//this.sendNotification(MsgConstant.START_FIGHT);
 	}
 	
 	/**

@@ -216,6 +216,16 @@ public class MiniMap extends Sprite
 		}
 	}
 	
+	/**
+	 * 设置标题
+	 * @param	str	内容
+	 */
+	public function setTitle(str:String):void
+	{
+		if (!this.ui) return;
+		this.ui.stageNumTxt.text = str;
+	}
+	
 	override public function get width():Number{ return this.ui.width; }
 	override public function set width(value:Number):void 
 	{

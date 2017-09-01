@@ -1,11 +1,11 @@
 {
     "x":0,
     "type":"View",
-    "selectedBox":1,
+    "selectedBox":10,
     "selecteID":6,
-    "props":{"width":1136,"sceneColor":"#000000","height":640},
+    "props":{"width":1136,"var":"contentTxt","sceneColor":"#ffffff","height":640},
     "nodeParent":-1,
-    "label":"View",
+    "label":"View(contentTxt)",
     "isOpen":true,
     "isDirectory":true,
     "isAniNode":true,
@@ -19,6 +19,46 @@
         }],
     "compId":1,
     "child":[
+        {
+            "x":15,
+            "type":"Sprite",
+            "props":{"y":0,"x":0,"alpha":0.5},
+            "nodeParent":1,
+            "label":"Sprite",
+            "isOpen":true,
+            "isDirectory":true,
+            "isAniNode":true,
+            "hasChild":true,
+            "frames":[
+                {
+                    "type":1,
+                    "props":{},
+                    "frame":0,
+                    "__InPool":false
+                }],
+            "compId":12,
+            "child":[
+                {
+                    "x":30,
+                    "type":"Rect",
+                    "props":{"y":0,"x":0,"width":1136,"lineWidth":1,"height":640,"fillColor":"#000000"},
+                    "nodeParent":12,
+                    "label":"Rect",
+                    "isDirectory":false,
+                    "isAniNode":true,
+                    "hasChild":false,
+                    "frames":[
+                        {
+                            "type":1,
+                            "props":{"width":100,"lineWidth":1,"height":100,"fillColor":"#ff0000"},
+                            "frame":0,
+                            "__InPool":false
+                        }],
+                    "compId":11,
+                    "child":[
+                        ]
+                }]
+        },
         {
             "x":15,
             "type":"Sprite",
@@ -41,9 +81,9 @@
                 {
                     "x":30,
                     "type":"Image",
-                    "props":{"y":-5.684341886080802e-14,"x":5.684341886080802e-14,"skin":"frame/alertFrame.png"},
+                    "props":{"y":-5.684341886080802e-14,"x":5.684341886080802e-14,"var":"txt","skin":"frame/alertFrame.png"},
                     "nodeParent":10,
-                    "label":"Image",
+                    "label":"Image(txt)",
                     "isDirectory":false,
                     "isAniNode":true,
                     "hasChild":false,
@@ -76,7 +116,8 @@
                         }],
                     "compId":3,
                     "child":[
-                        ]
+                        ],
+                    "$HIDDEN":true
                 },
                 {
                     "x":30,
@@ -116,7 +157,8 @@
                         }],
                     "compId":6,
                     "child":[
-                        ]
+                        ],
+                    "$HIDDEN":false
                 }]
         }],
     "animations":[

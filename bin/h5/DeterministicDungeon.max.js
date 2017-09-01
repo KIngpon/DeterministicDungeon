@@ -430,6 +430,9 @@ var Laya=window.Laya=(function(window,document){
 		MsgConstant.LOAD_PROGRESS_FIGHT_STAGE="LOAD_PROGRESS_FIGHT_STAGE";
 		MsgConstant.SHOW_SELECT_NEXT_POINT_LAYER="SHOW_SELECT_NEXT_POINT_LAYER";
 		MsgConstant.SELECT_NEXT_POINT="SELECT_NEXT_POINT";
+		MsgConstant.SHOW_ALERT="SHOW_ALERT";
+		MsgConstant.ALERT_CLOSE="CLOSE_ALERT";
+		MsgConstant.ALERT_CONFIRM="ALERT_CONFIRM";
 		return MsgConstant;
 	})()
 
@@ -669,6 +672,24 @@ var Laya=window.Laya=(function(window,document){
 		*/
 		__proto.initData=function(){}
 		return Proxy;
+	})()
+
+
+	/**
+	*...弹框数据
+	*@author Kanon
+	*/
+	//class model.vo.AlertVo
+	var AlertVo=(function(){
+		function AlertVo(){
+			this.type=0;
+			this.content=null;
+		}
+
+		__class(AlertVo,'model.vo.AlertVo');
+		AlertVo.DOWN_FLOOR=1;
+		AlertVo.UP_FLOOR=2;
+		return AlertVo;
 	})()
 
 
@@ -10470,6 +10491,7 @@ var Laya=window.Laya=(function(window,document){
 			this.facade.registerMediator(new SelectStageMediator());
 			this.facade.registerMediator(new LoadingMediator());
 			this.facade.registerMediator(new SelectNextPointMediator());
+			this.facade.registerMediator(new AlertMediator());
 		}
 
 		return ViewCommand;
@@ -12218,6 +12240,72 @@ var Laya=window.Laya=(function(window,document){
 
 
 	/**
+	*...alert中介
+	*@author Kanon
+	*/
+	//class view.mediator.AlertMediator extends mvc.Mediator
+	var AlertMediator=(function(_super){
+		function AlertMediator(){
+			this.alertUI=null;
+			this.aVo=null;
+			AlertMediator.__super.call(this);
+			this.mediatorName="AlertMediator";
+		}
+
+		__class(AlertMediator,'view.mediator.AlertMediator',_super);
+		var __proto=AlertMediator.prototype;
+		__proto.listNotificationInterests=function(){
+			var vect=[];
+			vect.push("SHOW_ALERT");
+			return vect;
+		}
+
+		__proto.handleNotification=function(notification){
+			switch (notification.notificationName){
+				case "SHOW_ALERT":
+					this.aVo=notification.body;
+					this.createUI(this.aVo.content);
+					break ;
+				}
+		}
+
+		/**
+		*创建UI
+		*/
+		__proto.createUI=function(str){
+			if (!this.alertUI){
+				this.alertUI=new AlertLayerUI();
+				Layer.GAME_ALERT.addChild(this.alertUI);
+			}
+			this.alertUI.contentTxt.text=str;
+			this.alertUI.closeBtn.on("click",this,this.closeBtnClickHandler);
+			this.alertUI.okBtn.on("click",this,this.okBtnClickHandler);
+		}
+
+		/**
+		*删除UI
+		*/
+		__proto.removeUI=function(){
+			if (this.alertUI)this.alertUI.removeSelf();
+			this.alertUI=null;
+		}
+
+		__proto.closeBtnClickHandler=function(){
+			this.removeUI();
+			this.sendNotification(MsgConstant.CLOSE_ALERT);
+		}
+
+		__proto.okBtnClickHandler=function(){
+			this.removeUI();
+			this.sendNotification("ALERT_CONFIRM",this.aVo);
+		}
+
+		AlertMediator.NAME="AlertMediator";
+		return AlertMediator;
+	})(Mediator)
+
+
+	/**
 	*...战斗系统中介
 	*战斗流程
 	*1.1.选择地形
@@ -12273,6 +12361,8 @@ var Laya=window.Laya=(function(window,document){
 			vect.push("START_FIGHT");
 			vect.push("SELECT_STAGE_COMPLETE");
 			vect.push("SELECT_NEXT_POINT");
+			vect.push(MsgConstant.CLOSE_ALERT);
+			vect.push("ALERT_CONFIRM");
 			return vect;
 		}
 
@@ -12295,6 +12385,7 @@ var Laya=window.Laya=(function(window,document){
 					this.gameStage.updateStageBg(this.curStagePo,this.stageProxy);
 					this.gameStage.miniMap.updateAllPointPassView(this.stageProxy.pointsAry,this.stageProxy.curPointVo);
 					this.gameStage.miniMap.updateAllPointTypeView(this.stageProxy.pointsAry);
+					this.gameStage.miniMap.setTitle(this.curStagePo.name+" "+this.curStagePo.points+"-"+this.stageProxy.getCurStagePointsCount());
 					this.gameStage.playerMove(250,1000,Handler.create(this,this.playerMoveComplete));
 					break ;
 				case "SELECT_NEXT_POINT":
@@ -12305,6 +12396,34 @@ var Laya=window.Laya=(function(window,document){
 					this.gameStage.miniMap.updateAllPointPassView(this.stageProxy.pointsAry,this.stageProxy.curPointVo);
 					this.gameStage.miniMap.updateAllPointTypeView(this.stageProxy.pointsAry);
 					this.gameStage.playerMove(250,1000,Handler.create(this,this.playerMoveComplete));
+					break ;
+				case MsgConstant.CLOSE_ALERT:
+					this.sendNotification("SHOW_SELECT_NEXT_POINT_LAYER");
+					break ;
+				case "ALERT_CONFIRM":;
+					var aVo=notification.body;
+					if (aVo.type==1){
+						this.stageProxy.curPoints++;
+						if (this.stageProxy.curPoints > this.stageProxy.getCurStagePointsCount()){
+							this.stageProxy.curPoints=1;
+							this.stageProxy.curLevel++;
+							if (this.stageProxy.curLevel > this.stageProxy.totalLevel){
+								console.log("通关了");
+								return;
+							}
+						}
+					}
+					else if (aVo.type==2){
+						this.stageProxy.curPoints--;
+						if (this.stageProxy.curPoints <=0){
+							this.stageProxy.curPoints=1;
+							this.stageProxy.curLevel--;
+						}
+					}
+					console.log("aVo.type",aVo.type);
+					console.log("this.stageProxy.curPoints, this.stageProxy.curLevel");
+					console.log(this.stageProxy.curPoints,this.stageProxy.curLevel);
+					this.sendNotification("START_FIGHT");
 					break ;
 				default :
 					break ;
@@ -12449,9 +12568,20 @@ var Laya=window.Laya=(function(window,document){
 		}
 
 		__proto.playerMoveOutComplete=function(){
+			var aVo;
 			if (this.curPointVo.type==2){
+				aVo=new AlertVo();
+				aVo.type=1;
+				aVo.content="前往下一层？";
+				this.sendNotification("SHOW_ALERT",aVo);
 			}
-			else if (this.curPointVo.type==1){
+			else if (!this.stageProxy.isFirstPointVo &&
+			this.stageProxy.curLevel > 1 &&
+			this.curPointVo.type==1){
+				aVo=new AlertVo();
+				aVo.type=2;
+				aVo.content="前往上一层？";
+				this.sendNotification("SHOW_ALERT",aVo);
 			}
 			else{
 				this.sendNotification("SHOW_SELECT_NEXT_POINT_LAYER");
@@ -18374,6 +18504,15 @@ var Laya=window.Laya=(function(window,document){
 					this.bossImg.visible=true;
 				}
 			}
+		}
+
+		/**
+		*设置标题
+		*@param str 内容
+		*/
+		__proto.setTitle=function(str){
+			if (!this.ui)return;
+			this.ui.stageNumTxt.text=str;
 		}
 
 		__getset(0,__proto,'width',function(){return this.ui.width;},function(value){
@@ -30915,6 +31054,30 @@ var Laya=window.Laya=(function(window,document){
 	})(FrameAnimation)
 
 
+	//class ui.GameStage.AlertLayerUI extends laya.ui.View
+	var AlertLayerUI=(function(_super){
+		function AlertLayerUI(){
+			this.txt=null;
+			this.okBtn=null;
+			this.closeBtn=null;
+			this.contentTxt=null;
+			AlertLayerUI.__super.call(this);
+		}
+
+		__class(AlertLayerUI,'ui.GameStage.AlertLayerUI',_super);
+		var __proto=AlertLayerUI.prototype;
+		__proto.createChildren=function(){
+			laya.ui.Component.prototype.createChildren.call(this);
+			this.createView(AlertLayerUI.uiView);
+		}
+
+		__static(AlertLayerUI,
+		['uiView',function(){return this.uiView={"type":"View","props":{"width":1136,"height":640},"child":[{"type":"Sprite","props":{"y":0,"x":0,"alpha":0.5},"child":[{"type":"Rect","props":{"y":0,"x":0,"width":1136,"lineWidth":1,"height":640,"fillColor":"#000000"}}]},{"type":"Sprite","props":{"y":201.5,"x":358.5,"width":419,"height":237},"child":[{"type":"Image","props":{"y":-5.684341886080802e-14,"x":5.684341886080802e-14,"var":"txt","skin":"frame/alertFrame.png"}},{"type":"Button","props":{"y":116.49999999999994,"x":92.24999999999989,"var":"okBtn","stateNum":"1","skin":"btn/okBtn.png","scaleY":1.5,"scaleX":1.5}},{"type":"Button","props":{"y":122.49999999999989,"x":220.74999999999977,"var":"closeBtn","stateNum":"1","skin":"btn/closeBtn.png","scaleY":1.5,"scaleX":1.5}},{"type":"Label","props":{"y":27.5,"x":139.49999999999977,"var":"contentTxt","text":"前往下一层","fontSize":28,"font":"Microsoft YaHei","color":"#ffffff","bold":false}}]}]};}
+		]);
+		return AlertLayerUI;
+	})(View)
+
+
 	//class ui.GameStage.LoadingLayerUI extends laya.ui.View
 	var LoadingLayerUI=(function(_super){
 		function LoadingLayerUI(){
@@ -30940,6 +31103,7 @@ var Laya=window.Laya=(function(window,document){
 	//class ui.GameStage.MiniMapUI extends laya.ui.View
 	var MiniMapUI=(function(_super){
 		function MiniMapUI(){
+			this.stageNumTxt=null;
 			this.content=null;
 			this.downStage=null;
 			this.upStage=null;
@@ -30957,7 +31121,7 @@ var Laya=window.Laya=(function(window,document){
 		}
 
 		__static(MiniMapUI,
-		['uiView',function(){return this.uiView={"type":"View","props":{"width":160,"height":200},"child":[{"type":"Label","props":{"y":114.00000000000001,"x":31,"width":98,"text":"泥土 1-1","height":25,"fontSize":26,"font":"Microsoft YaHei","color":"#ffffff"}},{"type":"Sprite","props":{"width":160,"var":"content","scaleY":1,"scaleX":1},"child":[{"type":"Image","props":{"y":6.25,"x":15,"width":130,"skin":"frame/smallMapBg.png","height":110}},{"type":"Sprite","props":{"y":13,"x":25,"width":30,"scaleY":1,"scaleX":1,"name":"r1","height":25},"child":[{"type":"Sprite","props":{"y":0,"x":0,"width":30,"name":"bg","height":25},"child":[{"type":"Rect","props":{"width":30,"lineWidth":1,"height":25,"fillColor":"#1D1E23"}}]},{"type":"Sprite","props":{"y":7.5,"x":-10,"width":10,"name":"leftSpt","height":10},"child":[{"type":"Rect","props":{"width":10,"lineWidth":1,"height":10,"fillColor":"#1D1E23"}}]},{"type":"Sprite","props":{"y":-10,"x":10,"width":10,"name":"upSpt","height":10},"child":[{"type":"Rect","props":{"y":0,"x":0,"width":10,"lineWidth":1,"height":10,"fillColor":"#1D1E23"}}]},{"type":"Sprite","props":{"y":25,"x":10,"width":10,"name":"downSpt","height":10},"child":[{"type":"Rect","props":{"y":0,"x":0,"width":10,"lineWidth":1,"height":10,"fillColor":"#1D1E23"}}]},{"type":"Sprite","props":{"y":7.5,"x":30,"width":10,"name":"rightSpt","height":10},"child":[{"type":"Rect","props":{"y":0,"x":0,"width":10,"lineWidth":1,"height":10,"fillColor":"#1D1E23"}}]}]},{"type":"Sprite","props":{"y":48,"x":25,"width":30,"scaleY":1,"scaleX":1,"name":"r2","height":25},"child":[{"type":"Sprite","props":{"y":0,"x":0,"width":30,"name":"bg","height":25},"child":[{"type":"Rect","props":{"width":30,"lineWidth":1,"height":25,"fillColor":"#1D1E23"}}]},{"type":"Sprite","props":{"y":7.5,"x":-10,"width":10,"name":"leftSpt","height":10},"child":[{"type":"Rect","props":{"width":10,"lineWidth":1,"height":10,"fillColor":"#1D1E23"}}]},{"type":"Sprite","props":{"y":-10,"x":10,"width":10,"name":"upSpt","height":10},"child":[{"type":"Rect","props":{"y":0,"x":0,"width":10,"lineWidth":1,"height":10,"fillColor":"#1D1E23"}}]},{"type":"Sprite","props":{"y":25,"x":10,"width":10,"name":"downSpt","height":10},"child":[{"type":"Rect","props":{"y":0,"x":0,"width":10,"lineWidth":1,"height":10,"fillColor":"#1D1E23"}}]},{"type":"Sprite","props":{"y":7.5,"x":30,"width":10,"name":"rightSpt","height":10},"child":[{"type":"Rect","props":{"y":0,"x":0,"width":10,"lineWidth":1,"height":10,"fillColor":"#1D1E23"}}]}]},{"type":"Sprite","props":{"y":83,"x":25,"width":30,"scaleY":1,"scaleX":1,"name":"r3","height":25},"child":[{"type":"Sprite","props":{"y":0,"x":0,"width":30,"name":"bg","height":25},"child":[{"type":"Rect","props":{"width":30,"lineWidth":1,"height":25,"fillColor":"#1D1E23"}}]},{"type":"Sprite","props":{"y":7.5,"x":-10,"width":10,"name":"leftSpt","height":10},"child":[{"type":"Rect","props":{"width":10,"lineWidth":1,"height":10,"fillColor":"#1D1E23"}}]},{"type":"Sprite","props":{"y":-10,"x":10,"width":10,"name":"upSpt","height":10},"child":[{"type":"Rect","props":{"y":0,"x":0,"width":10,"lineWidth":1,"height":10,"fillColor":"#1D1E23"}}]},{"type":"Sprite","props":{"y":25,"x":10,"width":10,"name":"downSpt","height":10},"child":[{"type":"Rect","props":{"y":0,"x":0,"width":10,"lineWidth":1,"height":10,"fillColor":"#1D1E23"}}]},{"type":"Sprite","props":{"y":7.5,"x":30,"width":10,"name":"rightSpt","height":10},"child":[{"type":"Rect","props":{"y":0,"x":0,"width":10,"lineWidth":1,"height":10,"fillColor":"#1D1E23"}}]}]},{"type":"Sprite","props":{"y":13,"x":65,"width":30,"scaleY":1,"scaleX":1,"name":"r4","height":25},"child":[{"type":"Sprite","props":{"y":0,"x":0,"width":30,"name":"bg","height":25},"child":[{"type":"Rect","props":{"width":30,"lineWidth":1,"height":25,"fillColor":"#1D1E23"}}]},{"type":"Sprite","props":{"y":7.5,"x":-10,"width":10,"name":"leftSpt","height":10},"child":[{"type":"Rect","props":{"width":10,"lineWidth":1,"height":10,"fillColor":"#1D1E23"}}]},{"type":"Sprite","props":{"y":-10,"x":10,"width":10,"name":"upSpt","height":10},"child":[{"type":"Rect","props":{"y":0,"x":0,"width":10,"lineWidth":1,"height":10,"fillColor":"#1D1E23"}}]},{"type":"Sprite","props":{"y":25,"x":10,"width":10,"name":"downSpt","height":10},"child":[{"type":"Rect","props":{"y":0,"x":0,"width":10,"lineWidth":1,"height":10,"fillColor":"#1D1E23"}}]},{"type":"Sprite","props":{"y":7.5,"x":30,"width":10,"name":"rightSpt","height":10},"child":[{"type":"Rect","props":{"y":0,"x":0,"width":10,"lineWidth":1,"height":10,"fillColor":"#1D1E23"}}]}]},{"type":"Sprite","props":{"y":48,"x":65,"width":30,"scaleY":1,"scaleX":1,"name":"r5","height":25},"child":[{"type":"Sprite","props":{"y":0,"x":0,"width":30,"name":"bg","height":25},"child":[{"type":"Rect","props":{"width":30,"lineWidth":1,"height":25,"fillColor":"#1D1E23"}}]},{"type":"Sprite","props":{"y":7.5,"x":-10,"width":10,"name":"leftSpt","height":10},"child":[{"type":"Rect","props":{"width":10,"lineWidth":1,"height":10,"fillColor":"#1D1E23"}}]},{"type":"Sprite","props":{"y":-10,"x":10,"width":10,"name":"upSpt","height":10},"child":[{"type":"Rect","props":{"y":0,"x":0,"width":10,"lineWidth":1,"height":10,"fillColor":"#1D1E23"}}]},{"type":"Sprite","props":{"y":25,"x":10,"width":10,"name":"downSpt","height":10},"child":[{"type":"Rect","props":{"y":0,"x":0,"width":10,"lineWidth":1,"height":10,"fillColor":"#1D1E23"}}]},{"type":"Sprite","props":{"y":7.5,"x":30,"width":10,"name":"rightSpt","height":10},"child":[{"type":"Rect","props":{"y":0,"x":0,"width":10,"lineWidth":1,"height":10,"fillColor":"#1D1E23"}}]}]},{"type":"Sprite","props":{"y":83,"x":65,"width":30,"scaleY":1,"scaleX":1,"name":"r6","height":25},"child":[{"type":"Sprite","props":{"y":0,"x":0,"width":30,"name":"bg","height":25},"child":[{"type":"Rect","props":{"width":30,"lineWidth":1,"height":25,"fillColor":"#1D1E23"}}]},{"type":"Sprite","props":{"y":7.5,"x":-10,"width":10,"name":"leftSpt","height":10},"child":[{"type":"Rect","props":{"width":10,"lineWidth":1,"height":10,"fillColor":"#1D1E23"}}]},{"type":"Sprite","props":{"y":-10,"x":10,"width":10,"name":"upSpt","height":10},"child":[{"type":"Rect","props":{"y":0,"x":0,"width":10,"lineWidth":1,"height":10,"fillColor":"#1D1E23"}}]},{"type":"Sprite","props":{"y":25,"x":10,"width":10,"name":"downSpt","height":10},"child":[{"type":"Rect","props":{"y":0,"x":0,"width":10,"lineWidth":1,"height":10,"fillColor":"#1D1E23"}}]},{"type":"Sprite","props":{"y":7.5,"x":30,"width":10,"name":"rightSpt","height":10},"child":[{"type":"Rect","props":{"y":0,"x":0,"width":10,"lineWidth":1,"height":10,"fillColor":"#1D1E23"}}]}]},{"type":"Sprite","props":{"y":13,"x":105,"width":30,"scaleY":1,"scaleX":1,"name":"r7","height":25},"child":[{"type":"Sprite","props":{"y":0,"x":0,"width":30,"name":"bg","height":25},"child":[{"type":"Rect","props":{"width":30,"lineWidth":1,"height":25,"fillColor":"#1D1E23"}}]},{"type":"Sprite","props":{"y":7.5,"x":-10,"width":10,"name":"leftSpt","height":10},"child":[{"type":"Rect","props":{"width":10,"lineWidth":1,"height":10,"fillColor":"#1D1E23"}}]},{"type":"Sprite","props":{"y":-10,"x":10,"width":10,"name":"upSpt","height":10},"child":[{"type":"Rect","props":{"y":0,"x":0,"width":10,"lineWidth":1,"height":10,"fillColor":"#1D1E23"}}]},{"type":"Sprite","props":{"y":25,"x":10,"width":10,"name":"downSpt","height":10},"child":[{"type":"Rect","props":{"y":0,"x":0,"width":10,"lineWidth":1,"height":10,"fillColor":"#1D1E23"}}]},{"type":"Sprite","props":{"y":7.5,"x":30,"width":10,"name":"rightSpt","height":10},"child":[{"type":"Rect","props":{"y":0,"x":0,"width":10,"lineWidth":1,"height":10,"fillColor":"#1D1E23"}}]}]},{"type":"Sprite","props":{"y":48,"x":105,"width":30,"scaleY":1,"scaleX":1,"name":"r8","height":25},"child":[{"type":"Sprite","props":{"y":0,"x":0,"width":30,"name":"bg","height":25},"child":[{"type":"Rect","props":{"width":30,"lineWidth":1,"height":25,"fillColor":"#1D1E23"}}]},{"type":"Sprite","props":{"y":7.5,"x":-10,"width":10,"name":"leftSpt","height":10},"child":[{"type":"Rect","props":{"width":10,"lineWidth":1,"height":10,"fillColor":"#1D1E23"}}]},{"type":"Sprite","props":{"y":-10,"x":10,"width":10,"name":"upSpt","height":10},"child":[{"type":"Rect","props":{"y":0,"x":0,"width":10,"lineWidth":1,"height":10,"fillColor":"#1D1E23"}}]},{"type":"Sprite","props":{"y":25,"x":10,"width":10,"name":"downSpt","height":10},"child":[{"type":"Rect","props":{"y":0,"x":0,"width":10,"lineWidth":1,"height":10,"fillColor":"#1D1E23"}}]},{"type":"Sprite","props":{"y":7.5,"x":30,"width":10,"name":"rightSpt","height":10},"child":[{"type":"Rect","props":{"y":0,"x":0,"width":10,"lineWidth":1,"height":10,"fillColor":"#1D1E23"}}]}]},{"type":"Sprite","props":{"y":83,"x":105,"width":30,"scaleY":1,"scaleX":1,"name":"r9","height":25},"child":[{"type":"Sprite","props":{"y":0,"x":0,"width":30,"name":"bg","height":25},"child":[{"type":"Rect","props":{"width":30,"lineWidth":1,"height":25,"fillColor":"#1D1E23"}}]},{"type":"Sprite","props":{"y":7.5,"x":-10,"width":10,"name":"leftSpt","height":10},"child":[{"type":"Rect","props":{"width":10,"lineWidth":1,"height":10,"fillColor":"#1D1E23"}}]},{"type":"Sprite","props":{"y":-10,"x":10,"width":10,"name":"upSpt","height":10},"child":[{"type":"Rect","props":{"y":0,"x":0,"width":10,"lineWidth":1,"height":10,"fillColor":"#1D1E23"}}]},{"type":"Sprite","props":{"y":25,"x":10,"width":10,"name":"downSpt","height":10},"child":[{"type":"Rect","props":{"y":0,"x":0,"width":10,"lineWidth":1,"height":10,"fillColor":"#1D1E23"}}]},{"type":"Sprite","props":{"y":7.5,"x":30,"width":10,"name":"rightSpt","height":10},"child":[{"type":"Rect","props":{"y":0,"x":0,"width":10,"lineWidth":1,"height":10,"fillColor":"#1D1E23"}}]}]},{"type":"Sprite","props":{"y":13,"x":25,"width":30,"scaleY":1,"scaleX":1,"name":"sr1","height":25},"child":[{"type":"Sprite","props":{"y":0,"x":0,"width":30,"name":"bg","height":25},"child":[{"type":"Rect","props":{"width":30,"lineWidth":0,"height":25,"fillColor":"#FF9900"}}]},{"type":"Sprite","props":{"y":7.5,"x":-10,"width":10,"name":"leftSpt","height":10},"child":[{"type":"Rect","props":{"width":10,"lineWidth":0,"height":10,"fillColor":"#FF9900"}}]},{"type":"Sprite","props":{"y":-10,"x":10,"width":10,"name":"upSpt","height":10},"child":[{"type":"Rect","props":{"y":0,"x":0,"width":10,"lineWidth":0,"height":10,"fillColor":"#FF9900"}}]},{"type":"Sprite","props":{"y":25,"x":10,"width":10,"name":"downSpt","height":10},"child":[{"type":"Rect","props":{"y":0,"x":0,"width":10,"lineWidth":0,"height":10,"fillColor":"#FF9900"}}]},{"type":"Sprite","props":{"y":7.5,"x":30,"width":10,"name":"rightSpt","height":10},"child":[{"type":"Rect","props":{"y":0,"x":0,"width":10,"lineWidth":0,"height":10,"fillColor":"#FF9900"}}]}]},{"type":"Sprite","props":{"y":48,"x":25,"width":30,"scaleY":1,"scaleX":1,"name":"sr2","height":25},"child":[{"type":"Sprite","props":{"y":0,"x":0,"width":30,"name":"bg","height":25},"child":[{"type":"Rect","props":{"width":30,"lineWidth":0,"height":25,"fillColor":"#FF9900"}}]},{"type":"Sprite","props":{"y":7.5,"x":-10,"width":10,"name":"leftSpt","height":10},"child":[{"type":"Rect","props":{"width":10,"lineWidth":0,"height":10,"fillColor":"#FF9900"}}]},{"type":"Sprite","props":{"y":-10,"x":10,"width":10,"name":"upSpt","height":10},"child":[{"type":"Rect","props":{"y":0,"x":0,"width":10,"lineWidth":0,"height":10,"fillColor":"#FF9900"}}]},{"type":"Sprite","props":{"y":25,"x":10,"width":10,"name":"downSpt","height":10},"child":[{"type":"Rect","props":{"y":0,"x":0,"width":10,"lineWidth":0,"height":10,"fillColor":"#FF9900"}}]},{"type":"Sprite","props":{"y":7.5,"x":30,"width":10,"name":"rightSpt","height":10},"child":[{"type":"Rect","props":{"y":0,"x":0,"width":10,"lineWidth":0,"height":10,"fillColor":"#FF9900"}}]}]},{"type":"Sprite","props":{"y":83,"x":25,"width":30,"scaleY":1,"scaleX":1,"name":"sr3","height":25},"child":[{"type":"Sprite","props":{"y":0,"x":0,"width":30,"name":"bg","height":25},"child":[{"type":"Rect","props":{"width":30,"lineWidth":0,"height":25,"fillColor":"#FF9900"}}]},{"type":"Sprite","props":{"y":7.5,"x":-10,"width":10,"name":"leftSpt","height":10},"child":[{"type":"Rect","props":{"width":10,"lineWidth":0,"height":10,"fillColor":"#FF9900"}}]},{"type":"Sprite","props":{"y":-10,"x":10,"width":10,"name":"upSpt","height":10},"child":[{"type":"Rect","props":{"y":0,"x":0,"width":10,"lineWidth":0,"height":10,"fillColor":"#FF9900"}}]},{"type":"Sprite","props":{"y":25,"x":10,"width":10,"name":"downSpt","height":10},"child":[{"type":"Rect","props":{"y":0,"x":0,"width":10,"lineWidth":0,"height":10,"fillColor":"#FF9900"}}]},{"type":"Sprite","props":{"y":7.5,"x":30,"width":10,"name":"rightSpt","height":10},"child":[{"type":"Rect","props":{"y":0,"x":0,"width":10,"lineWidth":0,"height":10,"fillColor":"#FF9900"}}]}]},{"type":"Sprite","props":{"y":13,"x":65,"width":30,"scaleY":1,"scaleX":1,"name":"sr4","height":25},"child":[{"type":"Sprite","props":{"y":0,"x":0,"width":30,"name":"bg","height":25},"child":[{"type":"Rect","props":{"width":30,"lineWidth":0,"height":25,"fillColor":"#FF9900"}}]},{"type":"Sprite","props":{"y":7.5,"x":-10,"width":10,"name":"leftSpt","height":10},"child":[{"type":"Rect","props":{"width":10,"lineWidth":0,"height":10,"fillColor":"#FF9900"}}]},{"type":"Sprite","props":{"y":-10,"x":10,"width":10,"name":"upSpt","height":10},"child":[{"type":"Rect","props":{"y":0,"x":0,"width":10,"lineWidth":0,"height":10,"fillColor":"#FF9900"}}]},{"type":"Sprite","props":{"y":25,"x":10,"width":10,"name":"downSpt","height":10},"child":[{"type":"Rect","props":{"y":0,"x":0,"width":10,"lineWidth":0,"height":10,"fillColor":"#FF9900"}}]},{"type":"Sprite","props":{"y":7.5,"x":30,"width":10,"name":"rightSpt","height":10},"child":[{"type":"Rect","props":{"y":0,"x":0,"width":10,"lineWidth":0,"height":10,"fillColor":"#FF9900"}}]}]},{"type":"Sprite","props":{"y":48,"x":65,"width":30,"scaleY":1,"scaleX":1,"name":"sr5","height":25},"child":[{"type":"Sprite","props":{"y":0,"x":0,"width":30,"name":"bg","height":25},"child":[{"type":"Rect","props":{"width":30,"lineWidth":0,"height":25,"fillColor":"#FF9900"}}]},{"type":"Sprite","props":{"y":7.5,"x":-10,"width":10,"name":"leftSpt","height":10},"child":[{"type":"Rect","props":{"width":10,"lineWidth":0,"height":10,"fillColor":"#FF9900"}}]},{"type":"Sprite","props":{"y":-10,"x":10,"width":10,"name":"upSpt","height":10},"child":[{"type":"Rect","props":{"y":0,"x":0,"width":10,"lineWidth":0,"height":10,"fillColor":"#FF9900"}}]},{"type":"Sprite","props":{"y":25,"x":10,"width":10,"name":"downSpt","height":10},"child":[{"type":"Rect","props":{"y":0,"x":0,"width":10,"lineWidth":0,"height":10,"fillColor":"#FF9900"}}]},{"type":"Sprite","props":{"y":7.5,"x":30,"width":10,"name":"rightSpt","height":10},"child":[{"type":"Rect","props":{"y":0,"x":0,"width":10,"lineWidth":0,"height":10,"fillColor":"#FF9900"}}]}]},{"type":"Sprite","props":{"y":83,"x":65,"width":30,"scaleY":1,"scaleX":1,"name":"sr6","height":25},"child":[{"type":"Sprite","props":{"y":0,"x":0,"width":30,"name":"bg","height":25},"child":[{"type":"Rect","props":{"width":30,"lineWidth":0,"height":25,"fillColor":"#FF9900"}}]},{"type":"Sprite","props":{"y":7.5,"x":-10,"width":10,"name":"leftSpt","height":10},"child":[{"type":"Rect","props":{"width":10,"lineWidth":0,"height":10,"fillColor":"#FF9900"}}]},{"type":"Sprite","props":{"y":-10,"x":10,"width":10,"name":"upSpt","height":10},"child":[{"type":"Rect","props":{"y":0,"x":0,"width":10,"lineWidth":0,"height":10,"fillColor":"#FF9900"}}]},{"type":"Sprite","props":{"y":25,"x":10,"width":10,"name":"downSpt","height":10},"child":[{"type":"Rect","props":{"y":0,"x":0,"width":10,"lineWidth":0,"height":10,"fillColor":"#FF9900"}}]},{"type":"Sprite","props":{"y":7.5,"x":30,"width":10,"name":"rightSpt","height":10},"child":[{"type":"Rect","props":{"y":0,"x":0,"width":10,"lineWidth":1,"height":10,"fillColor":"#FF9900"}}]}]},{"type":"Sprite","props":{"y":13,"x":105,"width":30,"scaleY":1,"scaleX":1,"name":"sr7","height":25},"child":[{"type":"Sprite","props":{"y":0,"x":0,"width":30,"name":"bg","height":25},"child":[{"type":"Rect","props":{"width":30,"lineWidth":0,"height":25,"fillColor":"#FF9900"}}]},{"type":"Sprite","props":{"y":7.5,"x":-10,"width":10,"name":"leftSpt","height":10},"child":[{"type":"Rect","props":{"width":10,"lineWidth":0,"height":10,"fillColor":"#FF9900"}}]},{"type":"Sprite","props":{"y":-10,"x":10,"width":10,"name":"upSpt","height":10},"child":[{"type":"Rect","props":{"y":0,"x":0,"width":10,"lineWidth":0,"height":10,"fillColor":"#FF9900"}}]},{"type":"Sprite","props":{"y":25,"x":10,"width":10,"name":"downSpt","height":10},"child":[{"type":"Rect","props":{"y":0,"x":0,"width":10,"lineWidth":0,"height":10,"fillColor":"#FF9900"}}]},{"type":"Sprite","props":{"y":7.5,"x":30,"width":10,"name":"rightSpt","height":10},"child":[{"type":"Rect","props":{"y":0,"x":0,"width":10,"lineWidth":0,"height":10,"fillColor":"#FF9900"}}]}]},{"type":"Sprite","props":{"y":48,"x":105,"width":30,"scaleY":1,"scaleX":1,"name":"sr8","height":25},"child":[{"type":"Sprite","props":{"y":0,"x":0,"width":30,"name":"bg","height":25},"child":[{"type":"Rect","props":{"width":30,"lineWidth":0,"height":25,"fillColor":"#FF9900"}}]},{"type":"Sprite","props":{"y":7.5,"x":-10,"width":10,"name":"leftSpt","height":10},"child":[{"type":"Rect","props":{"width":10,"lineWidth":0,"height":10,"fillColor":"#FF9900"}}]},{"type":"Sprite","props":{"y":-10,"x":10,"width":10,"name":"upSpt","height":10},"child":[{"type":"Rect","props":{"y":0,"x":0,"width":10,"lineWidth":0,"height":10,"fillColor":"#FF9900"}}]},{"type":"Sprite","props":{"y":25,"x":10,"width":10,"name":"downSpt","height":10},"child":[{"type":"Rect","props":{"y":0,"x":0,"width":10,"lineWidth":0,"height":10,"fillColor":"#FF9900"}}]},{"type":"Sprite","props":{"y":7.5,"x":30,"width":10,"name":"rightSpt","height":10},"child":[{"type":"Rect","props":{"y":0,"x":0,"width":10,"lineWidth":0,"height":10,"fillColor":"#FF9900"}}]}]},{"type":"Sprite","props":{"y":83,"x":105,"width":30,"scaleY":1,"scaleX":1,"name":"sr9","height":25},"child":[{"type":"Sprite","props":{"y":0,"x":0,"width":30,"name":"bg","height":25},"child":[{"type":"Rect","props":{"width":30,"lineWidth":0,"height":25,"fillColor":"#FF9900"}}]},{"type":"Sprite","props":{"y":7.5,"x":-10,"width":10,"name":"leftSpt","height":10},"child":[{"type":"Rect","props":{"width":10,"lineWidth":0,"height":10,"fillColor":"#FF9900"}}]},{"type":"Sprite","props":{"y":-10,"x":10,"width":10,"name":"upSpt","height":10},"child":[{"type":"Rect","props":{"y":0,"x":0,"width":10,"lineWidth":0,"height":10,"fillColor":"#FF9900"}}]},{"type":"Sprite","props":{"y":25,"x":10,"width":10,"name":"downSpt","height":10},"child":[{"type":"Rect","props":{"y":0,"x":0,"width":10,"lineWidth":0,"height":10,"fillColor":"#FF9900"}}]},{"type":"Sprite","props":{"y":7.5,"x":30,"width":10,"name":"rightSpt","height":10},"child":[{"type":"Rect","props":{"y":0,"x":0,"width":10,"lineWidth":0,"height":10,"fillColor":"#FF9900"}}]}]}]},{"type":"Image","props":{"y":23,"x":-85,"var":"downStage","skin":"comp/downStageSmall.png","scaleY":1,"scaleX":1}},{"type":"Image","props":{"y":-4,"x":-83,"var":"upStage","skin":"comp/upStageSmall.png","scaleY":1,"scaleX":1}},{"type":"Image","props":{"y":63,"x":-91,"var":"rewardBox","skin":"comp/rewardBoxSmall.png","scaleY":1,"scaleX":1}},{"type":"Image","props":{"y":117,"x":-89,"var":"bossImg","skin":"comp/bossIconSmall.png","scaleY":1,"scaleX":1}},{"type":"Image","props":{"y":153,"x":-95,"var":"bossRewardBox","skin":"comp/bossRewardBoxSmall.png","scaleY":1,"scaleX":1}}]};}
+		['uiView',function(){return this.uiView={"type":"View","props":{"width":160,"height":200},"child":[{"type":"Label","props":{"y":114.00000000000001,"x":31,"width":98,"var":"stageNumTxt","text":"泥土 1-1","height":25,"fontSize":26,"font":"Microsoft YaHei","color":"#ffffff"}},{"type":"Sprite","props":{"width":160,"var":"content","scaleY":1,"scaleX":1},"child":[{"type":"Image","props":{"y":6.25,"x":15,"width":130,"skin":"frame/smallMapBg.png","height":110}},{"type":"Sprite","props":{"y":13,"x":25,"width":30,"scaleY":1,"scaleX":1,"name":"r1","height":25},"child":[{"type":"Sprite","props":{"y":0,"x":0,"width":30,"name":"bg","height":25},"child":[{"type":"Rect","props":{"width":30,"lineWidth":1,"height":25,"fillColor":"#1D1E23"}}]},{"type":"Sprite","props":{"y":7.5,"x":-10,"width":10,"name":"leftSpt","height":10},"child":[{"type":"Rect","props":{"width":10,"lineWidth":1,"height":10,"fillColor":"#1D1E23"}}]},{"type":"Sprite","props":{"y":-10,"x":10,"width":10,"name":"upSpt","height":10},"child":[{"type":"Rect","props":{"y":0,"x":0,"width":10,"lineWidth":1,"height":10,"fillColor":"#1D1E23"}}]},{"type":"Sprite","props":{"y":25,"x":10,"width":10,"name":"downSpt","height":10},"child":[{"type":"Rect","props":{"y":0,"x":0,"width":10,"lineWidth":1,"height":10,"fillColor":"#1D1E23"}}]},{"type":"Sprite","props":{"y":7.5,"x":30,"width":10,"name":"rightSpt","height":10},"child":[{"type":"Rect","props":{"y":0,"x":0,"width":10,"lineWidth":1,"height":10,"fillColor":"#1D1E23"}}]}]},{"type":"Sprite","props":{"y":48,"x":25,"width":30,"scaleY":1,"scaleX":1,"name":"r2","height":25},"child":[{"type":"Sprite","props":{"y":0,"x":0,"width":30,"name":"bg","height":25},"child":[{"type":"Rect","props":{"width":30,"lineWidth":1,"height":25,"fillColor":"#1D1E23"}}]},{"type":"Sprite","props":{"y":7.5,"x":-10,"width":10,"name":"leftSpt","height":10},"child":[{"type":"Rect","props":{"width":10,"lineWidth":1,"height":10,"fillColor":"#1D1E23"}}]},{"type":"Sprite","props":{"y":-10,"x":10,"width":10,"name":"upSpt","height":10},"child":[{"type":"Rect","props":{"y":0,"x":0,"width":10,"lineWidth":1,"height":10,"fillColor":"#1D1E23"}}]},{"type":"Sprite","props":{"y":25,"x":10,"width":10,"name":"downSpt","height":10},"child":[{"type":"Rect","props":{"y":0,"x":0,"width":10,"lineWidth":1,"height":10,"fillColor":"#1D1E23"}}]},{"type":"Sprite","props":{"y":7.5,"x":30,"width":10,"name":"rightSpt","height":10},"child":[{"type":"Rect","props":{"y":0,"x":0,"width":10,"lineWidth":1,"height":10,"fillColor":"#1D1E23"}}]}]},{"type":"Sprite","props":{"y":83,"x":25,"width":30,"scaleY":1,"scaleX":1,"name":"r3","height":25},"child":[{"type":"Sprite","props":{"y":0,"x":0,"width":30,"name":"bg","height":25},"child":[{"type":"Rect","props":{"width":30,"lineWidth":1,"height":25,"fillColor":"#1D1E23"}}]},{"type":"Sprite","props":{"y":7.5,"x":-10,"width":10,"name":"leftSpt","height":10},"child":[{"type":"Rect","props":{"width":10,"lineWidth":1,"height":10,"fillColor":"#1D1E23"}}]},{"type":"Sprite","props":{"y":-10,"x":10,"width":10,"name":"upSpt","height":10},"child":[{"type":"Rect","props":{"y":0,"x":0,"width":10,"lineWidth":1,"height":10,"fillColor":"#1D1E23"}}]},{"type":"Sprite","props":{"y":25,"x":10,"width":10,"name":"downSpt","height":10},"child":[{"type":"Rect","props":{"y":0,"x":0,"width":10,"lineWidth":1,"height":10,"fillColor":"#1D1E23"}}]},{"type":"Sprite","props":{"y":7.5,"x":30,"width":10,"name":"rightSpt","height":10},"child":[{"type":"Rect","props":{"y":0,"x":0,"width":10,"lineWidth":1,"height":10,"fillColor":"#1D1E23"}}]}]},{"type":"Sprite","props":{"y":13,"x":65,"width":30,"scaleY":1,"scaleX":1,"name":"r4","height":25},"child":[{"type":"Sprite","props":{"y":0,"x":0,"width":30,"name":"bg","height":25},"child":[{"type":"Rect","props":{"width":30,"lineWidth":1,"height":25,"fillColor":"#1D1E23"}}]},{"type":"Sprite","props":{"y":7.5,"x":-10,"width":10,"name":"leftSpt","height":10},"child":[{"type":"Rect","props":{"width":10,"lineWidth":1,"height":10,"fillColor":"#1D1E23"}}]},{"type":"Sprite","props":{"y":-10,"x":10,"width":10,"name":"upSpt","height":10},"child":[{"type":"Rect","props":{"y":0,"x":0,"width":10,"lineWidth":1,"height":10,"fillColor":"#1D1E23"}}]},{"type":"Sprite","props":{"y":25,"x":10,"width":10,"name":"downSpt","height":10},"child":[{"type":"Rect","props":{"y":0,"x":0,"width":10,"lineWidth":1,"height":10,"fillColor":"#1D1E23"}}]},{"type":"Sprite","props":{"y":7.5,"x":30,"width":10,"name":"rightSpt","height":10},"child":[{"type":"Rect","props":{"y":0,"x":0,"width":10,"lineWidth":1,"height":10,"fillColor":"#1D1E23"}}]}]},{"type":"Sprite","props":{"y":48,"x":65,"width":30,"scaleY":1,"scaleX":1,"name":"r5","height":25},"child":[{"type":"Sprite","props":{"y":0,"x":0,"width":30,"name":"bg","height":25},"child":[{"type":"Rect","props":{"width":30,"lineWidth":1,"height":25,"fillColor":"#1D1E23"}}]},{"type":"Sprite","props":{"y":7.5,"x":-10,"width":10,"name":"leftSpt","height":10},"child":[{"type":"Rect","props":{"width":10,"lineWidth":1,"height":10,"fillColor":"#1D1E23"}}]},{"type":"Sprite","props":{"y":-10,"x":10,"width":10,"name":"upSpt","height":10},"child":[{"type":"Rect","props":{"y":0,"x":0,"width":10,"lineWidth":1,"height":10,"fillColor":"#1D1E23"}}]},{"type":"Sprite","props":{"y":25,"x":10,"width":10,"name":"downSpt","height":10},"child":[{"type":"Rect","props":{"y":0,"x":0,"width":10,"lineWidth":1,"height":10,"fillColor":"#1D1E23"}}]},{"type":"Sprite","props":{"y":7.5,"x":30,"width":10,"name":"rightSpt","height":10},"child":[{"type":"Rect","props":{"y":0,"x":0,"width":10,"lineWidth":1,"height":10,"fillColor":"#1D1E23"}}]}]},{"type":"Sprite","props":{"y":83,"x":65,"width":30,"scaleY":1,"scaleX":1,"name":"r6","height":25},"child":[{"type":"Sprite","props":{"y":0,"x":0,"width":30,"name":"bg","height":25},"child":[{"type":"Rect","props":{"width":30,"lineWidth":1,"height":25,"fillColor":"#1D1E23"}}]},{"type":"Sprite","props":{"y":7.5,"x":-10,"width":10,"name":"leftSpt","height":10},"child":[{"type":"Rect","props":{"width":10,"lineWidth":1,"height":10,"fillColor":"#1D1E23"}}]},{"type":"Sprite","props":{"y":-10,"x":10,"width":10,"name":"upSpt","height":10},"child":[{"type":"Rect","props":{"y":0,"x":0,"width":10,"lineWidth":1,"height":10,"fillColor":"#1D1E23"}}]},{"type":"Sprite","props":{"y":25,"x":10,"width":10,"name":"downSpt","height":10},"child":[{"type":"Rect","props":{"y":0,"x":0,"width":10,"lineWidth":1,"height":10,"fillColor":"#1D1E23"}}]},{"type":"Sprite","props":{"y":7.5,"x":30,"width":10,"name":"rightSpt","height":10},"child":[{"type":"Rect","props":{"y":0,"x":0,"width":10,"lineWidth":1,"height":10,"fillColor":"#1D1E23"}}]}]},{"type":"Sprite","props":{"y":13,"x":105,"width":30,"scaleY":1,"scaleX":1,"name":"r7","height":25},"child":[{"type":"Sprite","props":{"y":0,"x":0,"width":30,"name":"bg","height":25},"child":[{"type":"Rect","props":{"width":30,"lineWidth":1,"height":25,"fillColor":"#1D1E23"}}]},{"type":"Sprite","props":{"y":7.5,"x":-10,"width":10,"name":"leftSpt","height":10},"child":[{"type":"Rect","props":{"width":10,"lineWidth":1,"height":10,"fillColor":"#1D1E23"}}]},{"type":"Sprite","props":{"y":-10,"x":10,"width":10,"name":"upSpt","height":10},"child":[{"type":"Rect","props":{"y":0,"x":0,"width":10,"lineWidth":1,"height":10,"fillColor":"#1D1E23"}}]},{"type":"Sprite","props":{"y":25,"x":10,"width":10,"name":"downSpt","height":10},"child":[{"type":"Rect","props":{"y":0,"x":0,"width":10,"lineWidth":1,"height":10,"fillColor":"#1D1E23"}}]},{"type":"Sprite","props":{"y":7.5,"x":30,"width":10,"name":"rightSpt","height":10},"child":[{"type":"Rect","props":{"y":0,"x":0,"width":10,"lineWidth":1,"height":10,"fillColor":"#1D1E23"}}]}]},{"type":"Sprite","props":{"y":48,"x":105,"width":30,"scaleY":1,"scaleX":1,"name":"r8","height":25},"child":[{"type":"Sprite","props":{"y":0,"x":0,"width":30,"name":"bg","height":25},"child":[{"type":"Rect","props":{"width":30,"lineWidth":1,"height":25,"fillColor":"#1D1E23"}}]},{"type":"Sprite","props":{"y":7.5,"x":-10,"width":10,"name":"leftSpt","height":10},"child":[{"type":"Rect","props":{"width":10,"lineWidth":1,"height":10,"fillColor":"#1D1E23"}}]},{"type":"Sprite","props":{"y":-10,"x":10,"width":10,"name":"upSpt","height":10},"child":[{"type":"Rect","props":{"y":0,"x":0,"width":10,"lineWidth":1,"height":10,"fillColor":"#1D1E23"}}]},{"type":"Sprite","props":{"y":25,"x":10,"width":10,"name":"downSpt","height":10},"child":[{"type":"Rect","props":{"y":0,"x":0,"width":10,"lineWidth":1,"height":10,"fillColor":"#1D1E23"}}]},{"type":"Sprite","props":{"y":7.5,"x":30,"width":10,"name":"rightSpt","height":10},"child":[{"type":"Rect","props":{"y":0,"x":0,"width":10,"lineWidth":1,"height":10,"fillColor":"#1D1E23"}}]}]},{"type":"Sprite","props":{"y":83,"x":105,"width":30,"scaleY":1,"scaleX":1,"name":"r9","height":25},"child":[{"type":"Sprite","props":{"y":0,"x":0,"width":30,"name":"bg","height":25},"child":[{"type":"Rect","props":{"width":30,"lineWidth":1,"height":25,"fillColor":"#1D1E23"}}]},{"type":"Sprite","props":{"y":7.5,"x":-10,"width":10,"name":"leftSpt","height":10},"child":[{"type":"Rect","props":{"width":10,"lineWidth":1,"height":10,"fillColor":"#1D1E23"}}]},{"type":"Sprite","props":{"y":-10,"x":10,"width":10,"name":"upSpt","height":10},"child":[{"type":"Rect","props":{"y":0,"x":0,"width":10,"lineWidth":1,"height":10,"fillColor":"#1D1E23"}}]},{"type":"Sprite","props":{"y":25,"x":10,"width":10,"name":"downSpt","height":10},"child":[{"type":"Rect","props":{"y":0,"x":0,"width":10,"lineWidth":1,"height":10,"fillColor":"#1D1E23"}}]},{"type":"Sprite","props":{"y":7.5,"x":30,"width":10,"name":"rightSpt","height":10},"child":[{"type":"Rect","props":{"y":0,"x":0,"width":10,"lineWidth":1,"height":10,"fillColor":"#1D1E23"}}]}]},{"type":"Sprite","props":{"y":13,"x":25,"width":30,"scaleY":1,"scaleX":1,"name":"sr1","height":25},"child":[{"type":"Sprite","props":{"y":0,"x":0,"width":30,"name":"bg","height":25},"child":[{"type":"Rect","props":{"width":30,"lineWidth":0,"height":25,"fillColor":"#FF9900"}}]},{"type":"Sprite","props":{"y":7.5,"x":-10,"width":10,"name":"leftSpt","height":10},"child":[{"type":"Rect","props":{"width":10,"lineWidth":0,"height":10,"fillColor":"#FF9900"}}]},{"type":"Sprite","props":{"y":-10,"x":10,"width":10,"name":"upSpt","height":10},"child":[{"type":"Rect","props":{"y":0,"x":0,"width":10,"lineWidth":0,"height":10,"fillColor":"#FF9900"}}]},{"type":"Sprite","props":{"y":25,"x":10,"width":10,"name":"downSpt","height":10},"child":[{"type":"Rect","props":{"y":0,"x":0,"width":10,"lineWidth":0,"height":10,"fillColor":"#FF9900"}}]},{"type":"Sprite","props":{"y":7.5,"x":30,"width":10,"name":"rightSpt","height":10},"child":[{"type":"Rect","props":{"y":0,"x":0,"width":10,"lineWidth":0,"height":10,"fillColor":"#FF9900"}}]}]},{"type":"Sprite","props":{"y":48,"x":25,"width":30,"scaleY":1,"scaleX":1,"name":"sr2","height":25},"child":[{"type":"Sprite","props":{"y":0,"x":0,"width":30,"name":"bg","height":25},"child":[{"type":"Rect","props":{"width":30,"lineWidth":0,"height":25,"fillColor":"#FF9900"}}]},{"type":"Sprite","props":{"y":7.5,"x":-10,"width":10,"name":"leftSpt","height":10},"child":[{"type":"Rect","props":{"width":10,"lineWidth":0,"height":10,"fillColor":"#FF9900"}}]},{"type":"Sprite","props":{"y":-10,"x":10,"width":10,"name":"upSpt","height":10},"child":[{"type":"Rect","props":{"y":0,"x":0,"width":10,"lineWidth":0,"height":10,"fillColor":"#FF9900"}}]},{"type":"Sprite","props":{"y":25,"x":10,"width":10,"name":"downSpt","height":10},"child":[{"type":"Rect","props":{"y":0,"x":0,"width":10,"lineWidth":0,"height":10,"fillColor":"#FF9900"}}]},{"type":"Sprite","props":{"y":7.5,"x":30,"width":10,"name":"rightSpt","height":10},"child":[{"type":"Rect","props":{"y":0,"x":0,"width":10,"lineWidth":0,"height":10,"fillColor":"#FF9900"}}]}]},{"type":"Sprite","props":{"y":83,"x":25,"width":30,"scaleY":1,"scaleX":1,"name":"sr3","height":25},"child":[{"type":"Sprite","props":{"y":0,"x":0,"width":30,"name":"bg","height":25},"child":[{"type":"Rect","props":{"width":30,"lineWidth":0,"height":25,"fillColor":"#FF9900"}}]},{"type":"Sprite","props":{"y":7.5,"x":-10,"width":10,"name":"leftSpt","height":10},"child":[{"type":"Rect","props":{"width":10,"lineWidth":0,"height":10,"fillColor":"#FF9900"}}]},{"type":"Sprite","props":{"y":-10,"x":10,"width":10,"name":"upSpt","height":10},"child":[{"type":"Rect","props":{"y":0,"x":0,"width":10,"lineWidth":0,"height":10,"fillColor":"#FF9900"}}]},{"type":"Sprite","props":{"y":25,"x":10,"width":10,"name":"downSpt","height":10},"child":[{"type":"Rect","props":{"y":0,"x":0,"width":10,"lineWidth":0,"height":10,"fillColor":"#FF9900"}}]},{"type":"Sprite","props":{"y":7.5,"x":30,"width":10,"name":"rightSpt","height":10},"child":[{"type":"Rect","props":{"y":0,"x":0,"width":10,"lineWidth":0,"height":10,"fillColor":"#FF9900"}}]}]},{"type":"Sprite","props":{"y":13,"x":65,"width":30,"scaleY":1,"scaleX":1,"name":"sr4","height":25},"child":[{"type":"Sprite","props":{"y":0,"x":0,"width":30,"name":"bg","height":25},"child":[{"type":"Rect","props":{"width":30,"lineWidth":0,"height":25,"fillColor":"#FF9900"}}]},{"type":"Sprite","props":{"y":7.5,"x":-10,"width":10,"name":"leftSpt","height":10},"child":[{"type":"Rect","props":{"width":10,"lineWidth":0,"height":10,"fillColor":"#FF9900"}}]},{"type":"Sprite","props":{"y":-10,"x":10,"width":10,"name":"upSpt","height":10},"child":[{"type":"Rect","props":{"y":0,"x":0,"width":10,"lineWidth":0,"height":10,"fillColor":"#FF9900"}}]},{"type":"Sprite","props":{"y":25,"x":10,"width":10,"name":"downSpt","height":10},"child":[{"type":"Rect","props":{"y":0,"x":0,"width":10,"lineWidth":0,"height":10,"fillColor":"#FF9900"}}]},{"type":"Sprite","props":{"y":7.5,"x":30,"width":10,"name":"rightSpt","height":10},"child":[{"type":"Rect","props":{"y":0,"x":0,"width":10,"lineWidth":0,"height":10,"fillColor":"#FF9900"}}]}]},{"type":"Sprite","props":{"y":48,"x":65,"width":30,"scaleY":1,"scaleX":1,"name":"sr5","height":25},"child":[{"type":"Sprite","props":{"y":0,"x":0,"width":30,"name":"bg","height":25},"child":[{"type":"Rect","props":{"width":30,"lineWidth":0,"height":25,"fillColor":"#FF9900"}}]},{"type":"Sprite","props":{"y":7.5,"x":-10,"width":10,"name":"leftSpt","height":10},"child":[{"type":"Rect","props":{"width":10,"lineWidth":0,"height":10,"fillColor":"#FF9900"}}]},{"type":"Sprite","props":{"y":-10,"x":10,"width":10,"name":"upSpt","height":10},"child":[{"type":"Rect","props":{"y":0,"x":0,"width":10,"lineWidth":0,"height":10,"fillColor":"#FF9900"}}]},{"type":"Sprite","props":{"y":25,"x":10,"width":10,"name":"downSpt","height":10},"child":[{"type":"Rect","props":{"y":0,"x":0,"width":10,"lineWidth":0,"height":10,"fillColor":"#FF9900"}}]},{"type":"Sprite","props":{"y":7.5,"x":30,"width":10,"name":"rightSpt","height":10},"child":[{"type":"Rect","props":{"y":0,"x":0,"width":10,"lineWidth":0,"height":10,"fillColor":"#FF9900"}}]}]},{"type":"Sprite","props":{"y":83,"x":65,"width":30,"scaleY":1,"scaleX":1,"name":"sr6","height":25},"child":[{"type":"Sprite","props":{"y":0,"x":0,"width":30,"name":"bg","height":25},"child":[{"type":"Rect","props":{"width":30,"lineWidth":0,"height":25,"fillColor":"#FF9900"}}]},{"type":"Sprite","props":{"y":7.5,"x":-10,"width":10,"name":"leftSpt","height":10},"child":[{"type":"Rect","props":{"width":10,"lineWidth":0,"height":10,"fillColor":"#FF9900"}}]},{"type":"Sprite","props":{"y":-10,"x":10,"width":10,"name":"upSpt","height":10},"child":[{"type":"Rect","props":{"y":0,"x":0,"width":10,"lineWidth":0,"height":10,"fillColor":"#FF9900"}}]},{"type":"Sprite","props":{"y":25,"x":10,"width":10,"name":"downSpt","height":10},"child":[{"type":"Rect","props":{"y":0,"x":0,"width":10,"lineWidth":0,"height":10,"fillColor":"#FF9900"}}]},{"type":"Sprite","props":{"y":7.5,"x":30,"width":10,"name":"rightSpt","height":10},"child":[{"type":"Rect","props":{"y":0,"x":0,"width":10,"lineWidth":1,"height":10,"fillColor":"#FF9900"}}]}]},{"type":"Sprite","props":{"y":13,"x":105,"width":30,"scaleY":1,"scaleX":1,"name":"sr7","height":25},"child":[{"type":"Sprite","props":{"y":0,"x":0,"width":30,"name":"bg","height":25},"child":[{"type":"Rect","props":{"width":30,"lineWidth":0,"height":25,"fillColor":"#FF9900"}}]},{"type":"Sprite","props":{"y":7.5,"x":-10,"width":10,"name":"leftSpt","height":10},"child":[{"type":"Rect","props":{"width":10,"lineWidth":0,"height":10,"fillColor":"#FF9900"}}]},{"type":"Sprite","props":{"y":-10,"x":10,"width":10,"name":"upSpt","height":10},"child":[{"type":"Rect","props":{"y":0,"x":0,"width":10,"lineWidth":0,"height":10,"fillColor":"#FF9900"}}]},{"type":"Sprite","props":{"y":25,"x":10,"width":10,"name":"downSpt","height":10},"child":[{"type":"Rect","props":{"y":0,"x":0,"width":10,"lineWidth":0,"height":10,"fillColor":"#FF9900"}}]},{"type":"Sprite","props":{"y":7.5,"x":30,"width":10,"name":"rightSpt","height":10},"child":[{"type":"Rect","props":{"y":0,"x":0,"width":10,"lineWidth":0,"height":10,"fillColor":"#FF9900"}}]}]},{"type":"Sprite","props":{"y":48,"x":105,"width":30,"scaleY":1,"scaleX":1,"name":"sr8","height":25},"child":[{"type":"Sprite","props":{"y":0,"x":0,"width":30,"name":"bg","height":25},"child":[{"type":"Rect","props":{"width":30,"lineWidth":0,"height":25,"fillColor":"#FF9900"}}]},{"type":"Sprite","props":{"y":7.5,"x":-10,"width":10,"name":"leftSpt","height":10},"child":[{"type":"Rect","props":{"width":10,"lineWidth":0,"height":10,"fillColor":"#FF9900"}}]},{"type":"Sprite","props":{"y":-10,"x":10,"width":10,"name":"upSpt","height":10},"child":[{"type":"Rect","props":{"y":0,"x":0,"width":10,"lineWidth":0,"height":10,"fillColor":"#FF9900"}}]},{"type":"Sprite","props":{"y":25,"x":10,"width":10,"name":"downSpt","height":10},"child":[{"type":"Rect","props":{"y":0,"x":0,"width":10,"lineWidth":0,"height":10,"fillColor":"#FF9900"}}]},{"type":"Sprite","props":{"y":7.5,"x":30,"width":10,"name":"rightSpt","height":10},"child":[{"type":"Rect","props":{"y":0,"x":0,"width":10,"lineWidth":0,"height":10,"fillColor":"#FF9900"}}]}]},{"type":"Sprite","props":{"y":83,"x":105,"width":30,"scaleY":1,"scaleX":1,"name":"sr9","height":25},"child":[{"type":"Sprite","props":{"y":0,"x":0,"width":30,"name":"bg","height":25},"child":[{"type":"Rect","props":{"width":30,"lineWidth":0,"height":25,"fillColor":"#FF9900"}}]},{"type":"Sprite","props":{"y":7.5,"x":-10,"width":10,"name":"leftSpt","height":10},"child":[{"type":"Rect","props":{"width":10,"lineWidth":0,"height":10,"fillColor":"#FF9900"}}]},{"type":"Sprite","props":{"y":-10,"x":10,"width":10,"name":"upSpt","height":10},"child":[{"type":"Rect","props":{"y":0,"x":0,"width":10,"lineWidth":0,"height":10,"fillColor":"#FF9900"}}]},{"type":"Sprite","props":{"y":25,"x":10,"width":10,"name":"downSpt","height":10},"child":[{"type":"Rect","props":{"y":0,"x":0,"width":10,"lineWidth":0,"height":10,"fillColor":"#FF9900"}}]},{"type":"Sprite","props":{"y":7.5,"x":30,"width":10,"name":"rightSpt","height":10},"child":[{"type":"Rect","props":{"y":0,"x":0,"width":10,"lineWidth":0,"height":10,"fillColor":"#FF9900"}}]}]}]},{"type":"Image","props":{"y":23,"x":-85,"var":"downStage","skin":"comp/downStageSmall.png","scaleY":1,"scaleX":1}},{"type":"Image","props":{"y":-4,"x":-83,"var":"upStage","skin":"comp/upStageSmall.png","scaleY":1,"scaleX":1}},{"type":"Image","props":{"y":63,"x":-91,"var":"rewardBox","skin":"comp/rewardBoxSmall.png","scaleY":1,"scaleX":1}},{"type":"Image","props":{"y":117,"x":-89,"var":"bossImg","skin":"comp/bossIconSmall.png","scaleY":1,"scaleX":1}},{"type":"Image","props":{"y":153,"x":-95,"var":"bossRewardBox","skin":"comp/bossRewardBoxSmall.png","scaleY":1,"scaleX":1}}]};}
 		]);
 		return MiniMapUI;
 	})(View)
