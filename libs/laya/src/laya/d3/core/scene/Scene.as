@@ -24,6 +24,7 @@ package laya.d3.core.scene {
 	import laya.display.Node;
 	import laya.display.Sprite;
 	import laya.events.Event;
+	import laya.net.Loader;
 	import laya.renders.Render;
 	import laya.renders.RenderContext;
 	import laya.renders.RenderSprite;
@@ -45,32 +46,26 @@ package laya.d3.core.scene {
 		public static const FOGRANGE:int = 2;
 		
 		public static const LIGHTDIRECTION:int = 3;
-		public static const LIGHTDIRDIFFUSE:int = 4;
-		public static const LIGHTDIRAMBIENT:int = 5;
-		public static const LIGHTDIRSPECULAR:int = 6;
+		public static const LIGHTDIRCOLOR:int = 4;
 		
-		public static const POINTLIGHTPOS:int = 7;
-		public static const POINTLIGHTRANGE:int = 8;
-		public static const POINTLIGHTATTENUATION:int = 9;
-		public static const POINTLIGHTDIFFUSE:int = 10;
-		public static const POINTLIGHTAMBIENT:int = 11;
-		public static const POINTLIGHTSPECULAR:int = 12;
+		public static const POINTLIGHTPOS:int = 5;
+		public static const POINTLIGHTRANGE:int = 6;
+		public static const POINTLIGHTATTENUATION:int = 7;
+		public static const POINTLIGHTCOLOR:int = 8;
 		
-		public static const SPOTLIGHTPOS:int = 13;
-		public static const SPOTLIGHTDIRECTION:int = 14;
-		public static const SPOTLIGHTSPOT:int = 15;
-		public static const SPOTLIGHTRANGE:int = 16;
-		public static const SPOTLIGHTATTENUATION:int = 17;
-		public static const SPOTLIGHTDIFFUSE:int = 18;
-		public static const SPOTLIGHTAMBIENT:int = 19;
-		public static const SPOTLIGHTSPECULAR:int = 20;
+		public static const SPOTLIGHTPOS:int = 9;
+		public static const SPOTLIGHTDIRECTION:int = 10;
+		public static const SPOTLIGHTSPOT:int = 11;
+		public static const SPOTLIGHTRANGE:int = 12;
+		public static const SPOTLIGHTATTENUATION:int = 13;
+		public static const SPOTLIGHTCOLOR:int = 14;
 		
-		public static const SHADOWDISTANCE:int = 21;
-		public static const SHADOWLIGHTVIEWPROJECT:int = 22;
-		public static const SHADOWMAPPCFOFFSET:int = 23;
-		public static const SHADOWMAPTEXTURE1:int = 24;
-		public static const SHADOWMAPTEXTURE2:int = 25;
-		public static const SHADOWMAPTEXTURE3:int = 26;
+		public static const SHADOWDISTANCE:int = 15;
+		public static const SHADOWLIGHTVIEWPROJECT:int = 16;
+		public static const SHADOWMAPPCFOFFSET:int = 17;
+		public static const SHADOWMAPTEXTURE1:int = 18;
+		public static const SHADOWMAPTEXTURE2:int = 19;
+		public static const SHADOWMAPTEXTURE3:int = 20;
 		
 		/**
 		 * @private
@@ -539,12 +534,26 @@ package laya.d3.core.scene {
 		 */
 		protected function _set2DRenderConfig(gl:WebGLContext):void {
 			WebGLContext.setBlend(gl, true);//还原2D设置，此处用WEBGL强制还原2D设置并非十分合理
-			WebGLContext.setBlendFunc(gl, WebGLContext.SRC_ALPHA, WebGLContext.ONE_MINUS_SRC_ALPHA);
+			WebGLContext.setBlendFunc(gl, WebGLContext.ONE, WebGLContext.ONE_MINUS_SRC_ALPHA);
 			WebGLContext.setDepthTest(gl, false);
 			WebGLContext.setCullFace(gl, false);
 			WebGLContext.setDepthMask(gl, true);
 			WebGLContext.setFrontFace(gl, WebGLContext.CCW);
 			gl.viewport(0, 0, RenderState2D.width, RenderState2D.height);//还原2D视口
+		}
+		
+		/**
+		 *@private
+		 */
+		protected function _parseCustomProps(innerResouMap:Object, customProps:Object, nodeData:Object):void {
+			var lightMapsData:Array = nodeData.customProps.lightmaps;
+			var lightMapCount:int = lightMapsData.length;
+			var lightmaps:Vector.<Texture2D> = _lightmaps;
+			lightmaps.length = lightMapCount;
+			for (var i:int = 0; i < lightMapCount; i++)
+				lightmaps[i] = Loader.getRes(innerResouMap[lightMapsData[i].replace("exr", "png")]);
+			
+			setlightmaps(lightmaps);
 		}
 		
 		/**
@@ -899,7 +908,7 @@ package laya.d3.core.scene {
 		 * @inheritDoc
 		 */
 		public override function render(context:RenderContext, x:Number, y:Number):void {
-			(Render._context.ctx as WebGLContext2D)._shader2D.glTexture = null;//TODO:临时清空2D合并，不然影响图层合并。
+			(Render._context.ctx as WebGLContext2D)._renderKey = 0;//打断2D合并的renderKey
 			_childs.length > 0 && context.addRenderObject(this);
 			_renderType &= ~RenderSprite.CHILDS;
 			super.render(context, x, y);
@@ -945,7 +954,7 @@ package laya.d3.core.scene {
 				throw new Error("Scene: the .lh file root type must be Scene,please use other function to  load  this file.");
 			
 			var innerResouMap:Object = data[1];
-			ClassUtils.createByJson(json, this, this, Handler.create(null, Utils3D._parseHierarchyProp, [innerResouMap], false), Handler.create(null, Utils3D._parseHierarchyNode, null, false));
+			Utils3D._createNodeByJson(json, this, innerResouMap);
 			event(Event.HIERARCHY_LOADED, [this]);
 			__loaded = true;
 		}

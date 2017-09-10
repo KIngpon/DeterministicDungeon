@@ -325,6 +325,10 @@ package laya.ui {
 		}
 		
 		public function set stateNum(value:int):void {
+			if (value is String)
+			{
+				value = parseInt(value as String);
+			}
 			if (_stateNum != value) {
 				_stateNum = value < 1 ? 1 : value > 3 ? 3 : value;
 				callLater(changeClips);

@@ -292,7 +292,7 @@ package laya.display {
 			if (!screenAdaptationEnabled) return;
 			var canvas:HTMLCanvas = Render._mainCanvas;
 			var canvasStyle:* = canvas.source.style;
-			//canvas.size(1, 1);
+			canvas.size(1, 1);
 			//canvasStyle.transform = canvasStyle.webkitTransform = canvasStyle.msTransform = canvasStyle.mozTransform = canvasStyle.oTransform = "";
 			//visible = false;
 			Laya.timer.once(100, this, this._changeCanvasSize);

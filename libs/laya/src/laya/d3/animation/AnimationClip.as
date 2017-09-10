@@ -39,6 +39,8 @@ package laya.d3.animation {
 		public var _cachePropertyToNodeMap:Int32Array;
 		/**@private */
 		public var _nodeToCachePropertyMap:Int32Array;
+		/**@private */
+		public var _unCachePropertyToNodeMap:Int32Array;
 		
 		/**@private */
 		public var _duration:Number;
@@ -181,13 +183,14 @@ package laya.d3.animation {
 		public function _evaluateAnimationlDatasCacheFrame(nodesFrameIndices:Array, animator:Animator, cacheNodesOriginalValue:Vector.<Float32Array>, publicAnimationDatas:Vector.<Float32Array>, cacheAnimationDatas:Vector.<Float32Array>, nodeOwners:Vector.<AnimationNode>):void {
 			var j:int, m:int;
 			for (var i:int = 0, n:int = _nodes.length; i < n; i++) {
-				if (!nodeOwners[i])//动画节点丢失时，忽略该节点动画
+				var node:KeyframeNode = _nodes[i];
+				var cacheProperty:Boolean = node._cacheProperty;
+				if (!nodeOwners[i] || (cacheProperty && !cacheAnimationDatas))//动画节点丢失时，忽略该节点动画
 					continue;
 				
-				var node:KeyframeNode = _nodes[i];
 				var frmaeIndices:Int32Array = nodesFrameIndices[i];
 				var realFrameIndex:int = frmaeIndices[animator.currentFrameIndex];
-				var cacheProperty:Boolean = node._cacheProperty;
+				
 				var outDatas:Float32Array;
 				var lastFrameIndex:int;
 				if (realFrameIndex !== -1) {
@@ -195,8 +198,6 @@ package laya.d3.animation {
 					var nextKeyFrame:Keyframe = frame.next;
 					if (nextKeyFrame) {
 						if (cacheProperty) {
-							if (!cacheAnimationDatas)//TODO:
-								continue;
 							outDatas = new Float32Array(node.keyFrameWidth);
 							cacheAnimationDatas[_nodeToCachePropertyMap[i]] = outDatas;
 						} else {
@@ -216,8 +217,6 @@ package laya.d3.animation {
 							if (lastFrameIndex !== -1 && frmaeIndices[lastFrameIndex] === realFrameIndex)//只有非公共数据可以跳过，否则公共数据会错乱
 								continue;
 							
-							if (!cacheAnimationDatas)//TODO:
-								continue;
 							outDatas = new Float32Array(node.keyFrameWidth);
 							cacheAnimationDatas[_nodeToCachePropertyMap[i]] = outDatas;
 						} else {
@@ -234,8 +233,6 @@ package laya.d3.animation {
 						if (lastFrameIndex !== -1 && frmaeIndices[lastFrameIndex] === realFrameIndex)//只有非公共数据可以跳过，否则公共数据会错乱
 							continue;
 						
-						if (!cacheAnimationDatas)//TODO:
-							continue;
 						outDatas = new Float32Array(node.keyFrameWidth);
 						cacheAnimationDatas[_nodeToCachePropertyMap[i]] = outDatas;
 					} else {
@@ -312,16 +309,6 @@ package laya.d3.animation {
 			}
 			_endLoaded();
 		}
-		
-		/**
-		 * @inheritDoc
-		 */
-		override public function dispose():void {
-			if (resourceManager)
-				resourceManager.removeResource(this);
-			super.dispose();
-		}
-	
 	}
 }
 

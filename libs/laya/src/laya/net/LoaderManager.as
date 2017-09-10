@@ -114,11 +114,15 @@ package laya.net {
 		}
 		
 		private function _create(url:String, complete:Handler = null, progress:Handler = null, clas:Class = null, params:Array = null, priority:int = 1, cache:Boolean = true):* {
-			url = URL.formatURL(url)
+			url = URL.formatURL(url);
+			
 			var item:* = getRes(url);
 			if (!item) {
 				var extension:String = Utils.getFileExtension(url);
 				var creatItem:Array = createMap[extension];
+				if (!creatItem)
+					throw new Error("LoaderManager:unknown file extension with: "+extension+".");
+				
 				if (!clas) clas = creatItem[0];
 				var type:String = creatItem[1];
 				if (extension == "atlas") {
@@ -127,10 +131,10 @@ package laya.net {
 					if (clas === Texture) type = "htmlimage";
 					item = clas ? new clas() : null;
 					if (item.hasOwnProperty("_loaded"))
-						item._loaded=false;
+						item._loaded = false;
 					load(url, Handler.create(null, onLoaded), progress, type, priority, false, null, true);
 					function onLoaded(data:*):void {
-						item && item.onAsynLoaded.call(item, url, data, params);
+						(item && !item.disposed && data) && (item.onAsynLoaded.call(item, url, data, params));//TODO:精灵如何处理
 						if (complete) complete.run();
 						Laya.loader.event(url);
 					}
@@ -167,10 +171,13 @@ package laya.net {
 			if (url is Array) return _loadAssets(url as Array, complete, progress, type, priority, cache, group);
 			var content:* = Loader.getRes(url);
 			if (content != null) {
-				progress && progress.runWith(1);
-				complete && complete.runWith(content);
-				//判断是否全部加载，如果是则抛出complete事件
-				_loaderCount || event(Event.COMPLETE);
+				//增加延迟回掉
+				Laya.timer.frameOnce(1,null,function():void{
+					progress && progress.runWith(1);
+					complete && complete.runWith(content);
+					//判断是否全部加载，如果是则抛出complete事件
+					_loaderCount || event(Event.COMPLETE);
+				});
 			} else {
 				var info:ResInfo = _resMap[url];
 				if (!info) {

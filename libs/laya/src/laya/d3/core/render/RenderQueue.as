@@ -6,7 +6,6 @@ package laya.d3.core.render {
 	import laya.d3.core.material.BaseMaterial;
 	import laya.d3.core.scene.Scene;
 	import laya.d3.graphics.DynamicBatch;
-	import laya.d3.graphics.StaticBatch;
 	import laya.d3.graphics.VertexBuffer3D;
 	import laya.d3.graphics.VertexDeclaration;
 	import laya.d3.math.Vector3;

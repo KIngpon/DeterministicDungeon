@@ -97,6 +97,7 @@ package laya.d3.shader {
 		private var _curMaterialDefinePower:int = 1;
 		private var _curSpriteDefinePower:int = 3;
 		public var _materialInt2name:Array = [];
+		public var _materialName2Int:Object = {};
 		public var _spriteInt2name:Array = [];
 		
 		public var _conchShader:*;//NATIVE		
@@ -261,6 +262,23 @@ package laya.d3.shader {
 		}
 		
 		/**
+		 * @private
+		 */
+		private function _definesToNameDic(value:int, int2Name:Array):Object {
+			var o:Object = {};
+			var d:int = 1;
+			for (var i:int = 0; i < 32; i++) {
+				d = 1 << i;
+				if (d > value) break;
+				if (value & d) {
+					var name:String = int2Name[d];
+					name && (o[name] = "");
+				}
+			}
+			return o;
+		}
+		
+		/**
 		 * 根据宏动态生成shader文件，支持#include?COLOR_FILTER "parts/ColorFilter_ps_logic.glsl";条件嵌入文件
 		 * @param	name
 		 * @param	vs
@@ -287,9 +305,9 @@ package laya.d3.shader {
 				materialDefShaders = spriteDefShaders[spriteDefine] = [];
 			}
 			
-			var publicDefGroup:Object = definesToNameDic(publicDefine, _globalInt2name);
-			var spriteDefGroup:Object = definesToNameDic(spriteDefine, _spriteInt2name);
-			var materialDefGroup:Object = definesToNameDic(materialDefine, _materialInt2name);
+			var publicDefGroup:Object = _definesToNameDic(publicDefine, _globalInt2name);
+			var spriteDefGroup:Object = _definesToNameDic(spriteDefine, _spriteInt2name);
+			var materialDefGroup:Object = _definesToNameDic(materialDefine, _materialInt2name);
 			if (ShaderCompile3D.debugMode) {
 				var publicDefGroupStr:String = "", key:String;
 				for (key in publicDefGroup)
@@ -360,6 +378,7 @@ package laya.d3.shader {
 		public function registerMaterialDefine(name:String):int {
 			var value:int = Math.pow(2, _curMaterialDefinePower++);//TODO:超界处理	
 			_materialInt2name[value] = name;
+			_materialName2Int[name] = value;
 			
 			if (Render.isConchNode) {//NATIVE
 				__JS__("conch.regShaderDefine&&conch.regShaderDefine(name,value);")
@@ -382,18 +401,13 @@ package laya.d3.shader {
 			return value;
 		}
 		
-		public function definesToNameDic(value:int, int2Name:Array):Object {
-			var o:Object = {};
-			var d:int = 1;
-			for (var i:int = 0; i < 32; i++) {
-				d = 1 << i;
-				if (d > value) break;
-				if (value & d) {
-					var name:String = int2Name[d];
-					name && (o[name] = "");
-				}
-			}
-			return o;
+		/**
+		 * 通过名称获取宏定义值。
+		 * @param	name 名称。
+		 * @return 宏定义值。
+		 */
+		public function getMaterialDefineByName(name:String):int {
+			return _materialName2Int[name];
 		}
 	
 	}

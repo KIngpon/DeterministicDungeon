@@ -37,7 +37,15 @@ package laya.filters.webgl {
 		}
 		
 		override public function setValue(shader:*):void {
-			shader.strength = data.strength;
+			shader.strength = data.strength;//这个shader中并不用，但是注释掉会什么都不显示。
+			var sigma:Number = data.strength/3.0;//3σ以外影响很小。即当σ=1的时候，半径为3;
+			var sigma2 = sigma*sigma;
+			data.strength_sig2_2sig2_gauss1[0] = data.strength;
+			//data.strength_sig2_2sig2_gauss1[1] = sigma;
+			data.strength_sig2_2sig2_gauss1[1] = sigma2;			//做一些预计算传给shader，提高效率
+			data.strength_sig2_2sig2_gauss1[2] = 2.0*sigma2;
+			data.strength_sig2_2sig2_gauss1[3] = 1.0/(2.0*Math.PI*sigma2);
+			shader.strength_sig2_2sig2_gauss1 = data.strength_sig2_2sig2_gauss1;
 		}
 	}
 }

@@ -1,16 +1,11 @@
 package laya.d3.core {
-	import laya.d3.animation.AnimationClip;
 	import laya.d3.animation.AnimationNode;
 	import laya.d3.animation.AnimationTransform3D;
 	import laya.d3.component.Animator;
 	import laya.d3.math.Matrix4x4;
 	import laya.d3.math.Quaternion;
 	import laya.d3.math.Vector3;
-	import laya.d3.math.Vector4;
-	import laya.d3.utils.Utils3D;
-	import laya.events.Event;
 	import laya.resource.Resource;
-	import laya.utils.Stat;
 	
 	/**
 	 * <code>Avatar</code> 类用于创建Avatar。
