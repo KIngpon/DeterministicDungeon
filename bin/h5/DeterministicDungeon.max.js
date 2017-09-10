@@ -11287,8 +11287,8 @@ var Laya=window.Laya=(function(window,document){
 			this.step=0;
 			this.curPointIndex=0;
 			this.isFirstPointVo=true;
-			if (this.isBossPoint)this.maxStep=4;
-			else if (this.isFirstPoint)this.maxStep=3;
+			if (this.isBossPoint())this.maxStep=4;
+			else if (this.isFirstPoint())this.maxStep=3;
 			else this.maxStep=2;
 			for (var i=0;i < 9;i++){
 				var pVo=new PointVo();
@@ -11669,6 +11669,16 @@ var Laya=window.Laya=(function(window,document){
 		*/
 		__proto.initStartPointVo=function(){
 			this.curPointVo=this.getPointVoByType(1);
+		}
+
+		/**
+		*判断是否是第一次打第一个关卡点
+		*@return
+		*/
+		__proto.checkFirstPoint=function(){
+			if (this.curLevel > 1)return this.isFirstPointVo;
+			else if(!this.isFirstPoint())return this.isFirstPointVo;
+			return true;
 		}
 
 		/**
@@ -12516,10 +12526,17 @@ var Laya=window.Laya=(function(window,document){
 				this.isSelectEnemyCount=true;
 				this.enemyCanSelectCount=this.slots.indexValue;
 				this.curEnemySelectCount++;
-				if (this.enemyCanSelectCount > 0)
+				if (this.enemyCanSelectCount > 0){
 					this.initSlotsSelectEnemyType();
-				else
-				this.gameStage.playerMove(1136,300,Handler.create(this,this.playerMoveOutComplete));
+				}
+				else{
+					if ((!this.stageProxy.checkFirstPoint()&&
+						this.curPointVo.type==1)||
+					this.curPointVo.type==2)
+					this.gameStage.playerMove(1136-300,3000,Handler.create(this,this.playerMoveOutComplete));
+					else
+					this.gameStage.playerMove(1136,3000,Handler.create(this,this.playerMoveOutComplete));
+				}
 			}
 			else if (!this.isSelectEnemyType){
 				var id=this.slots.getSelectId();
@@ -12562,8 +12579,7 @@ var Laya=window.Laya=(function(window,document){
 				aVo.content="前往下一层？";
 				this.sendNotification("SHOW_ALERT",aVo);
 			}
-			else if (!this.stageProxy.isFirstPointVo &&
-			this.stageProxy.curLevel > 1 &&
+			else if (!this.stageProxy.checkFirstPoint()&&
 			this.curPointVo.type==1){
 				aVo=new AlertVo();
 				aVo.type=2;
@@ -12636,6 +12652,11 @@ var Laya=window.Laya=(function(window,document){
 		__proto.enemyHurt=function(isDead){
 			if (this.enemyProxy.getCurStageEnemyCount()==0){
 				this.gameStage.hpBarShow(false);
+				if ((!this.stageProxy.checkFirstPoint()&&
+					this.curPointVo.type==1)||
+				this.curPointVo.type==2)
+				this.gameStage.playerMove(1136-300,3000,Handler.create(this,this.playerMoveOutComplete));
+				else
 				this.gameStage.playerMove(1136,3000,Handler.create(this,this.playerMoveOutComplete));
 			}
 			else{
@@ -12979,6 +13000,7 @@ var Laya=window.Laya=(function(window,document){
 				this.selectStageLayer.skip();
 			}
 			else{
+				console.log(this.stageProxy.step,this.stageProxy.maxStep);
 				this.selectStageLayer.removeSelf();
 				this.selectStageLayer=null;
 				this.sendNotification("SELECT_STAGE_COMPLETE");
@@ -13014,6 +13036,7 @@ var Laya=window.Laya=(function(window,document){
 			this.selectStageLayer.nextStep();
 			this.stageProxy.nextStep(index);
 			if (this.selectStageLayer.isLastStep()){
+				console.log(this.stageProxy.step,this.stageProxy.maxStep);
 				this.selectStageLayer.removeSelf();
 				this.selectStageLayer=null;
 				this.sendNotification("SELECT_STAGE_COMPLETE");
@@ -20033,34 +20056,44 @@ var Laya=window.Laya=(function(window,document){
 				this.upStage.x=stageIcon.x+selectImg.width / 2;
 				this.upStage.y=stageIcon.y+selectImg.height / 2;
 				this.upStage.visible=true;
-				this.setDes("选择上层楼梯。");
+				this.setDes("选择入口。");
 			}
 			else if (this.step==2){
 				this.downStage.x=stageIcon.x+selectImg.width / 2;
 				this.downStage.y=stageIcon.y+selectImg.height / 2;
 				this.downStage.visible=true;
-				this.setDes("选择下层楼梯。");
+				this.setDes("选择出口。");
 			}
 			else if (this.step==3){
 				if (this.isBossPoints){
 					this.bossRewardBox.x=stageIcon.x+selectImg.width / 2;
 					this.bossRewardBox.y=stageIcon.y+selectImg.height / 2;
 					this.bossRewardBox.visible=true;
+					this.setDes("选择宝箱房间。");
 				}
 				else if(this.isFirstPoints){
 					this.rewardBox.x=stageIcon.x+selectImg.width / 2;
 					this.rewardBox.y=stageIcon.y+selectImg.height / 2;
 					this.rewardBox.visible=true;
+					this.setDes("选择宝箱房间。");
 				}
-				this.setDes("选择宝箱房间。");
+				else{
+					this.setDes("关卡完成！点击进入。");
+				}
 			}
 			else if (this.step==4){
 				if (this.isBossPoints){
 					this.bossImg.x=stageIcon.x+selectImg.width / 2;
 					this.bossImg.y=stageIcon.y+selectImg.height / 2;
 					this.bossImg.visible=true;
+					this.setDes("选择boss房间。");
 				}
-				this.setDes("选择boss房间。");
+				else{
+					this.setDes("关卡完成！点击进入。");
+				}
+			}
+			else{
+				this.setDes("关卡完成！点击进入。");
 			}
 		}
 
@@ -20153,6 +20186,11 @@ var Laya=window.Laya=(function(window,document){
 		*@param pointsAry 点数组
 		*/
 		__proto.updateAllPointTypeView=function(pointAry){
+			this.upStage.visible=false;
+			this.downStage.visible=false;
+			this.rewardBox.visible=false;
+			this.bossRewardBox.visible=false;
+			this.bossImg.visible=false;
 			if (!pointAry)return;
 			var count=pointAry.length;
 			for (var i=0;i < count;i++){

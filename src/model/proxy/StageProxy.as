@@ -269,8 +269,8 @@ public class StageProxy extends Proxy
 		this.step = 0;
 		this.curPointIndex = 0;
 		this.isFirstPointVo = true;
-		if (this.isBossPoint) this.maxStep = 4;
-		else if (this.isFirstPoint) this.maxStep = 3;
+		if (this.isBossPoint()) this.maxStep = 4;
+		else if (this.isFirstPoint()) this.maxStep = 3;
 		else this.maxStep = 2;
 		for (var i:int = 0; i < GameConstant.POINTS_NUM_MAX; i++) 
 		{
@@ -724,6 +724,17 @@ public class StageProxy extends Proxy
 	public function initStartPointVo():void
 	{
 		this.curPointVo = this.getPointVoByType(PointVo.UP_FLOOR);
+	}
+	
+	/**
+	 * 判断是否是第一次打第一个关卡点
+	 * @return	
+	 */
+	public function checkFirstPoint():Boolean
+	{
+		if (this.curLevel > 1) return this.isFirstPointVo;
+		else if(!this.isFirstPoint()) return this.isFirstPointVo;
+		return true;
 	}
 }
 }

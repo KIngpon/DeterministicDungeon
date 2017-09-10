@@ -301,9 +301,18 @@ public class GameStageMediator extends Mediator
 			this.enemyCanSelectCount = this.slots.indexValue;
 			this.curEnemySelectCount++;
 			if (this.enemyCanSelectCount > 0)
+			{
 				this.initSlotsSelectEnemyType();
+			}
 			else 
-				this.gameStage.playerMove(GameConstant.GAME_WIDTH, 300, Handler.create(this, playerMoveOutComplete));
+			{
+				if ((!this.stageProxy.checkFirstPoint() && 
+					this.curPointVo.type == PointVo.UP_FLOOR) || 
+					this.curPointVo.type == PointVo.DOWN_FLOOR)
+					this.gameStage.playerMove(GameConstant.GAME_WIDTH - 300, 3000, Handler.create(this, playerMoveOutComplete));
+				else
+					this.gameStage.playerMove(GameConstant.GAME_WIDTH, 3000, Handler.create(this, playerMoveOutComplete));
+			}
 			//直接移动出舞台
 		}
 		else if (!this.isSelectEnemyType)
@@ -360,8 +369,7 @@ public class GameStageMediator extends Mediator
 			aVo.content = "前往下一层？";
 			this.sendNotification(MsgConstant.SHOW_ALERT, aVo);
 		}
-		else if (!this.stageProxy.isFirstPointVo && 
-				  this.stageProxy.curLevel > 1 &&
+		else if (!this.stageProxy.checkFirstPoint() && 
 				  this.curPointVo.type == PointVo.UP_FLOOR)
 		{
 			//弹出对话框
@@ -453,7 +461,12 @@ public class GameStageMediator extends Mediator
 		{
 			//all dead;
 			this.gameStage.hpBarShow(false);
-			this.gameStage.playerMove(GameConstant.GAME_WIDTH, 3000, Handler.create(this, playerMoveOutComplete));
+			if ((!this.stageProxy.checkFirstPoint() && 
+				this.curPointVo.type == PointVo.UP_FLOOR) || 
+				this.curPointVo.type == PointVo.DOWN_FLOOR)
+				this.gameStage.playerMove(GameConstant.GAME_WIDTH - 300, 3000, Handler.create(this, playerMoveOutComplete));
+			else
+				this.gameStage.playerMove(GameConstant.GAME_WIDTH, 3000, Handler.create(this, playerMoveOutComplete));
 		}
 		else
 		{

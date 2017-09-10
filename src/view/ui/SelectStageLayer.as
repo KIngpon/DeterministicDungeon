@@ -261,7 +261,7 @@ public class SelectStageLayer extends Sprite
 			this.upStage.x = stageIcon.x + selectImg.width / 2;
 			this.upStage.y = stageIcon.y + selectImg.height / 2;
 			this.upStage.visible = true;
-			this.setDes("选择上层楼梯。");
+			this.setDes("选择入口。");
 		}
 		else if (this.step == 2)
 		{
@@ -269,8 +269,7 @@ public class SelectStageLayer extends Sprite
 			this.downStage.x = stageIcon.x + selectImg.width / 2;
 			this.downStage.y = stageIcon.y + selectImg.height / 2;
 			this.downStage.visible = true;
-			this.setDes("选择下层楼梯。");
-
+			this.setDes("选择出口。");
 		}
 		else if (this.step == 3)
 		{
@@ -280,14 +279,19 @@ public class SelectStageLayer extends Sprite
 				this.bossRewardBox.x = stageIcon.x + selectImg.width / 2;
 				this.bossRewardBox.y = stageIcon.y + selectImg.height / 2;
 				this.bossRewardBox.visible = true;
+				this.setDes("选择宝箱房间。");
 			}
 			else if(this.isFirstPoints)
 			{
 				this.rewardBox.x = stageIcon.x + selectImg.width / 2;
 				this.rewardBox.y = stageIcon.y + selectImg.height / 2;
 				this.rewardBox.visible = true;
+				this.setDes("选择宝箱房间。");
 			}
-			this.setDes("选择宝箱房间。");
+			else
+			{
+				this.setDes("关卡完成！点击进入。");
+			}
 		}
 		else if (this.step == 4)
 		{
@@ -296,8 +300,16 @@ public class SelectStageLayer extends Sprite
 				this.bossImg.x = stageIcon.x + selectImg.width / 2;
 				this.bossImg.y = stageIcon.y + selectImg.height / 2;
 				this.bossImg.visible = true;
+				this.setDes("选择boss房间。");
 			}
-			this.setDes("选择boss房间。");
+			else
+			{
+				this.setDes("关卡完成！点击进入。");
+			}
+		}
+		else
+		{
+			this.setDes("关卡完成！点击进入。");
 		}
 	}
 	
@@ -407,6 +419,11 @@ public class SelectStageLayer extends Sprite
 	 */
 	public function updateAllPointTypeView(pointAry:Array):void 
 	{
+		this.upStage.visible = false;
+		this.downStage.visible = false;
+		this.rewardBox.visible = false;
+		this.bossRewardBox.visible = false;
+		this.bossImg.visible = false;
 		if (!pointAry) return;
 		var count:int = pointAry.length;
 		for (var i:int = 0; i < count; i++) 
