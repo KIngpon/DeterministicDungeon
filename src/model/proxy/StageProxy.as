@@ -86,7 +86,7 @@ public class StageProxy extends Proxy
 			//解析关卡数据
 			this.curLevel = 1;
 			this.curPoints = 1;
-			trace(LocalStorage.getJSON("dungeon"));
+			trace(JSON.stringify(LocalStorage.getJSON("dungeon")));
 			this.isLoaded = true;
 			//LocalStorage.clear();
 		}));
@@ -774,31 +774,36 @@ public class StageProxy extends Proxy
 			}
 			o[this.curLevel + "_" + this.curPoints] = arr;
 		}
-		//trace(JSON.stringify(o));
+		trace(JSON.stringify(o));
 		LocalStorage.setJSON("dungeon", o);
 	}
 	
 	/**
 	 * 解析保存的数据
 	 */
-	public function parseSaveData():void
+	public function parseStageData():void
 	{
 		if (!this.hasSaveData()) return;
 		var saveData:Object = LocalStorage.getJSON("dungeon");
 		this.isFirstPointVo = true;
 		this.curLevel = saveData.level;
 		this.curPoints = saveData.curPoints;
-		this.pProxy.pVo.level = saveData.playerLevel;
-		var pPo:PlayerPo = this.pProxy.getPlayerPoByLevel(saveData.playerLevel);
-		this.pProxy.pVo.maxExp = pPo.exp;
-		this.pProxy.pVo.maxHp = saveData.maxHp;
-		this.pProxy.pVo.curHp = this.pProxy.pVo.maxHp;
-		this.pProxy.pVo.curExp = saveData.curExp;
-		this.pProxy.pVo.name = saveData.playerName;
-		this.pProxy.pVo.slotsDelay = 270;
-		this.pProxy.pVo.weaponPo = this.equipProxy.getEquipPoById(1);
-		//TODO 解析关卡
 		this.pointsAry = saveData[this.curLevel + "_" + this.curPoints];
+	}
+	
+	/**
+	 * 根据关卡和关卡点获取关卡数据
+	 * @param	level		关卡
+	 * @param	points		关卡点
+	 */
+	public function parseStageDataByLevelAndPoints(level:int, points:int):void
+	{
+		if (!this.hasStageDataByLevelAndPoints(level, points)) return;
+		var saveData:Object = LocalStorage.getJSON("dungeon");
+		this.isFirstPointVo = true;
+		this.curLevel = saveData.level;
+		this.curPoints = saveData.curPoints;
+		this.pointsAry = saveData[level + "_" + points];
 	}
 	
 	/**
@@ -808,6 +813,19 @@ public class StageProxy extends Proxy
 	public function hasSaveData():Boolean
 	{
 		return LocalStorage.getJSON("dungeon");
+	}
+	
+	/**
+	 * 根据关卡和关卡点
+	 * @param	level		关卡
+	 * @param	points		关卡点
+	 * @return
+	 */
+	public function hasStageDataByLevelAndPoints(level:int, points:int):Boolean
+	{
+		if (!LocalStorage.getJSON("dungeon")) return false;
+		var saveData:Object = LocalStorage.getJSON("dungeon");
+		return saveData[level + "_" + points];
 	}
 }
 }

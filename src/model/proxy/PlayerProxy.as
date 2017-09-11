@@ -155,5 +155,23 @@ public class PlayerProxy extends Proxy
 		return MathUtil.ceil(this.pVo.getBaseMagic() / this.maxLevel) + 1;
 	}
 
+	
+	/**
+	 * 解析角色数据
+	 */
+	public function parsePlayerData():void
+	{
+		if (!LocalStorage.getJSON("dungeon")) return;
+		var saveData:Object = LocalStorage.getJSON("dungeon");
+		this.pVo.level = saveData.playerLevel;
+		var pPo:PlayerPo = this.getPlayerPoByLevel(saveData.playerLevel);
+		this.pVo.maxExp = pPo.exp;
+		this.pVo.maxHp = saveData.maxHp;
+		this.pVo.curHp = this.pVo.maxHp;
+		this.pVo.curExp = saveData.curExp;
+		this.pVo.name = saveData.playerName;
+		this.pVo.slotsDelay = 270;
+		this.pVo.weaponPo = this.equipProxy.getEquipPoById(1);
+	}
 }
 }

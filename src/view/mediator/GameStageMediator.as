@@ -115,7 +115,8 @@ public class GameStageMediator extends Mediator
 				this.initUI();
 				if (this.stageProxy.hasSaveData())
 				{
-					this.stageProxy.parseSaveData();
+					this.stageProxy.parseStageData();
+					this.playerProxy.parsePlayerData();
 					//有保存数据的直接开始
 					this.initData();
 					this.gameStage.initPlayer(this.playerVo);
@@ -179,14 +180,25 @@ public class GameStageMediator extends Mediator
 					this.stageProxy.curPoints--;
 					if (this.stageProxy.curPoints <= 0)
 					{
-						this.stageProxy.curPoints = 1;
 						this.stageProxy.curLevel--;
+						this.stageProxy.curPoints = this.stageProxy.getCurStagePointsCount();
 					}
 				}
-				trace("aVo.type", aVo.type);
-				trace("this.stageProxy.curPoints, this.stageProxy.curLevel");
-				trace(this.stageProxy.curPoints, this.stageProxy.curLevel);
-				this.sendNotification(MsgConstant.START_FIGHT);
+				
+				if(this.stageProxy.hasStageDataByLevelAndPoints(this.stageProxy.curLevel, 
+															    this.stageProxy.curPoints))
+				{
+					this.stageProxy.parseStageDataByLevelAndPoints(this.stageProxy.curLevel, 
+																   this.stageProxy.curPoints);
+					this.initData();
+					this.gameStage.initPlayer(this.playerVo);
+					this.gameStage.setPlayerProp(this.playerVo);
+					this.sendNotification(MsgConstant.SELECT_STAGE_COMPLETE);
+				}
+				else
+				{
+					this.sendNotification(MsgConstant.START_FIGHT);
+				}
 				break;
 			default:
 				break;
