@@ -112,12 +112,25 @@ public class GameStageMediator extends Mediator
 		{
 			case MsgConstant.INIT_FIGHT_STAGE:
 				this.initEvent();
-				this.sendNotification(MsgConstant.START_FIGHT);
+				this.initUI();
+				if (this.stageProxy.hasSaveData())
+				{
+					this.stageProxy.parseSaveData();
+					//有保存数据的直接开始
+					this.initData();
+					this.gameStage.initPlayer(this.playerVo);
+					this.gameStage.setPlayerProp(this.playerVo);
+					this.sendNotification(MsgConstant.SELECT_STAGE_COMPLETE);
+				}
+				else
+				{
+					this.sendNotification(MsgConstant.START_FIGHT);
+				}
+				this.sendNotification(MsgConstant.REMOVE_LOADING);
 				break;
 			case MsgConstant.START_FIGHT:
 				this.initData();
 				this.resetPointsAry();
-				this.initUI();
 				this.gameStage.initPlayer(this.playerVo);
 				this.gameStage.setPlayerProp(this.playerVo);
 				break;
@@ -309,9 +322,9 @@ public class GameStageMediator extends Mediator
 				if ((!this.stageProxy.checkFirstPoint() && 
 					this.curPointVo.type == PointVo.UP_FLOOR) || 
 					this.curPointVo.type == PointVo.DOWN_FLOOR)
-					this.gameStage.playerMove(GameConstant.GAME_WIDTH - 300, 3000, Handler.create(this, playerMoveOutComplete));
+					this.gameStage.playerMove(GameConstant.GAME_WIDTH - 300, 300, Handler.create(this, playerMoveOutComplete));
 				else
-					this.gameStage.playerMove(GameConstant.GAME_WIDTH, 3000, Handler.create(this, playerMoveOutComplete));
+					this.gameStage.playerMove(GameConstant.GAME_WIDTH, 300, Handler.create(this, playerMoveOutComplete));
 			}
 			//直接移动出舞台
 		}
@@ -464,9 +477,9 @@ public class GameStageMediator extends Mediator
 			if ((!this.stageProxy.checkFirstPoint() && 
 				this.curPointVo.type == PointVo.UP_FLOOR) || 
 				this.curPointVo.type == PointVo.DOWN_FLOOR)
-				this.gameStage.playerMove(GameConstant.GAME_WIDTH - 300, 3000, Handler.create(this, playerMoveOutComplete));
+				this.gameStage.playerMove(GameConstant.GAME_WIDTH - 300, 300, Handler.create(this, playerMoveOutComplete));
 			else
-				this.gameStage.playerMove(GameConstant.GAME_WIDTH, 3000, Handler.create(this, playerMoveOutComplete));
+				this.gameStage.playerMove(GameConstant.GAME_WIDTH, 300, Handler.create(this, playerMoveOutComplete));
 		}
 		else
 		{

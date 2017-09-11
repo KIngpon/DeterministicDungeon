@@ -19,6 +19,8 @@ public class PlayerVo
 	public var slotsDelay:int;
 	//武器数据
 	public var weaponPo:EquipPo;
+	//玩家名字
+	public var name:String = "玩家名字";
 	//攻击加成buff
 	private var atkAddBuff:int = 0;
 	private var defAddBuff:int = 0;

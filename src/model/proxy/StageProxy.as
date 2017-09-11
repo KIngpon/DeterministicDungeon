@@ -1,10 +1,12 @@
 package model.proxy 
 {
 import config.GameConstant;
+import laya.net.LocalStorage;
 import laya.utils.Handler;
 import model.po.DropPo;
 import model.po.EnemyPo;
 import model.po.EquipPo;
+import model.po.PlayerPo;
 import model.po.StagePo;
 import model.vo.PointVo;
 import mvc.Proxy;
@@ -36,6 +38,7 @@ public class StageProxy extends Proxy
 	private var eProxy:EnemyProxy;
 	private var equipProxy:EquipProxy;
 	private var dProxy:DropProxy;
+	private var pProxy:PlayerProxy;
 	//关卡点数据列表
 	public var pointsAry:Array;
 	public var openList:Array;
@@ -49,6 +52,7 @@ public class StageProxy extends Proxy
 		this.eProxy = this.retrieveProxy(EnemyProxy.NAME) as EnemyProxy;
 		this.dProxy = this.retrieveProxy(DropProxy.NAME) as DropProxy;
 		this.equipProxy = this.retrieveProxy(EquipProxy.NAME) as EquipProxy;
+		this.pProxy = this.retrieveProxy(PlayerProxy.NAME) as PlayerProxy;
 	}
 	
 	override public function initData():void 
@@ -79,7 +83,12 @@ public class StageProxy extends Proxy
 				}
 				this.stageAry.push(stagePo);
 			}
+			//解析关卡数据
+			this.curLevel = 1;
+			this.curPoints = 1;
+			trace(LocalStorage.getJSON("dungeon"));
 			this.isLoaded = true;
+			//LocalStorage.clear();
 		}));
 	}
 	
@@ -461,6 +470,11 @@ public class StageProxy extends Proxy
 				}
 			break;
 		}
+		
+		if (this.step > this.maxStep)
+		{
+			trace("----下一步保存-----");
+		}
 	}
 	
 	/**
@@ -735,6 +749,65 @@ public class StageProxy extends Proxy
 		if (this.curLevel > 1) return this.isFirstPointVo;
 		else if(!this.isFirstPoint()) return this.isFirstPointVo;
 		return true;
+	}
+	
+	/**
+	 * 保存关卡数据
+	 */
+	public function save():void
+	{
+		var o:Object = {};
+		o.level = this.curLevel;
+		o.curPoints = this.curPoints;
+		o.curExp = this.pProxy.pVo.curExp;
+		o.maxHp = this.pProxy.pVo.maxHp;
+		o.playerLevel = this.pProxy.pVo.level;
+		o.playerName = this.pProxy.pVo.level;
+		if (this.pointsAry)
+		{
+			var arr:Array = [];
+			var count:int = this.pointsAry.length;
+			for (var i:int = 0; i < count; ++i) 
+			{
+				var pVo:PointVo = this.pointsAry[i];
+				arr.push(pVo);
+			}
+			o[this.curLevel + "_" + this.curPoints] = arr;
+		}
+		//trace(JSON.stringify(o));
+		LocalStorage.setJSON("dungeon", o);
+	}
+	
+	/**
+	 * 解析保存的数据
+	 */
+	public function parseSaveData():void
+	{
+		if (!this.hasSaveData()) return;
+		var saveData:Object = LocalStorage.getJSON("dungeon");
+		this.isFirstPointVo = true;
+		this.curLevel = saveData.level;
+		this.curPoints = saveData.curPoints;
+		this.pProxy.pVo.level = saveData.playerLevel;
+		var pPo:PlayerPo = this.pProxy.getPlayerPoByLevel(saveData.playerLevel);
+		this.pProxy.pVo.maxExp = pPo.exp;
+		this.pProxy.pVo.maxHp = saveData.maxHp;
+		this.pProxy.pVo.curHp = this.pProxy.pVo.maxHp;
+		this.pProxy.pVo.curExp = saveData.curExp;
+		this.pProxy.pVo.name = saveData.playerName;
+		this.pProxy.pVo.slotsDelay = 270;
+		this.pProxy.pVo.weaponPo = this.equipProxy.getEquipPoById(1);
+		//TODO 解析关卡
+		this.pointsAry = saveData[this.curLevel + "_" + this.curPoints];
+	}
+	
+	/**
+	 * 是否有保存数据
+	 * @return	
+	 */
+	public function hasSaveData():Boolean
+	{
+		return LocalStorage.getJSON("dungeon");
 	}
 }
 }

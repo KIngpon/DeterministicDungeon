@@ -112,7 +112,8 @@ public class SelectStageMediator extends Mediator
 		}
 		else
 		{
-			trace(this.stageProxy.step, this.stageProxy.maxStep);
+			//保存
+			this.stageProxy.save();
 			this.selectStageLayer.removeSelf();
 			this.selectStageLayer = null;
 			this.sendNotification(MsgConstant.SELECT_STAGE_COMPLETE);
@@ -156,7 +157,7 @@ public class SelectStageMediator extends Mediator
 		if (this.selectStageLayer.isLastStep())
 		{
 			//保存
-			trace(this.stageProxy.step, this.stageProxy.maxStep);
+			this.stageProxy.save();
 			this.selectStageLayer.removeSelf();
 			this.selectStageLayer = null;
 			this.sendNotification(MsgConstant.SELECT_STAGE_COMPLETE);

@@ -426,6 +426,7 @@ var Laya=window.Laya=(function(window,document){
 		__class(MsgConstant,'config.MsgConstant');
 		MsgConstant.INIT_FIGHT_STAGE="INIT_FIGHT_STAGE";
 		MsgConstant.START_FIGHT="START_FIGHT";
+		MsgConstant.REMOVE_LOADING="REMOVE_LOADING";
 		MsgConstant.SELECT_STAGE_COMPLETE="SELECT_STAGE_COMPLETE";
 		MsgConstant.LOAD_PROGRESS_FIGHT_STAGE="LOAD_PROGRESS_FIGHT_STAGE";
 		MsgConstant.SHOW_SELECT_NEXT_POINT_LAYER="SHOW_SELECT_NEXT_POINT_LAYER";
@@ -726,6 +727,7 @@ var Laya=window.Laya=(function(window,document){
 			this.level=0;
 			this.slotsDelay=0;
 			this.weaponPo=null;
+			this.name="玩家名字";
 			this.atkAddBuff=0;
 			this.defAddBuff=0;
 			this.magicAddBuff=0;
@@ -10887,9 +10889,10 @@ var Laya=window.Laya=(function(window,document){
 						this.maxLevel=playerPo.level;
 				}
 				this.isLoaded=true;
+				var pPo;
 				this.pVo=new PlayerVo();
-				this.pVo.level=20;
-				var pPo=this.getPlayerPoByLevel(this.pVo.level);
+				this.pVo.level=1;
+				pPo=this.getPlayerPoByLevel(this.pVo.level);
 				this.pVo.maxExp=pPo.exp;
 				this.pVo.maxHp=pPo.hp;
 				this.pVo.curHp=this.pVo.maxHp;
@@ -11100,6 +11103,7 @@ var Laya=window.Laya=(function(window,document){
 			this.eProxy=null;
 			this.equipProxy=null;
 			this.dProxy=null;
+			this.pProxy=null;
 			this.pointsAry=null;
 			this.openList=null;
 			this.curPointVo=null;
@@ -11109,6 +11113,7 @@ var Laya=window.Laya=(function(window,document){
 			this.eProxy=this.retrieveProxy("EnemyProxy");
 			this.dProxy=this.retrieveProxy("DropProxy");
 			this.equipProxy=this.retrieveProxy("EquipProxy");
+			this.pProxy=this.retrieveProxy("PlayerProxy");
 		}
 
 		__class(StageProxy,'model.proxy.StageProxy',_super);
@@ -11137,6 +11142,9 @@ var Laya=window.Laya=(function(window,document){
 					}
 					this.stageAry.push(stagePo);
 				}
+				this.curLevel=1;
+				this.curPoints=1;
+				console.log(LocalStorage.getJSON("dungeon"));
 				this.isLoaded=true;
 			}));
 		}
@@ -11468,6 +11476,9 @@ var Laya=window.Laya=(function(window,document){
 					}
 					break ;
 				}
+			if (this.step > this.maxStep){
+				console.log("----下一步保存-----");
+			}
 		}
 
 		/**
@@ -11692,6 +11703,58 @@ var Laya=window.Laya=(function(window,document){
 			if (this.curLevel > 1)return this.isFirstPointVo;
 			else if(!this.isFirstPoint())return this.isFirstPointVo;
 			return true;
+		}
+
+		/**
+		*保存关卡数据
+		*/
+		__proto.save=function(){
+			var o={};
+			o.level=this.curLevel;
+			o.curPoints=this.curPoints;
+			o.curExp=this.pProxy.pVo.curExp;
+			o.maxHp=this.pProxy.pVo.maxHp;
+			o.playerLevel=this.pProxy.pVo.level;
+			o.playerName=this.pProxy.pVo.level;
+			if (this.pointsAry){
+				var arr=[];
+				var count=this.pointsAry.length;
+				for (var i=0;i < count;++i){
+					var pVo=this.pointsAry[i];
+					arr.push(pVo);
+				}
+				o[this.curLevel+"_"+this.curPoints]=arr;
+			}
+			LocalStorage.setJSON("dungeon",o);
+		}
+
+		/**
+		*解析保存的数据
+		*/
+		__proto.parseSaveData=function(){
+			if (!this.hasSaveData())return;
+			var saveData=LocalStorage.getJSON("dungeon");
+			this.isFirstPointVo=true;
+			this.curLevel=saveData.level;
+			this.curPoints=saveData.curPoints;
+			this.pProxy.pVo.level=saveData.playerLevel;
+			var pPo=this.pProxy.getPlayerPoByLevel(saveData.playerLevel);
+			this.pProxy.pVo.maxExp=pPo.exp;
+			this.pProxy.pVo.maxHp=saveData.maxHp;
+			this.pProxy.pVo.curHp=this.pProxy.pVo.maxHp;
+			this.pProxy.pVo.curExp=saveData.curExp;
+			this.pProxy.pVo.name=saveData.playerName;
+			this.pProxy.pVo.slotsDelay=270;
+			this.pProxy.pVo.weaponPo=this.equipProxy.getEquipPoById(1);
+			this.pointsAry=saveData[this.curLevel+"_"+this.curPoints];
+		}
+
+		/**
+		*是否有保存数据
+		*@return
+		*/
+		__proto.hasSaveData=function(){
+			return LocalStorage.getJSON("dungeon");
 		}
 
 		/**
@@ -12380,12 +12443,22 @@ var Laya=window.Laya=(function(window,document){
 			switch (notification.notificationName){
 				case "INIT_FIGHT_STAGE":
 					this.initEvent();
-					this.sendNotification("START_FIGHT");
+					this.initUI();
+					if (this.stageProxy.hasSaveData()){
+						this.stageProxy.parseSaveData();
+						this.initData();
+						this.gameStage.initPlayer(this.playerVo);
+						this.gameStage.setPlayerProp(this.playerVo);
+						this.sendNotification("SELECT_STAGE_COMPLETE");
+					}
+					else{
+						this.sendNotification("START_FIGHT");
+					}
+					this.sendNotification("REMOVE_LOADING");
 					break ;
 				case "START_FIGHT":
 					this.initData();
 					this.resetPointsAry();
-					this.initUI();
 					this.gameStage.initPlayer(this.playerVo);
 					this.gameStage.setPlayerProp(this.playerVo);
 					break ;
@@ -12546,9 +12619,9 @@ var Laya=window.Laya=(function(window,document){
 					if ((!this.stageProxy.checkFirstPoint()&&
 						this.curPointVo.type==1)||
 					this.curPointVo.type==2)
-					this.gameStage.playerMove(1136-300,3000,Handler.create(this,this.playerMoveOutComplete));
+					this.gameStage.playerMove(1136-300,300,Handler.create(this,this.playerMoveOutComplete));
 					else
-					this.gameStage.playerMove(1136,3000,Handler.create(this,this.playerMoveOutComplete));
+					this.gameStage.playerMove(1136,300,Handler.create(this,this.playerMoveOutComplete));
 				}
 			}
 			else if (!this.isSelectEnemyType){
@@ -12668,9 +12741,9 @@ var Laya=window.Laya=(function(window,document){
 				if ((!this.stageProxy.checkFirstPoint()&&
 					this.curPointVo.type==1)||
 				this.curPointVo.type==2)
-				this.gameStage.playerMove(1136-300,3000,Handler.create(this,this.playerMoveOutComplete));
+				this.gameStage.playerMove(1136-300,300,Handler.create(this,this.playerMoveOutComplete));
 				else
-				this.gameStage.playerMove(1136,3000,Handler.create(this,this.playerMoveOutComplete));
+				this.gameStage.playerMove(1136,300,Handler.create(this,this.playerMoveOutComplete));
 			}
 			else{
 				if (this.roundIndex > this.enemyProxy.getCurStageEnemyCount()-1)this.roundIndex=0;
@@ -12752,7 +12825,7 @@ var Laya=window.Laya=(function(window,document){
 		__proto.listNotificationInterests=function(){
 			var vect=[];
 			vect.push("LOAD_PROGRESS_FIGHT_STAGE");
-			vect.push("START_FIGHT");
+			vect.push("REMOVE_LOADING");
 			return vect;
 		}
 
@@ -12761,7 +12834,7 @@ var Laya=window.Laya=(function(window,document){
 				case "LOAD_PROGRESS_FIGHT_STAGE":
 					this.updateLoading(notification.body);
 					break ;
-				case "START_FIGHT":
+				case "REMOVE_LOADING":
 					this.removeLoading();
 					break ;
 				default :
@@ -13013,7 +13086,7 @@ var Laya=window.Laya=(function(window,document){
 				this.selectStageLayer.skip();
 			}
 			else{
-				console.log(this.stageProxy.step,this.stageProxy.maxStep);
+				this.stageProxy.save();
 				this.selectStageLayer.removeSelf();
 				this.selectStageLayer=null;
 				this.sendNotification("SELECT_STAGE_COMPLETE");
@@ -13049,7 +13122,7 @@ var Laya=window.Laya=(function(window,document){
 			this.selectStageLayer.nextStep();
 			this.stageProxy.nextStep(index);
 			if (this.selectStageLayer.isLastStep()){
-				console.log(this.stageProxy.step,this.stageProxy.maxStep);
+				this.stageProxy.save();
 				this.selectStageLayer.removeSelf();
 				this.selectStageLayer=null;
 				this.sendNotification("SELECT_STAGE_COMPLETE");
@@ -18496,6 +18569,11 @@ var Laya=window.Laya=(function(window,document){
 		*@param pointsAry 点数组
 		*/
 		__proto.updateAllPointTypeView=function(pointAry){
+			this.upStage.visible=false;
+			this.downStage.visible=false;
+			this.rewardBox.visible=false;
+			this.bossRewardBox.visible=false;
+			this.bossImg.visible=false;
 			if (!pointAry)return;
 			var count=pointAry.length;
 			for (var i=0;i < count;i++){
@@ -19179,7 +19257,6 @@ var Laya=window.Laya=(function(window,document){
 			this.nameTxt.pivotX=this.nameTxt.width / 2;
 			this.nameTxt.x=levelBg.x+levelBg.width / 2;
 			this.nameTxt.y=levelBg.y-68;
-			this.nameTxt.text="玩家名字"
 			this.addChild(this.nameTxt);
 			this.miniMap=new MiniMap();
 			this.miniMap.x=1136 / 2-this.miniMap.width / 2;
@@ -19202,6 +19279,7 @@ var Laya=window.Laya=(function(window,document){
 			this.player.x=-this.player.width / 2;
 			this.player.y=450;
 			this.arrowImg.visible=false;
+			this.nameTxt.text=pVo.name;
 			this.playerHpBar.setMaxValue(pVo.maxHp);
 			this.playerHpBar.setValue(pVo.curHp);
 			this.playerExpBar.setMaxValue(pVo.maxExp);
@@ -32044,7 +32122,7 @@ var Laya=window.Laya=(function(window,document){
 	})(Dialog)
 
 
-	Laya.__init([LoaderManager,EventDispatcher,FloatTips,Damage,NotificationCenter,Facade,Timer,Render,Browser,View,GraphicAnimation1,LocalStorage]);
+	Laya.__init([LoaderManager,EventDispatcher,FloatTips,Damage,LocalStorage,NotificationCenter,Facade,Timer,Render,Browser,View,GraphicAnimation1]);
 	new Main();
 
 })(window,document,Laya);

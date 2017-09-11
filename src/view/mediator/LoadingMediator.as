@@ -22,7 +22,7 @@ public class LoadingMediator extends Mediator
 	{
 		var vect:Vector.<String> = new Vector.<String>();
 		vect.push(MsgConstant.LOAD_PROGRESS_FIGHT_STAGE);
-		vect.push(MsgConstant.START_FIGHT);
+		vect.push(MsgConstant.REMOVE_LOADING);
 		return vect;
 	}
 	
@@ -33,7 +33,7 @@ public class LoadingMediator extends Mediator
 			case MsgConstant.LOAD_PROGRESS_FIGHT_STAGE:
 				this.updateLoading(notification.body);
 			break;
-			case MsgConstant.START_FIGHT:
+			case MsgConstant.REMOVE_LOADING:
 				this.removeLoading();
 			break;
 			default:

@@ -213,7 +213,6 @@ public class GameStageLayer extends Sprite
 		this.nameTxt.pivotX = this.nameTxt.width / 2;
 		this.nameTxt.x = levelBg.x + levelBg.width / 2;
 		this.nameTxt.y = levelBg.y - 68;
-		this.nameTxt.text = "玩家名字"
 		this.addChild(this.nameTxt);
 		
 		this.miniMap = new MiniMap();
@@ -239,7 +238,7 @@ public class GameStageLayer extends Sprite
 		this.player.x = -this.player.width / 2;
 		this.player.y = GameConstant.ROLE_POS_Y;
 		this.arrowImg.visible = false;
-		
+		this.nameTxt.text = pVo.name;
 		this.playerHpBar.setMaxValue(pVo.maxHp);
 		this.playerHpBar.setValue(pVo.curHp);
 		this.playerExpBar.setMaxValue(pVo.maxExp);

@@ -172,6 +172,11 @@ public class MiniMap extends Sprite
 	 */
 	public function updateAllPointTypeView(pointAry:Array):void 
 	{
+		this.upStage.visible = false;
+		this.downStage.visible = false;
+		this.rewardBox.visible = false;
+		this.bossRewardBox.visible = false;
+		this.bossImg.visible = false;
 		if (!pointAry) return;
 		var count:int = pointAry.length;
 		for (var i:int = 0; i < count; i++) 

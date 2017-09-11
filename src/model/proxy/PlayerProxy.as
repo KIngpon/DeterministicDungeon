@@ -1,5 +1,6 @@
 package model.proxy 
 {
+import laya.net.LocalStorage;
 import laya.utils.Handler;
 import model.po.PlayerPo;
 import model.vo.PlayerVo;
@@ -54,9 +55,10 @@ public class PlayerProxy extends Proxy
 					this.maxLevel = playerPo.level;
 			}
 			this.isLoaded = true;
+			var pPo:PlayerPo;
 			this.pVo = new PlayerVo();
-			this.pVo.level = 20;
-			var pPo:PlayerPo = this.getPlayerPoByLevel(this.pVo.level);
+			this.pVo.level = 1;
+			pPo = this.getPlayerPoByLevel(this.pVo.level);
 			this.pVo.maxExp = pPo.exp;
 			this.pVo.maxHp = pPo.hp;
 			this.pVo.curHp = this.pVo.maxHp;
