@@ -23,6 +23,10 @@ public class GameConstant
 	public static var GAME_RED_FONT_NAME:String = "gameRedFont";
 	//敌人icon路径
 	public static const ENEMY_ICON:String = "icon/enemy/";
+	//关卡数据存储key
+	public static const STAGE_DATA_KEY:String = "dungeon_stage"
+	//角色数据存储key
+	public static const PLAYER_DATA_KEY:String = "dungeon_player"
 
 }
 }

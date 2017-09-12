@@ -86,8 +86,9 @@ public class StageProxy extends Proxy
 			//解析关卡数据
 			this.curLevel = 1;
 			this.curPoints = 1;
-			trace(JSON.stringify(LocalStorage.getJSON("dungeon")));
 			this.isLoaded = true;
+			trace(JSON.stringify(LocalStorage.getJSON("dungeon_stage")));
+			this.parseStageData();
 			//LocalStorage.clear();
 		}));
 	}
@@ -734,6 +735,7 @@ public class StageProxy extends Proxy
 	
 	/**
 	 * 初始化关卡点
+	 * @param flag	是否是上楼点
 	 */
 	public function initStartPointVo():void
 	{
@@ -759,23 +761,9 @@ public class StageProxy extends Proxy
 		var o:Object = {};
 		o.level = this.curLevel;
 		o.curPoints = this.curPoints;
-		o.curExp = this.pProxy.pVo.curExp;
-		o.maxHp = this.pProxy.pVo.maxHp;
-		o.playerLevel = this.pProxy.pVo.level;
-		o.playerName = this.pProxy.pVo.level;
-		if (this.pointsAry)
-		{
-			var arr:Array = [];
-			var count:int = this.pointsAry.length;
-			for (var i:int = 0; i < count; ++i) 
-			{
-				var pVo:PointVo = this.pointsAry[i];
-				arr.push(pVo);
-			}
-			o[this.curLevel + "_" + this.curPoints] = arr;
-		}
-		trace(JSON.stringify(o));
-		LocalStorage.setJSON("dungeon", o);
+		LocalStorage.setJSON(GameConstant.STAGE_DATA_KEY, o);
+		if (!this.pointsAry || this.pointsAry.length == 0) return;
+		LocalStorage.setJSON(GameConstant.STAGE_DATA_KEY + "_" + this.curLevel + "_" + this.curPoints, this.pointsAry);
 	}
 	
 	/**
@@ -784,11 +772,13 @@ public class StageProxy extends Proxy
 	public function parseStageData():void
 	{
 		if (!this.hasSaveData()) return;
-		var saveData:Object = LocalStorage.getJSON("dungeon");
+		var o:Object = LocalStorage.getJSON(GameConstant.STAGE_DATA_KEY);
 		this.isFirstPointVo = true;
-		this.curLevel = saveData.level;
-		this.curPoints = saveData.curPoints;
-		this.pointsAry = saveData[this.curLevel + "_" + this.curPoints];
+		this.curLevel = o.level;
+		this.curPoints = o.curPoints;
+		o = LocalStorage.getJSON(GameConstant.STAGE_DATA_KEY + "_" + this.curLevel + "_" + this.curPoints);
+		if (!o) return;
+		this.pointsAry = o as Array;
 	}
 	
 	/**
@@ -799,11 +789,8 @@ public class StageProxy extends Proxy
 	public function parseStageDataByLevelAndPoints(level:int, points:int):void
 	{
 		if (!this.hasStageDataByLevelAndPoints(level, points)) return;
-		var saveData:Object = LocalStorage.getJSON("dungeon");
-		this.isFirstPointVo = true;
-		this.curLevel = saveData.level;
-		this.curPoints = saveData.curPoints;
-		this.pointsAry = saveData[level + "_" + points];
+		var o:Object = LocalStorage.getJSON(GameConstant.STAGE_DATA_KEY + "_" + level + "_" + points);
+		this.pointsAry = o as Array;
 	}
 	
 	/**
@@ -812,7 +799,7 @@ public class StageProxy extends Proxy
 	 */
 	public function hasSaveData():Boolean
 	{
-		return LocalStorage.getJSON("dungeon");
+		return LocalStorage.getJSON(GameConstant.STAGE_DATA_KEY);
 	}
 	
 	/**
@@ -823,9 +810,7 @@ public class StageProxy extends Proxy
 	 */
 	public function hasStageDataByLevelAndPoints(level:int, points:int):Boolean
 	{
-		if (!LocalStorage.getJSON("dungeon")) return false;
-		var saveData:Object = LocalStorage.getJSON("dungeon");
-		return saveData[level + "_" + points];
+		return LocalStorage.getJSON(GameConstant.STAGE_DATA_KEY + "_" + level + "_" + points);
 	}
 }
 }

@@ -113,10 +113,12 @@ public class GameStageMediator extends Mediator
 			case MsgConstant.INIT_FIGHT_STAGE:
 				this.initEvent();
 				this.initUI();
-				if (this.stageProxy.hasSaveData())
+				if (this.stageProxy.hasStageDataByLevelAndPoints(this.stageProxy.curLevel, 
+																 this.stageProxy.curPoints))
 				{
-					this.stageProxy.parseStageData();
-					this.playerProxy.parsePlayerData();
+					this.stageProxy.isFirstPointVo = true;
+					this.stageProxy.parseStageDataByLevelAndPoints(this.stageProxy.curLevel, 
+																   this.stageProxy.curPoints);
 					//有保存数据的直接开始
 					this.initData();
 					this.gameStage.initPlayer(this.playerVo);
@@ -188,6 +190,7 @@ public class GameStageMediator extends Mediator
 				if(this.stageProxy.hasStageDataByLevelAndPoints(this.stageProxy.curLevel, 
 															    this.stageProxy.curPoints))
 				{
+					this.stageProxy.isFirstPointVo = true;
 					this.stageProxy.parseStageDataByLevelAndPoints(this.stageProxy.curLevel, 
 																   this.stageProxy.curPoints);
 					this.initData();
@@ -199,6 +202,7 @@ public class GameStageMediator extends Mediator
 				{
 					this.sendNotification(MsgConstant.START_FIGHT);
 				}
+				this.stageProxy.save();
 				break;
 			default:
 				break;

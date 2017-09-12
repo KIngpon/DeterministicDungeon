@@ -1,5 +1,6 @@
 package model.proxy 
 {
+import config.GameConstant;
 import laya.net.LocalStorage;
 import laya.utils.Handler;
 import model.po.PlayerPo;
@@ -55,16 +56,17 @@ public class PlayerProxy extends Proxy
 					this.maxLevel = playerPo.level;
 			}
 			this.isLoaded = true;
-			var pPo:PlayerPo;
 			this.pVo = new PlayerVo();
 			this.pVo.level = 1;
-			pPo = this.getPlayerPoByLevel(this.pVo.level);
+			var pPo:PlayerPo = this.getPlayerPoByLevel(this.pVo.level);
 			this.pVo.maxExp = pPo.exp;
 			this.pVo.maxHp = pPo.hp;
 			this.pVo.curHp = this.pVo.maxHp;
 			this.pVo.curExp = 0;
 			this.pVo.slotsDelay = 270;
 			this.pVo.weaponPo = this.equipProxy.getEquipPoById(1);
+			//解析保存的数据
+			this.parsePlayerData();
 		}));
 	}
 	
@@ -120,6 +122,8 @@ public class PlayerProxy extends Proxy
 			this.pVo.maxExp = pPo.exp;
 			this.pVo.curHp = pPo.hp;
 			this.pVo.maxHp = pPo.hp;
+			//保存
+			this.savePlayerData();
 			//trace("-----剩余经验----", this.pVo.curExp);
 			//trace("-----当前总经验----", this.pVo.maxExp);
 			//trace("-----当前等级----", this.pVo.level);
@@ -161,8 +165,8 @@ public class PlayerProxy extends Proxy
 	 */
 	public function parsePlayerData():void
 	{
-		if (!LocalStorage.getJSON("dungeon")) return;
-		var saveData:Object = LocalStorage.getJSON("dungeon");
+		if (!LocalStorage.getJSON(GameConstant.PLAYER_DATA_KEY)) return;
+		var saveData:Object = LocalStorage.getJSON(GameConstant.PLAYER_DATA_KEY);
 		this.pVo.level = saveData.playerLevel;
 		var pPo:PlayerPo = this.getPlayerPoByLevel(saveData.playerLevel);
 		this.pVo.maxExp = pPo.exp;
@@ -172,6 +176,19 @@ public class PlayerProxy extends Proxy
 		this.pVo.name = saveData.playerName;
 		this.pVo.slotsDelay = 270;
 		this.pVo.weaponPo = this.equipProxy.getEquipPoById(1);
+	}
+	
+	/**
+	 * 保存角色信息
+	 */
+	public function savePlayerData():void
+	{
+		var o:Object = {};
+		o.curExp = this.pVo.curExp;
+		o.maxHp = this.pVo.maxHp;
+		o.playerLevel = this.pVo.level;
+		o.playerName = this.pVo.level;
+		LocalStorage.setJSON(GameConstant.PLAYER_DATA_KEY, o);
 	}
 }
 }
