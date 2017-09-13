@@ -189,6 +189,8 @@ public class GameStageMediator extends Mediator
 					}
 				}
 				
+				//TODO 根据上下弹出楼梯图片以及关卡数文字，消失后跳转。 
+				
 				//判断此层关卡是否已经有保存的数据了
 				if(this.stageProxy.hasStageDataByLevelAndPoints(this.stageProxy.curLevel, 
 															    this.stageProxy.curPoints))
@@ -196,7 +198,7 @@ public class GameStageMediator extends Mediator
 					this.stageProxy.isFirstPointVo = true;
 					this.stageProxy.parseStageDataByLevelAndPoints(this.stageProxy.curLevel, 
 																   this.stageProxy.curPoints);
-					this.stageProxy.initStartPointVo(aVo.type == AlertVo.DOWN_FLOOR);			   
+					this.stageProxy.initStartPointVo(aVo.type == AlertVo.DOWN_FLOOR);	
 				    //根据上下
 					this.initData();
 					this.gameStage.initPlayer(this.playerVo);
