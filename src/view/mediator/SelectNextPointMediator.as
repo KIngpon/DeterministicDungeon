@@ -109,6 +109,8 @@ public class SelectNextPointMediator extends Mediator
 		if (this.isSelected) return;
 		this.stageProxy.curPointVo =
 				this.stageProxy.getPointVoByDir(this.curPointVo.index - 1, PointVo.DOWN);
+		//保存
+		this.stageProxy.savePointData();
 		this.stageProxy.isFirstPointVo = false;
 		//选中后闪烁几下
 		this.selectNextPointLayer.flashing(this.stageProxy.curPointVo.index, 
@@ -121,6 +123,8 @@ public class SelectNextPointMediator extends Mediator
 		if (this.isSelected) return;
 		this.stageProxy.curPointVo =
 				this.stageProxy.getPointVoByDir(this.curPointVo.index - 1, PointVo.RIGHT);
+		//保存
+		this.stageProxy.savePointData();
 		this.stageProxy.isFirstPointVo = false;
 		this.selectNextPointLayer.flashing(this.stageProxy.curPointVo.index, 
 										   Handler.create(this, flashingCompleteHandler));
@@ -132,6 +136,8 @@ public class SelectNextPointMediator extends Mediator
 		if (this.isSelected) return;
 		this.stageProxy.curPointVo = 
 				this.stageProxy.getPointVoByDir(this.curPointVo.index - 1, PointVo.LEFT);
+		//保存
+		this.stageProxy.savePointData();
 		this.stageProxy.isFirstPointVo = false;
 		this.selectNextPointLayer.flashing(this.stageProxy.curPointVo.index, 
 										   Handler.create(this, flashingCompleteHandler));
@@ -143,6 +149,8 @@ public class SelectNextPointMediator extends Mediator
 		if (this.isSelected) return;
 		this.stageProxy.curPointVo =
 				this.stageProxy.getPointVoByDir(this.curPointVo.index - 1, PointVo.UP);
+		//保存
+		this.stageProxy.savePointData();
 		this.stageProxy.isFirstPointVo = false;
 		this.selectNextPointLayer.flashing(this.stageProxy.curPointVo.index,
 										   Handler.create(this, flashingCompleteHandler));

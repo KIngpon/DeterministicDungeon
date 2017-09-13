@@ -116,10 +116,12 @@ public class GameStageMediator extends Mediator
 				if (this.stageProxy.hasStageDataByLevelAndPoints(this.stageProxy.curLevel, 
 																 this.stageProxy.curPoints))
 				{
+					//开始后获取之前保存的关卡数据
 					this.stageProxy.isFirstPointVo = true;
 					this.stageProxy.parseStageDataByLevelAndPoints(this.stageProxy.curLevel, 
 																   this.stageProxy.curPoints);
 					//有保存数据的直接开始
+					this.stageProxy.initStartPointBySaveIndex();
 					this.initData();
 					this.gameStage.initPlayer(this.playerVo);
 					this.gameStage.setPlayerProp(this.playerVo);
@@ -138,7 +140,6 @@ public class GameStageMediator extends Mediator
 				this.gameStage.setPlayerProp(this.playerVo);
 				break;
 			case MsgConstant.SELECT_STAGE_COMPLETE:
-				this.stageProxy.initStartPointVo();
 				this.curPointVo = this.stageProxy.curPointVo;
 				this.gameStage.updateStageBg(this.curStagePo, this.stageProxy);
 				this.gameStage.miniMap.updateAllPointPassView(this.stageProxy.pointsAry, this.stageProxy.curPointVo);
@@ -169,10 +170,11 @@ public class GameStageMediator extends Mediator
 					{
 						this.stageProxy.curPoints = 1;
 						this.stageProxy.curLevel++;
+						trace("curLevel", this.stageProxy.curLevel);
+						trace("totalLevel", this.stageProxy.totalLevel);
 						if (this.stageProxy.curLevel > this.stageProxy.totalLevel)
 						{
 							trace("通关了");
-							//TODO 过关动画
 							return;
 						}
 					}
@@ -187,12 +189,15 @@ public class GameStageMediator extends Mediator
 					}
 				}
 				
+				//判断此层关卡是否已经有保存的数据了
 				if(this.stageProxy.hasStageDataByLevelAndPoints(this.stageProxy.curLevel, 
 															    this.stageProxy.curPoints))
 				{
 					this.stageProxy.isFirstPointVo = true;
 					this.stageProxy.parseStageDataByLevelAndPoints(this.stageProxy.curLevel, 
 																   this.stageProxy.curPoints);
+					this.stageProxy.initStartPointVo(aVo.type == AlertVo.DOWN_FLOOR);			   
+				    //根据上下
 					this.initData();
 					this.gameStage.initPlayer(this.playerVo);
 					this.gameStage.setPlayerProp(this.playerVo);
@@ -390,6 +395,9 @@ public class GameStageMediator extends Mediator
 		//TODO 选择下一个关卡点
 		//胜利
 		var aVo:AlertVo;
+		trace("this.curPointVo.type", this.curPointVo.type);
+		trace("this.stageProxy.isFirstPoint()", this.stageProxy.isFirstPoint());
+		trace("this.stageProxy.curLevel", this.stageProxy.curLevel);
 		if (this.curPointVo.type == PointVo.DOWN_FLOOR)
 		{
 			//弹出对话框

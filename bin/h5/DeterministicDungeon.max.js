@@ -474,14 +474,14 @@ var Laya=window.Laya=(function(window,document){
 	*[关卡表对应关卡背景图片，敌人id]
 	*[选择移动格子]
 	*[小地图]
-	*上下楼梯
+	*[上下楼梯]
+	*[数据存储]
 	*楼梯动画
 	*本地化表
 	*导航菜单
 	*自由选择敌人
 	*抽掉落
 	*敌人扣血死亡胜利流程
-	*数据存储
 	*道具表
 	*装备icon
 	*特殊道处理
@@ -11725,8 +11725,10 @@ var Laya=window.Laya=(function(window,document){
 		*初始化关卡点
 		*@param flag 是否是上楼点
 		*/
-		__proto.initStartPointVo=function(){
-			this.curPointVo=this.getPointVoByType(1);
+		__proto.initStartPointVo=function(flag){
+			(flag===void 0)&& (flag=true);
+			if (flag)this.curPointVo=this.getPointVoByType(1);
+			else this.curPointVo=this.getPointVoByType(2);
 		}
 
 		/**
@@ -11740,15 +11742,23 @@ var Laya=window.Laya=(function(window,document){
 		}
 
 		/**
-		*保存关卡数据
+		*保存所有关卡相关的数据
 		*/
 		__proto.save=function(){
+			this.savePointData();
+			if (!this.pointsAry || this.pointsAry.length==0)return;
+			LocalStorage.setJSON("dungeon_stage"+"_"+this.curLevel+"_"+this.curPoints,this.pointsAry);
+		}
+
+		/**
+		*保存关卡点数据
+		*/
+		__proto.savePointData=function(){
 			var o={};
 			o.level=this.curLevel;
 			o.curPoints=this.curPoints;
+			o.playerPointIndex=this.curPointVo.index-1;
 			LocalStorage.setJSON("dungeon_stage",o);
-			if (!this.pointsAry || this.pointsAry.length==0)return;
-			LocalStorage.setJSON("dungeon_stage"+"_"+this.curLevel+"_"+this.curPoints,this.pointsAry);
 		}
 
 		/**
@@ -11792,6 +11802,17 @@ var Laya=window.Laya=(function(window,document){
 		*/
 		__proto.hasStageDataByLevelAndPoints=function(level,points){
 			return LocalStorage.getJSON("dungeon_stage"+"_"+level+"_"+points);
+		}
+
+		/**
+		*根据保存的索引设置起始点
+		*/
+		__proto.initStartPointBySaveIndex=function(){
+			var o=LocalStorage.getJSON("dungeon_stage");
+			if (o && o.playerPointIndex !=undefined)
+				this.curPointVo=this.getPointVoByIndex(o.playerPointIndex);
+			else
+			this.initStartPointVo();
 		}
 
 		/**
@@ -12486,6 +12507,7 @@ var Laya=window.Laya=(function(window,document){
 						this.stageProxy.isFirstPointVo=true;
 						this.stageProxy.parseStageDataByLevelAndPoints(this.stageProxy.curLevel,
 						this.stageProxy.curPoints);
+						this.stageProxy.initStartPointBySaveIndex();
 						this.initData();
 						this.gameStage.initPlayer(this.playerVo);
 						this.gameStage.setPlayerProp(this.playerVo);
@@ -12503,7 +12525,6 @@ var Laya=window.Laya=(function(window,document){
 					this.gameStage.setPlayerProp(this.playerVo);
 					break ;
 				case "SELECT_STAGE_COMPLETE":
-					this.stageProxy.initStartPointVo();
 					this.curPointVo=this.stageProxy.curPointVo;
 					this.gameStage.updateStageBg(this.curStagePo,this.stageProxy);
 					this.gameStage.miniMap.updateAllPointPassView(this.stageProxy.pointsAry,this.stageProxy.curPointVo);
@@ -12530,6 +12551,8 @@ var Laya=window.Laya=(function(window,document){
 						if (this.stageProxy.curPoints > this.stageProxy.getCurStagePointsCount()){
 							this.stageProxy.curPoints=1;
 							this.stageProxy.curLevel++;
+							console.log("curLevel",this.stageProxy.curLevel);
+							console.log("totalLevel",this.stageProxy.totalLevel);
 							if (this.stageProxy.curLevel > this.stageProxy.totalLevel){
 								console.log("通关了");
 								return;
@@ -12548,6 +12571,7 @@ var Laya=window.Laya=(function(window,document){
 						this.stageProxy.isFirstPointVo=true;
 						this.stageProxy.parseStageDataByLevelAndPoints(this.stageProxy.curLevel,
 						this.stageProxy.curPoints);
+						this.stageProxy.initStartPointVo(aVo.type==1);
 						this.initData();
 						this.gameStage.initPlayer(this.playerVo);
 						this.gameStage.setPlayerProp(this.playerVo);
@@ -12709,6 +12733,9 @@ var Laya=window.Laya=(function(window,document){
 
 		__proto.playerMoveOutComplete=function(){
 			var aVo;
+			console.log("this.curPointVo.type",this.curPointVo.type);
+			console.log("this.stageProxy.isFirstPoint()",this.stageProxy.isFirstPoint());
+			console.log("this.stageProxy.curLevel",this.stageProxy.curLevel);
 			if (this.curPointVo.type==2){
 				aVo=new AlertVo();
 				aVo.type=1;
@@ -13004,6 +13031,7 @@ var Laya=window.Laya=(function(window,document){
 			if (this.isSelected)return;
 			this.stageProxy.curPointVo=
 			this.stageProxy.getPointVoByDir(this.curPointVo.index-1,2);
+			this.stageProxy.savePointData();
 			this.stageProxy.isFirstPointVo=false;
 			this.selectNextPointLayer.flashing(this.stageProxy.curPointVo.index,
 			Handler.create(this,this.flashingCompleteHandler));
@@ -13014,6 +13042,7 @@ var Laya=window.Laya=(function(window,document){
 			if (this.isSelected)return;
 			this.stageProxy.curPointVo=
 			this.stageProxy.getPointVoByDir(this.curPointVo.index-1,4);
+			this.stageProxy.savePointData();
 			this.stageProxy.isFirstPointVo=false;
 			this.selectNextPointLayer.flashing(this.stageProxy.curPointVo.index,
 			Handler.create(this,this.flashingCompleteHandler));
@@ -13024,6 +13053,7 @@ var Laya=window.Laya=(function(window,document){
 			if (this.isSelected)return;
 			this.stageProxy.curPointVo=
 			this.stageProxy.getPointVoByDir(this.curPointVo.index-1,3);
+			this.stageProxy.savePointData();
 			this.stageProxy.isFirstPointVo=false;
 			this.selectNextPointLayer.flashing(this.stageProxy.curPointVo.index,
 			Handler.create(this,this.flashingCompleteHandler));
@@ -13034,6 +13064,7 @@ var Laya=window.Laya=(function(window,document){
 			if (this.isSelected)return;
 			this.stageProxy.curPointVo=
 			this.stageProxy.getPointVoByDir(this.curPointVo.index-1,1);
+			this.stageProxy.savePointData();
 			this.stageProxy.isFirstPointVo=false;
 			this.selectNextPointLayer.flashing(this.stageProxy.curPointVo.index,
 			Handler.create(this,this.flashingCompleteHandler));
@@ -13136,6 +13167,7 @@ var Laya=window.Laya=(function(window,document){
 				this.selectStageLayer.skip();
 			}
 			else{
+				this.stageProxy.initStartPointVo();
 				this.stageProxy.save();
 				this.selectStageLayer.removeSelf();
 				this.selectStageLayer=null;
@@ -13172,6 +13204,7 @@ var Laya=window.Laya=(function(window,document){
 			this.selectStageLayer.nextStep();
 			this.stageProxy.nextStep(index);
 			if (this.selectStageLayer.isLastStep()){
+				this.stageProxy.initStartPointVo();
 				this.stageProxy.save();
 				this.selectStageLayer.removeSelf();
 				this.selectStageLayer=null;

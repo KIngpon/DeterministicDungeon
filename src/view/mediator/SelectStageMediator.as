@@ -113,6 +113,7 @@ public class SelectStageMediator extends Mediator
 		else
 		{
 			//保存
+			this.stageProxy.initStartPointVo();
 			this.stageProxy.save();
 			this.selectStageLayer.removeSelf();
 			this.selectStageLayer = null;
@@ -157,6 +158,7 @@ public class SelectStageMediator extends Mediator
 		if (this.selectStageLayer.isLastStep())
 		{
 			//保存
+			this.stageProxy.initStartPointVo();
 			this.stageProxy.save();
 			this.selectStageLayer.removeSelf();
 			this.selectStageLayer = null;

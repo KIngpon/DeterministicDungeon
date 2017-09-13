@@ -737,9 +737,10 @@ public class StageProxy extends Proxy
 	 * 初始化关卡点
 	 * @param flag	是否是上楼点
 	 */
-	public function initStartPointVo():void
+	public function initStartPointVo(flag:Boolean = true):void
 	{
-		this.curPointVo = this.getPointVoByType(PointVo.UP_FLOOR);
+		if (flag) this.curPointVo = this.getPointVoByType(PointVo.UP_FLOOR);
+		else this.curPointVo = this.getPointVoByType(PointVo.DOWN_FLOOR);
 	}
 	
 	/**
@@ -754,16 +755,25 @@ public class StageProxy extends Proxy
 	}
 	
 	/**
-	 * 保存关卡数据
+	 * 保存所有关卡相关的数据
 	 */
 	public function save():void
+	{
+		this.savePointData();
+		if (!this.pointsAry || this.pointsAry.length == 0) return;
+		LocalStorage.setJSON(GameConstant.STAGE_DATA_KEY + "_" + this.curLevel + "_" + this.curPoints, this.pointsAry);
+	}
+	
+	/**
+	 * 保存关卡点数据
+	 */
+	public function savePointData():void
 	{
 		var o:Object = {};
 		o.level = this.curLevel;
 		o.curPoints = this.curPoints;
+		o.playerPointIndex = this.curPointVo.index - 1;
 		LocalStorage.setJSON(GameConstant.STAGE_DATA_KEY, o);
-		if (!this.pointsAry || this.pointsAry.length == 0) return;
-		LocalStorage.setJSON(GameConstant.STAGE_DATA_KEY + "_" + this.curLevel + "_" + this.curPoints, this.pointsAry);
 	}
 	
 	/**
@@ -811,6 +821,18 @@ public class StageProxy extends Proxy
 	public function hasStageDataByLevelAndPoints(level:int, points:int):Boolean
 	{
 		return LocalStorage.getJSON(GameConstant.STAGE_DATA_KEY + "_" + level + "_" + points);
+	}
+	
+	/**
+	 * 根据保存的索引设置起始点
+	 */
+	public function initStartPointBySaveIndex():void
+	{
+		var o:Object = LocalStorage.getJSON(GameConstant.STAGE_DATA_KEY);
+		if (o && o.playerPointIndex != undefined) 
+			this.curPointVo = this.getPointVoByIndex(o.playerPointIndex);
+		else
+			this.initStartPointVo();
 	}
 }
 }
