@@ -26,5 +26,9 @@ public class MsgConstant
 	public static const ALERT_CLOSE:String = "CLOSE_ALERT";
 	//弹框点击确定
 	public static const ALERT_CONFIRM:String = "ALERT_CONFIRM";
+	//弹出上下楼过场
+	public static const SHOW_THROUGH_FLOOR:String = "SHOW_THROUGH_FLOOR";
+	//删除上下楼过场
+	public static const REMOVE_THROUGH_FLOOR:String = "REMOVE_THROUGH_FLOOR";
 }
 }

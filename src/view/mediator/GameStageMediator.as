@@ -103,6 +103,7 @@ public class GameStageMediator extends Mediator
 		vect.push(MsgConstant.SELECT_NEXT_POINT);
 		vect.push(MsgConstant.CLOSE_ALERT);
 		vect.push(MsgConstant.ALERT_CONFIRM);
+		vect.push(MsgConstant.REMOVE_THROUGH_FLOOR);
 		return vect;
 	}
 	
@@ -163,6 +164,10 @@ public class GameStageMediator extends Mediator
 				//选择下楼梯
 				//关卡数累加
 				var aVo:AlertVo = notification.body as AlertVo;
+				var prevStagePo:StagePo = this.curStagePo;
+				var nextStagePo:StagePo;
+				var prevStagePointsCount:int = this.stageProxy.getCurStagePointsCount();
+				var nextStagePointsCount:int;
 				if (aVo.type == AlertVo.DOWN_FLOOR)
 				{
 					this.stageProxy.curPoints++;
@@ -170,14 +175,14 @@ public class GameStageMediator extends Mediator
 					{
 						this.stageProxy.curPoints = 1;
 						this.stageProxy.curLevel++;
-						trace("curLevel", this.stageProxy.curLevel);
-						trace("totalLevel", this.stageProxy.totalLevel);
 						if (this.stageProxy.curLevel > this.stageProxy.totalLevel)
 						{
 							trace("通关了");
 							return;
 						}
 					}
+					nextStagePo = this.stageProxy.getCurStagePo();
+					nextStagePointsCount = this.stageProxy.getCurStagePointsCount();
 				}
 				else if (aVo.type == AlertVo.UP_FLOOR)
 				{
@@ -187,10 +192,14 @@ public class GameStageMediator extends Mediator
 						this.stageProxy.curLevel--;
 						this.stageProxy.curPoints = this.stageProxy.getCurStagePointsCount();
 					}
+					nextStagePo = this.stageProxy.getCurStagePo();
+					nextStagePointsCount = this.stageProxy.getCurStagePointsCount();
 				}
-				
+				this.sendNotification(MsgConstant.SHOW_THROUGH_FLOOR, [aVo, prevStagePo, nextStagePo, prevStagePointsCount, nextStagePointsCount]);
 				//TODO 根据上下弹出楼梯图片以及关卡数文字，消失后跳转。 
-				
+				break;
+			case MsgConstant.REMOVE_THROUGH_FLOOR:
+				var aVo:AlertVo = notification.body as AlertVo;
 				//判断此层关卡是否已经有保存的数据了
 				if(this.stageProxy.hasStageDataByLevelAndPoints(this.stageProxy.curLevel, 
 															    this.stageProxy.curPoints))

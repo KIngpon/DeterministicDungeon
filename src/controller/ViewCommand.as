@@ -7,6 +7,7 @@ import view.mediator.GameStageMediator;
 import view.mediator.LoadingMediator;
 import view.mediator.SelectNextPointMediator;
 import view.mediator.SelectStageMediator;
+import view.mediator.ThroughFloorMediator;
 /**
  * ...视图command
  * @author Kanon
@@ -20,6 +21,7 @@ public class ViewCommand extends Command
 		this.facade.registerMediator(new LoadingMediator());
 		this.facade.registerMediator(new SelectNextPointMediator());
 		this.facade.registerMediator(new AlertMediator());
+		this.facade.registerMediator(new ThroughFloorMediator());
 	}
 }
 }
